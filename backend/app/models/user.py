@@ -1,0 +1,18 @@
+from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime
+from sqlalchemy.sql import func
+from app.database import Base
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    phone = Column(String, unique=True, index=True, nullable=False)
+    full_name = Column(String, nullable=False)
+    cedula = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    role = Column(String, default="worker")  # worker o contractor
+    wallet_address = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
+    rating_avg = Column(Float, default=0.0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
