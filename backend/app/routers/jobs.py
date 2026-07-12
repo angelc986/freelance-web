@@ -149,6 +149,12 @@ def apply_to_job(request: Request, job_id: int, application: ApplicationCreate, 
     db.add(db_app)
     db.commit()
     db.refresh(db_app)
+    publish(job.client_id, "job_applied", {
+        "job_id": job.id,
+        "job_title": job.title,
+        "worker_name": current_user.full_name,
+        "message": f"{current_user.full_name} aplicó a tu trabajo '{job.title}'"
+    })
     return db_app
 
 
@@ -204,6 +210,11 @@ def accept_application(request: Request, job_id: int, application_id: int, db: S
 
     db.commit()
     db.refresh(job)
+    publish(job.worker_id, "job_accepted", {
+        "job_id": job.id,
+        "job_title": job.title,
+        "message": f"Fuiste aceptado para '{job.title}'"
+    })
     return job
 
 
@@ -227,6 +238,11 @@ def request_complete(request: Request, job_id: int, db: Session = Depends(get_db
     job.review_requested_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(job)
+    publish(job.client_id, "job_review_pending", {
+        "job_id": job.id,
+        "job_title": job.title,
+        "message": f"{current_user.full_name} marcó '{job.title}' como completado"
+    })
     return job
 
 
@@ -247,6 +263,11 @@ def approve_job(request: Request, job_id: int, db: Session = Depends(get_db),
     job.review_requested_at = None
     db.commit()
     db.refresh(job)
+    publish(job.worker_id, "job_completed", {
+        "job_id": job.id,
+        "job_title": job.title,
+        "message": f"'{job.title}' fue aprobado y completado"
+    })
     return job
 
 
@@ -268,6 +289,12 @@ def dispute_job(request: Request, job_id: int, dispute: DisputeRequest, db: Sess
     job.review_requested_at = None
     db.commit()
     db.refresh(job)
+    publish(1, "job_disputed", {
+        "job_id": job.id,
+        "job_title": job.title,
+        "reason": dispute.reason,
+        "message": f"'{job.title}' en disputa: {dispute.reason}"
+    })
     return job
 
 
@@ -287,6 +314,12 @@ def cancel_job(request: Request, job_id: int, db: Session = Depends(get_db),
     job.status = "cancelled"
     db.commit()
     db.refresh(job)
+    if job.worker_id:
+        publish(job.worker_id, "job_cancelled", {
+            "job_id": job.id,
+            "job_title": job.title,
+            "message": f"'{job.title}' fue cancelado"
+        })
     return job
 
 

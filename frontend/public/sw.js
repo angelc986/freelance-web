@@ -5,6 +5,8 @@ const PRECACHE_URLS = [
   "/jobs",
   "/auth/login",
   "/auth/register",
+  "/dashboard",
+  "/offline",
   "/manifest.json",
 ];
 
@@ -32,11 +34,11 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Fetch — network first, fallback to cache, offline page
+// Fetch — network first, fallback to cache, offline fallback
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
-  if (event.request.url.includes("/api/")) return;
-  if (event.request.url.includes("localhost")) return;
+  // Don't cache API calls or localhost in dev
+  if (event.request.url.includes("/api/") && !event.request.url.includes("localhost")) return;
 
   event.respondWith(
     fetch(event.request)
@@ -51,7 +53,7 @@ self.addEventListener("fetch", (event) => {
       })
       .catch(() => {
         return caches.match(event.request).then((cached) => {
-          return cached || caches.match("/");
+          return cached || caches.match("/offline");
         });
       })
   );

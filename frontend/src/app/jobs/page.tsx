@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { listJobs, type Job } from "@/lib/api";
 import Logo from "@/components/Logo";
 import PullToRefresh from "@/components/PullToRefresh";
+import EmptyState from "@/components/EmptyState";
 
 const categories = [
   "Todas", "Gastronomía", "Logística", "Servicios", "Limpieza", "Eventos", "Retail",
@@ -86,10 +87,11 @@ export default function JobsPage() {
           ) : (
             <PullToRefresh onRefresh={refreshJobs}>
               {filtered.length === 0 ? (
-                <div className="text-center py-20 bg-white rounded-xl border border-gray-200">
-                  <p className="text-4xl mb-3">🔍</p>
-                  <p className="text-gray">No hay trabajos disponibles en esta categoría</p>
-                </div>
+                <EmptyState
+                  title="No hay trabajos disponibles"
+                  description={`No encontramos trabajos en la categoría "${category}". Prueba con otra categoría.`}
+                  variant="search"
+                />
               ) : (
                 <div className="grid gap-4">
                   {filtered.map((job) => (

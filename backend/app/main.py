@@ -4,7 +4,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.limiter import limiter
 from app.database import engine, Base
-from app.routers import auth_router, jobs_router, payments_router, ratings_router, users_router, admin_router
+from app.routers import auth_router, jobs_router, payments_router, ratings_router, users_router, admin_router, events_router
 
 # Crear todas las tablas de la BD al iniciar
 Base.metadata.create_all(bind=engine)
@@ -35,6 +35,7 @@ app.include_router(payments_router)
 app.include_router(users_router)
 app.include_router(ratings_router)
 app.include_router(admin_router)
+app.include_router(events_router)
 
 @app.get("/api/v1/health")
 @limiter.exempt

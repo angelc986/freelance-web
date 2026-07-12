@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { getBalance, getHistory, deposit, withdraw, type Transaction } from "@/lib/api";
 import PullToRefresh from "@/components/PullToRefresh";
+import EmptyState from "@/components/EmptyState";
 
 const typeMeta: Record<string, { icon: string; label: string; color: string; sign: string }> = {
   deposit: { icon: "📥", label: "Depósito", color: "text-secondary", sign: "+" },
@@ -389,13 +390,13 @@ export default function WalletPage() {
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : history.length === 0 ? (
-            <div className="text-center py-14">
-              <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center text-3xl mx-auto mb-4">💳</div>
-              <p className="text-dark font-medium">Sin movimientos</p>
-              <p className="text-sm text-gray mt-1">
-                {isContractor ? "Deposita fondos para empezar" : "Completa trabajos para recibir pagos"}
-              </p>
-            </div>
+            <EmptyState
+              title="Sin movimientos"
+              description={isContractor ? "Deposita fondos para empezar" : "Completa trabajos para recibir pagos"}
+              variant="wallet"
+              actionLabel={isContractor ? "Depositar fondos" : undefined}
+              actionFn={isContractor ? () => setShowDeposit(true) : undefined}
+            />
           ) : (
             <div className="divide-y divide-gray-100">
               {history.map((tx) => {

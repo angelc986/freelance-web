@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import NotificationBell from "@/components/NotificationBell";
 
 // ═══════════════════════════════════════════════════════ TYPES
 
@@ -14,6 +15,18 @@ interface Job { id: number; title: string; status: string; budget: number; clien
 interface Tx { id: number; user_id: number; job_id: number | null; type: string; amount: number; network?: string; tx_hash?: string; status: string; created_at: string | null; }
 interface Dispute { id: number; title: string; budget: number; client_id: number; worker_id: number; dispute_reason: string; created_at: string | null; }
 interface WalletInfo { system_wallet: string; balance: number; total_deposits: number; total_withdrawals: number; pending_confirmation: number; }
+
+type MetricType =
+  | "users_detail"
+  | "jobs_detail"
+  | "volume_detail"
+  | "transactions_detail"
+  | "new_users_detail"
+  | "active_detail"
+  | "growth_detail"
+  | "total_jobs_detail"
+  | "top_workers_detail"
+  | "rating_distribution_detail";
 
 // ═══════════════════════════════════════════════════════ API
 
@@ -50,6 +63,10 @@ const I = {
 
 // ═══════════════════════════════════════════════════════ COMPONENTS
 
+function fmt(n: number) { return n.toLocaleString(); }
+function fmtCurr(n: number) { return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; }
+function pct(a: number, b: number) { return b > 0 ? ((a / b) * 100).toFixed(1) : "0.0"; }
+
 function Badge({ label, color }: { label: string; color: string }) {
   return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${color}`}>{label}</span>;
 }
@@ -73,15 +90,29 @@ function Toast({ msg, type, onClose }: { msg: string; type: "success" | "error";
   </div>;
 }
 
-function KpiCard({ label, value, icon, trend, color, fmt }: { label: string; value: number | string; icon: React.ReactNode; trend?: string; color: string; fmt?: "curr" }) {
+function KpiCard({ label, value, icon, trend, color, fmt, onClick }: { label: string; value: number | string; icon: React.ReactNode; trend?: string; color: string; fmt?: "curr"; onClick?: () => void }) {
   const d = fmt === "curr" ? `$${(typeof value === "number" ? value : 0).toLocaleString()}` : typeof value === "number" ? value.toLocaleString() : value;
-  return <div className="group bg-[#111118] border border-white/[0.06] rounded-2xl p-5 hover:border-white/[0.12] transition-all">
+  return <div
+    onClick={onClick}
+    className={`group bg-[#111118] border border-white/[0.06] rounded-2xl p-5 transition-all ${onClick ? "cursor-pointer hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 active:scale-[0.98]" : "hover:border-white/[0.12]"}`}
+  >
     <div className="flex items-start justify-between mb-4">
       <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center`}>{icon}</div>
       {trend && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><I.TrendingUp />{trend}</span>}
     </div>
-    <p className="text-2xl font-bold text-white tracking-tight font-mono">{d}</p>
-    <p className="text-xs text-gray-500 mt-1">{label}</p>
+    <div className="flex items-end justify-between">
+      <div>
+        <p className="text-2xl font-bold text-white tracking-tight font-mono">{d}</p>
+        <p className="text-xs text-gray-500 mt-1">{label}</p>
+      </div>
+      {onClick && (
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+          </svg>
+        </div>
+      )}
+    </div>
   </div>;
 }
 
@@ -376,6 +407,736 @@ const NAV: { key: Section; label: string; icon: React.ReactNode }[] = [
   { key: "wallet", label: "Wallet", icon: <I.Wallet /> },
 ];
 
+// ═══════════════════════════════════════════════════════ METRIC MODAL
+
+function MetricModal({ metric, stats, analytics, users, jobs, txs, onClose }: {
+  metric: MetricType;
+  stats: Stats;
+  analytics: Analytics | null;
+  users: User[];
+  jobs: Job[];
+  txs: Tx[];
+  onClose: () => void;
+}) {
+  const cfg = {
+    users_detail: {
+      title: "Users — Full Breakdown",
+      icon: <I.Users />,
+      color: "from-blue-500/20 to-indigo-600/20 text-blue-400",
+    },
+    jobs_detail: {
+      title: "Jobs — Full Breakdown",
+      icon: <I.Briefcase />,
+      color: "from-emerald-500/20 to-emerald-600/20 text-emerald-400",
+    },
+    volume_detail: {
+      title: "Volume (USDT) — Detailed",
+      icon: <I.Dollar />,
+      color: "from-violet-500/20 to-violet-600/20 text-violet-400",
+    },
+    transactions_detail: {
+      title: "Transactions — Detailed Log",
+      icon: <I.Wallet />,
+      color: "from-amber-500/20 to-amber-600/20 text-amber-400",
+    },
+    new_users_detail: {
+      title: "New Users Today — Detailed",
+      icon: <I.Users />,
+      color: "from-blue-500/20 to-indigo-600/20 text-blue-400",
+    },
+    active_detail: {
+      title: "Active Users Today — Detailed",
+      icon: <I.TrendingUp />,
+      color: "from-emerald-500/20 to-emerald-600/20 text-emerald-400",
+    },
+    growth_detail: {
+      title: "Growth Rate — Trends",
+      icon: <I.Chart />,
+      color: "from-violet-500/20 to-violet-600/20 text-violet-400",
+    },
+    total_jobs_detail: {
+      title: "Total Jobs — Full Distribution",
+      icon: <I.Briefcase />,
+      color: "from-amber-500/20 to-amber-600/20 text-amber-400",
+    },
+    top_workers_detail: {
+      title: "Top Workers — Ranking & Earnings",
+      icon: <I.TrendingUp />,
+      color: "from-emerald-500/20 to-teal-600/20 text-emerald-400",
+    },
+    rating_distribution_detail: {
+      title: "Rating Distribution — Quality Analysis",
+      icon: <I.Chart />,
+      color: "from-amber-500/20 to-orange-600/20 text-amber-400",
+    },
+  }[metric];
+
+  return <ModalShell title="" onClose={onClose}>
+    {/* ═══ HERO ═══ */}
+    <div className={`relative -mx-6 -mt-6 px-6 pt-10 pb-6 mb-6 bg-gradient-to-br ${cfg.color} overflow-hidden`}>
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
+      <div className="relative flex items-center gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-xl flex-shrink-0">
+          {cfg.icon}
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-white drop-shadow-sm">{cfg.title}</h2>
+          <p className="text-sm text-white/70 mt-0.5">Click outside or press ESC to close</p>
+        </div>
+      </div>
+    </div>
+
+    {/* ═══ USERS DETAIL ═══ */}
+    {metric === "users_detail" && <>
+      {/* Big numbers grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-white font-mono">{fmt(stats.total_users)}</p>
+          <p className="text-xs text-gray-500 mt-1">Total Users</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-emerald-400 font-mono">{fmt(stats.total_workers)}</p>
+          <p className="text-xs text-gray-500 mt-1">Workers ({pct(stats.total_workers, stats.total_users)}%)</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-blue-400 font-mono">{fmt(stats.total_contractors)}</p>
+          <p className="text-xs text-gray-500 mt-1">Contractors ({pct(stats.total_contractors, stats.total_users)}%)</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-amber-400 font-mono">{analytics ? fmt(analytics.new_users_today) : "—"}</p>
+          <p className="text-xs text-gray-500 mt-1">New Today</p>
+        </div>
+      </div>
+
+      {/* Role distribution bar */}
+      <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04] mb-6">
+        <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-4">Role Distribution</h4>
+        <div className="h-6 bg-white/[0.04] rounded-full overflow-hidden flex">
+          <div className="h-full bg-blue-500 transition-all duration-700 flex items-center justify-center text-[10px] text-white font-medium" style={{ width: `${pct(stats.total_workers, stats.total_users)}%` }}>
+            {stats.total_workers > 0 && `Workers ${pct(stats.total_workers, stats.total_users)}%`}
+          </div>
+          <div className="h-full bg-emerald-500 transition-all duration-700 flex items-center justify-center text-[10px] text-white font-medium" style={{ width: `${pct(stats.total_contractors, stats.total_users)}%` }}>
+            {stats.total_contractors > 0 && `Contractors ${pct(stats.total_contractors, stats.total_users)}%`}
+          </div>
+        </div>
+      </div>
+
+      {/* Active vs inactive */}
+      <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04] mb-6">
+        <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-4">Account Status</h4>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-400">Active</span>
+              <span className="text-sm font-mono text-emerald-400 font-bold">{fmt(users.filter(u => u.is_active).length)}</span>
+            </div>
+            <div className="h-2 bg-white/[0.04] rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${pct(users.filter(u => u.is_active).length, users.length)}%` }} />
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-400">Suspended</span>
+              <span className="text-sm font-mono text-red-400 font-bold">{fmt(users.filter(u => !u.is_active).length)}</span>
+            </div>
+            <div className="h-2 bg-white/[0.04] rounded-full overflow-hidden">
+              <div className="h-full bg-red-500 rounded-full" style={{ width: `${pct(users.filter(u => !u.is_active).length, users.length)}%` }} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent users list */}
+      <div className="bg-white/[0.02] rounded-xl border border-white/[0.04]">
+        <div className="px-4 py-3 border-b border-white/[0.04] flex items-center justify-between">
+          <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Recent Registrations</h4>
+          <span className="text-xs text-gray-500">Last 10</span>
+        </div>
+        <div className="divide-y divide-white/[0.04] max-h-64 overflow-y-auto custom-scrollbar">
+          {users.slice(0, 10).map(u => (
+            <div key={u.id} className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{u.full_name.charAt(0)}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-white truncate">{u.full_name}</p>
+                <p className="text-xs text-gray-500">{u.email} · {u.role}</p>
+              </div>
+              <div className={`flex items-center gap-1.5 text-xs ${u.is_active ? "text-emerald-400" : "text-red-400"}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? "bg-emerald-500" : "bg-red-500"}`} />
+                {u.is_active ? "Active" : "Suspended"}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>}
+
+    {/* ═══ JOBS DETAIL ═══ */}
+    {metric === "jobs_detail" && <>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-white font-mono">{fmt(stats.total_jobs)}</p>
+          <p className="text-xs text-gray-500 mt-1">Total Jobs</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-blue-400 font-mono">{fmt(stats.active_jobs)}</p>
+          <p className="text-xs text-gray-500 mt-1">Active ({pct(stats.active_jobs, stats.total_jobs)}%)</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-emerald-400 font-mono">{fmt(stats.completed_jobs)}</p>
+          <p className="text-xs text-gray-500 mt-1">Completed ({pct(stats.completed_jobs, stats.total_jobs)}%)</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-red-400 font-mono">{fmt(stats.disputed_jobs)}</p>
+          <p className="text-xs text-gray-500 mt-1">Disputed ({pct(stats.disputed_jobs, stats.total_jobs)}%)</p>
+        </div>
+      </div>
+
+      {/* Status bars */}
+      <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04] mb-6">
+        <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-4">Job Status Distribution</h4>
+        <div className="h-8 bg-white/[0.04] rounded-full overflow-hidden flex">
+          {[
+            { l: "Active", v: stats.active_jobs, c: "bg-blue-500" },
+            { l: "Completed", v: stats.completed_jobs, c: "bg-emerald-500" },
+            { l: "Cancelled", v: jobs.filter(j => j.status === "cancelled").length, c: "bg-gray-500" },
+            { l: "Disputed", v: stats.disputed_jobs, c: "bg-red-500" },
+          ].map(({ l, v, c }) => (
+            <div key={l} className={`h-full ${c} transition-all duration-700 flex items-center justify-center text-[10px] text-white font-medium`} style={{ width: `${pct(v, stats.total_jobs)}%` }}>
+              {v > 0 && `${l} ${pct(v, stats.total_jobs)}%`}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Category breakdown */}
+      <div className="bg-white/[0.02] rounded-xl border border-white/[0.04] mb-6">
+        <div className="px-4 py-3 border-b border-white/[0.04]">
+          <h4 className="text-xs font-semibold text-white uppercase tracking-wider">By Category</h4>
+        </div>
+        <div className="divide-y divide-white/[0.04]">
+          {Object.entries(
+            jobs.reduce((acc, j) => {
+              const cat = j.category || "Uncategorized";
+              acc[cat] = (acc[cat] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>)
+          ).sort(([, a], [, b]) => b - a).map(([cat, count]) => (
+            <div key={cat} className="flex items-center justify-between px-4 py-2.5">
+              <span className="text-sm text-gray-300">{cat}</span>
+              <div className="flex items-center gap-3">
+                <div className="w-24 h-2 bg-white/[0.04] rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${pct(count, jobs.length)}%` }} />
+                </div>
+                <span className="text-sm font-mono text-white w-8 text-right">{count}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* By City */}
+      <div className="bg-white/[0.02] rounded-xl border border-white/[0.04] mb-6">
+        <div className="px-4 py-3 border-b border-white/[0.04]">
+          <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Top Cities</h4>
+        </div>
+        <div className="divide-y divide-white/[0.04]">
+          {Object.entries(
+            jobs.reduce((acc, j) => {
+              const loc = j.location || "Unknown";
+              acc[loc] = (acc[loc] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>)
+          ).sort(([, a], [, b]) => b - a).slice(0, 8).map(([city, count], _, arr) => (
+            <div key={city} className="flex items-center justify-between px-4 py-2.5">
+              <span className="text-sm text-gray-300">{city}</span>
+              <div className="flex items-center gap-3">
+                <div className="w-24 h-2 bg-white/[0.04] rounded-full overflow-hidden">
+                  <div className="h-full bg-violet-500 rounded-full" style={{ width: `${pct(count, Math.max(...arr.map(([, c]) => c)))}%` }} />
+                </div>
+                <span className="text-sm font-mono text-white w-8 text-right">{count}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent jobs */}
+      <div className="bg-white/[0.02] rounded-xl border border-white/[0.04]">
+        <div className="px-4 py-3 border-b border-white/[0.04]">
+          <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Recent Jobs</h4>
+        </div>
+        <div className="divide-y divide-white/[0.04] max-h-56 overflow-y-auto custom-scrollbar">
+          {jobs.slice(0, 8).map(j => (
+            <div key={j.id} className="flex items-center justify-between px-4 py-3 hover:bg-white/[0.02] transition-colors">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${j.status === "completed" ? "bg-emerald-500" : j.status === "disputed" ? "bg-red-500" : j.status === "in_progress" || j.status === "checked_in" ? "bg-blue-500" : j.status === "cancelled" ? "bg-gray-500" : "bg-amber-500"}`} />
+                <div className="min-w-0">
+                  <p className="text-sm text-white truncate">{j.title}</p>
+                  <p className="text-xs text-gray-500">{j.category || "—"}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <span className="text-sm font-mono text-white">{fmtCurr(j.budget)}</span>
+                <Badge label={j.status.replace("_", " ")} color={j.status === "completed" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : j.status === "disputed" ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-white/[0.04] text-gray-400 border-white/[0.08]"} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>}
+
+    {/* ═══ VOLUME DETAIL ═══ */}
+    {metric === "volume_detail" && <>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-white font-mono">{fmtCurr(stats.total_volume_usdt)}</p>
+          <p className="text-xs text-gray-500 mt-1">Total Volume</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-emerald-400 font-mono">{fmtCurr(txs.filter(t => t.type === "deposit").reduce((s, t) => s + t.amount, 0))}</p>
+          <p className="text-xs text-gray-500 mt-1">Total Deposits</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-red-400 font-mono">{fmtCurr(txs.filter(t => t.type === "withdraw").reduce((s, t) => s + t.amount, 0))}</p>
+          <p className="text-xs text-gray-500 mt-1">Total Withdrawals</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-amber-400 font-mono">{fmt(stats.total_transactions)}</p>
+          <p className="text-xs text-gray-500 mt-1">Transactions</p>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-4 mb-6">
+        {/* Status breakdown */}
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-4">Transaction Status</h4>
+          <div className="space-y-3">
+            {[
+              { l: "Confirmed", v: txs.filter(t => t.status === "confirmed").length, c: "bg-emerald-500" },
+              { l: "Pending", v: txs.filter(t => t.status === "pending").length, c: "bg-amber-500" },
+              { l: "Failed", v: txs.filter(t => t.status === "failed").length, c: "bg-red-500" },
+            ].map(({ l, v, c }) => (
+              <div key={l}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs text-gray-400">{l}</span>
+                  <span className="text-xs font-mono text-white">{fmt(v)} ({pct(v, txs.length)}%)</span>
+                </div>
+                <div className="h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
+                  <div className={`h-full ${c} rounded-full`} style={{ width: `${pct(v, txs.length)}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Type breakdown */}
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-4">By Transaction Type</h4>
+          <div className="space-y-3">
+            {[
+              { l: "Deposits", v: txs.filter(t => t.type === "deposit").reduce((s, t) => s + t.amount, 0), c: "text-emerald-400", bg: "bg-emerald-500/10", icon: "↓" },
+              { l: "Withdrawals", v: txs.filter(t => t.type === "withdraw").reduce((s, t) => s + t.amount, 0), c: "text-red-400", bg: "bg-red-500/10", icon: "↑" },
+              { l: "Releases", v: txs.filter(t => t.type === "release").reduce((s, t) => s + t.amount, 0), c: "text-blue-400", bg: "bg-blue-500/10", icon: "→" },
+              { l: "Refunds", v: txs.filter(t => t.type === "refund").reduce((s, t) => s + t.amount, 0), c: "text-amber-400", bg: "bg-amber-500/10", icon: "↩" },
+            ].map(({ l, v, c, bg, icon }) => (
+              <div key={l} className={`${bg} rounded-xl px-3 py-2.5 flex items-center justify-between`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">{icon}</span>
+                  <span className="text-xs text-gray-300">{l}</span>
+                </div>
+                <span className={`text-sm font-mono font-bold ${c}`}>{fmtCurr(v)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Revenue timeline */}
+      {analytics?.revenue_timeline && analytics.revenue_timeline.length > 0 && (
+        <div className="bg-white/[0.02] rounded-xl border border-white/[0.04]">
+          <div className="px-4 py-3 border-b border-white/[0.04]">
+            <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Revenue Timeline (30 days)</h4>
+          </div>
+          <div className="divide-y divide-white/[0.04] max-h-64 overflow-y-auto custom-scrollbar">
+            {analytics.revenue_timeline.slice(-15).reverse().map(r => (
+              <div key={r.date} className="flex items-center gap-4 px-4 py-2.5 hover:bg-white/[0.02] transition-colors">
+                <span className="text-xs text-gray-500 w-20 flex-shrink-0">{r.date}</span>
+                <div className="flex-1 h-4 bg-white/[0.04] rounded-full overflow-hidden flex">
+                  <div className="h-full bg-emerald-500/60 rounded-l-full" style={{ width: `${pct(r.deposits || 0, (r.deposits || 0) + (r.withdrawals || 0))}%` }} />
+                  <div className="h-full bg-red-500/60 rounded-r-full" style={{ width: `${pct(r.withdrawals || 0, (r.deposits || 0) + (r.withdrawals || 0))}%` }} />
+                </div>
+                <span className="text-xs font-mono text-emerald-400 w-20 text-right">+{fmtCurr(r.deposits || 0)}</span>
+                <span className="text-xs font-mono text-red-400 w-20 text-right">-{fmtCurr(r.withdrawals || 0)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>}
+
+    {/* ═══ TRANSACTIONS DETAIL ═══ */}
+    {metric === "transactions_detail" && <>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-white font-mono">{fmt(txs.length)}</p>
+          <p className="text-xs text-gray-500 mt-1">Total Transactions</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-emerald-400 font-mono">{fmt(txs.filter(t => t.status === "confirmed").length)}</p>
+          <p className="text-xs text-gray-500 mt-1">Confirmed</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-amber-400 font-mono">{fmt(txs.filter(t => t.status === "pending" || t.status === "pending_confirmation").length)}</p>
+          <p className="text-xs text-gray-500 mt-1">Pending</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-red-400 font-mono">{fmt(txs.filter(t => t.status === "failed").length)}</p>
+          <p className="text-xs text-gray-500 mt-1">Failed</p>
+        </div>
+      </div>
+
+      <div className="bg-white/[0.02] rounded-xl border border-white/[0.04]">
+        <div className="px-4 py-3 border-b border-white/[0.04]">
+          <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Recent Transactions</h4>
+        </div>
+        <div className="divide-y divide-white/[0.04] max-h-80 overflow-y-auto custom-scrollbar">
+          {txs.slice(0, 20).map(t => (
+            <div key={t.id} className="flex items-center justify-between px-4 py-3 hover:bg-white/[0.02] transition-colors">
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs ${
+                  t.type === "deposit" ? "bg-emerald-500/10 text-emerald-400" :
+                  t.type === "withdraw" ? "bg-red-500/10 text-red-400" :
+                  "bg-blue-500/10 text-blue-400"
+                }`}>
+                  {t.type === "deposit" ? "↓" : t.type === "withdraw" ? "↑" : "↔"}
+                </div>
+                <div>
+                  <p className="text-sm text-white capitalize font-medium">{t.type}</p>
+                  <p className="text-xs text-gray-500">
+                    {t.created_at ? new Date(t.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className={`text-sm font-mono font-semibold ${
+                  t.type === "deposit" ? "text-emerald-400" :
+                  t.type === "withdraw" ? "text-red-400" : "text-white"
+                }`}>
+                  {t.type === "deposit" ? "+" : t.type === "withdraw" ? "-" : ""}{fmtCurr(t.amount)}
+                </span>
+                <Badge label={t.status.replace("_", " ")} color={t.status === "confirmed" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : t.status === "failed" ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-amber-500/10 text-amber-400 border-amber-500/20"} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>}
+
+    {/* ═══ ANALYTICS: NEW USERS ═══ */}
+    {metric === "new_users_detail" && analytics && <>
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-white font-mono">{fmt(analytics.new_users_today)}</p>
+          <p className="text-xs text-gray-500 mt-1">New Today</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-emerald-400 font-mono">{analytics.active_users_today}</p>
+          <p className="text-xs text-gray-500 mt-1">Active Today</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className={`text-2xl font-bold font-mono ${analytics.growth_rate >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            {analytics.growth_rate >= 0 ? "+" : ""}{analytics.growth_rate}%
+          </p>
+          <p className="text-xs text-gray-500 mt-1">Growth Rate</p>
+        </div>
+      </div>
+      {analytics.user_growth.length > 0 && (
+        <div className="bg-white/[0.02] rounded-xl border border-white/[0.04]">
+          <div className="px-4 py-3 border-b border-white/[0.04]">
+            <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Daily Signups (30 days)</h4>
+          </div>
+          <div className="p-4 h-48">
+            <MiniChart data={analytics.user_growth} h={160} w={600} />
+          </div>
+          <div className="divide-y divide-white/[0.04] max-h-48 overflow-y-auto custom-scrollbar">
+            {analytics.user_growth.slice(-14).reverse().map(d => (
+              <div key={d.date} className="flex items-center justify-between px-4 py-2 hover:bg-white/[0.02] transition-colors">
+                <span className="text-xs text-gray-400">{d.date}</span>
+                <div className="flex items-center gap-3 flex-1 mx-4">
+                  <div className="flex-1 h-2 bg-white/[0.04] rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${pct(d.count, Math.max(...analytics.user_growth.map(x => x.count)))}%` }} />
+                  </div>
+                </div>
+                <span className="text-xs font-mono text-white">{d.count} new</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>}
+
+    {/* ═══ ANALYTICS: ACTIVE TODAY ═══ */}
+    {metric === "active_detail" && analytics && <>
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-emerald-400 font-mono">{analytics.active_users_today}</p>
+          <p className="text-xs text-gray-500 mt-1">Active Today</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-white font-mono">{fmt(users.length)}</p>
+          <p className="text-xs text-gray-500 mt-1">Total Registered</p>
+        </div>
+      </div>
+      <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04] mb-6">
+        <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-4">Engagement Rate</h4>
+        <div className="flex items-center gap-4">
+          <div className="relative w-24 h-24">
+            <svg className="w-24 h-24 -rotate-90" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="3" />
+              <circle cx="18" cy="18" r="15.5" fill="none" stroke="#10b981" strokeWidth="3" strokeDasharray={`${pct(analytics.active_users_today, users.length)} 100`} strokeLinecap="round" />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-lg font-bold text-white">{pct(analytics.active_users_today, users.length)}%</span>
+            </div>
+          </div>
+          <div className="text-sm text-gray-400">
+            <p><span className="text-emerald-400 font-semibold">{analytics.active_users_today}</span> of <span className="text-white font-semibold">{users.length}</span> users were active today</p>
+            <p className="text-xs text-gray-500 mt-1">Active users are those who logged in or performed an action in the last 24h</p>
+          </div>
+        </div>
+      </div>
+      <div className="bg-white/[0.02] rounded-xl border border-white/[0.04]">
+        <div className="px-4 py-3 border-b border-white/[0.04]">
+          <h4 className="text-xs font-semibold text-white uppercase tracking-wider">User Growth Trend</h4>
+        </div>
+        <div className="p-4 h-40">
+          {analytics.user_growth.length > 0 ? <MiniChart data={analytics.user_growth} h={128} w={600} /> : <div className="flex items-center justify-center h-full text-xs text-gray-600">No data</div>}
+        </div>
+      </div>
+    </>}
+
+    {/* ═══ ANALYTICS: GROWTH RATE ═══ */}
+    {metric === "growth_detail" && analytics && <>
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className={`text-2xl font-bold font-mono ${analytics.growth_rate >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+            {analytics.growth_rate >= 0 ? "+" : ""}{analytics.growth_rate}%
+          </p>
+          <p className="text-xs text-gray-500 mt-1">Growth Rate</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-white font-mono">{fmt(analytics.new_users_today)}</p>
+          <p className="text-xs text-gray-500 mt-1">New Today</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-white font-mono">{fmt(analytics.active_users_today)}</p>
+          <p className="text-xs text-gray-500 mt-1">Active Today</p>
+        </div>
+      </div>
+
+      {analytics.user_growth.length > 0 && (
+        <div className="bg-white/[0.02] rounded-xl border border-white/[0.04]">
+          <div className="px-4 py-3 border-b border-white/[0.04]">
+            <h4 className="text-xs font-semibold text-white uppercase tracking-wider">30-Day Growth Timeline</h4>
+          </div>
+          <div className="p-4 h-48">
+            <MiniChart data={analytics.user_growth} h={160} w={600} />
+          </div>
+          <div className="px-4 py-3 border-t border-white/[0.04] flex items-center gap-6 text-xs">
+            <span className="text-gray-500">Total this month: <strong className="text-white">{analytics.user_growth.reduce((s, d) => s + d.count, 0)}</strong></span>
+            <span className="text-gray-500">Avg/day: <strong className="text-white">{(analytics.user_growth.reduce((s, d) => s + d.count, 0) / analytics.user_growth.length).toFixed(1)}</strong></span>
+            <span className="text-gray-500">Best day: <strong className="text-white">{Math.max(...analytics.user_growth.map(d => d.count))}</strong></span>
+          </div>
+        </div>
+      )}
+    </>}
+
+    {/* ═══ ANALYTICS: TOTAL JOBS ═══ */}
+    {metric === "total_jobs_detail" && <>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-white font-mono">{fmt(stats.total_jobs)}</p>
+          <p className="text-xs text-gray-500 mt-1">Total Jobs</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-blue-400 font-mono">{fmt(stats.active_jobs)}</p>
+          <p className="text-xs text-gray-500 mt-1">Active</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-emerald-400 font-mono">{fmt(stats.completed_jobs)}</p>
+          <p className="text-xs text-gray-500 mt-1">Completed</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-red-400 font-mono">{fmt(stats.disputed_jobs)}</p>
+          <p className="text-xs text-gray-500 mt-1">Disputed</p>
+        </div>
+      </div>
+
+      <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04] mb-6">
+        <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-4">Completion Rate</h4>
+        <div className="flex items-center gap-4">
+          <div className="relative w-24 h-24">
+            <svg className="w-24 h-24 -rotate-90" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="15.5" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="3" />
+              <circle cx="18" cy="18" r="15.5" fill="none" stroke="#10b981" strokeWidth="3" strokeDasharray={`${pct(stats.completed_jobs, stats.total_jobs)} 100`} strokeLinecap="round" />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-lg font-bold text-white">{pct(stats.completed_jobs, stats.total_jobs)}%</span>
+            </div>
+          </div>
+          <div className="text-sm text-gray-400">
+            <p><span className="text-emerald-400 font-semibold">{fmt(stats.completed_jobs)}</span> of <span className="text-white font-semibold">{fmt(stats.total_jobs)}</span> jobs completed</p>
+            <p className="text-xs text-gray-500 mt-1">Active: {fmt(stats.active_jobs)} · Disputed: {fmt(stats.disputed_jobs)}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white/[0.02] rounded-xl border border-white/[0.04]">
+        <div className="px-4 py-3 border-b border-white/[0.04]">
+          <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Job Status Distribution</h4>
+        </div>
+        <div className="divide-y divide-white/[0.04]">
+          {[
+            { l: "Open", v: jobs.filter(j => j.status === "open").length, c: "text-amber-400" },
+            { l: "In Progress", v: jobs.filter(j => j.status === "in_progress").length, c: "text-blue-400" },
+            { l: "Checked In", v: jobs.filter(j => j.status === "checked_in").length, c: "text-sky-400" },
+            { l: "Review Pending", v: jobs.filter(j => j.status === "review_pending").length, c: "text-violet-400" },
+            { l: "Completed", v: jobs.filter(j => j.status === "completed").length, c: "text-emerald-400" },
+            { l: "Disputed", v: jobs.filter(j => j.status === "disputed").length, c: "text-red-400" },
+            { l: "Cancelled", v: jobs.filter(j => j.status === "cancelled").length, c: "text-gray-400" },
+          ].filter(({ v }) => v > 0).map(({ l, v, c }) => (
+            <div key={l} className="flex items-center justify-between px-4 py-2.5 hover:bg-white/[0.02] transition-colors">
+              <span className="text-sm text-gray-300">{l}</span>
+              <div className="flex items-center gap-3">
+                <div className="w-24 h-2 bg-white/[0.04] rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full ${c.replace("text-", "bg-").replace("-400", "-500")}`} style={{ width: `${pct(v, jobs.length)}%` }} />
+                </div>
+                <span className={`text-sm font-mono ${c} w-8 text-right`}>{v}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>}
+
+    {/* ═══ TOP WORKERS DETAIL ═══ */}
+    {metric === "top_workers_detail" && analytics && <>
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-white font-mono">{analytics.top_workers.length}</p>
+          <p className="text-xs text-gray-500 mt-1">Workers with Earnings</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-emerald-400 font-mono">{fmtCurr(analytics.top_workers.reduce((s, w) => s + w.earnings, 0))}</p>
+          <p className="text-xs text-gray-500 mt-1">Combined Earnings</p>
+        </div>
+        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-2xl font-bold text-amber-400 font-mono">{analytics.top_workers.reduce((s, w) => s + w.jobs, 0)}</p>
+          <p className="text-xs text-gray-500 mt-1">Total Jobs Completed</p>
+        </div>
+      </div>
+      {analytics.top_workers.length > 0 ? (
+        <div className="bg-white/[0.02] rounded-xl border border-white/[0.04]">
+          <div className="px-4 py-3 border-b border-white/[0.04]">
+            <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Leaderboard</h4>
+          </div>
+          <div className="divide-y divide-white/[0.04]">
+            {analytics.top_workers.map((w, i) => (
+              <div key={w.id} className="flex items-center gap-4 px-4 py-3.5 hover:bg-white/[0.02] transition-colors">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold ${i === 0 ? "bg-amber-500/20 text-amber-400" : i === 1 ? "bg-gray-300/20 text-gray-300" : i === 2 ? "bg-amber-700/20 text-amber-600" : "bg-white/[0.04] text-gray-500"}`}>
+                  #{i + 1}
+                </div>
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                  {w.name.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white font-medium truncate">{w.name}</p>
+                  <p className="text-xs text-gray-500">{w.jobs} jobs completed</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1 text-xs">
+                    <svg className="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 24 24"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+                    <span className="text-white font-medium">{w.rating.toFixed(1)}</span>
+                  </div>
+                  <span className="text-sm font-bold text-emerald-400 font-mono">{fmtCurr(w.earnings)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white/[0.02] rounded-xl border border-white/[0.04] p-12 text-center">
+          <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gray-500/10 flex items-center justify-center">
+            <I.TrendingUp />
+          </div>
+          <p className="text-sm text-gray-400">No workers with earnings yet</p>
+          <p className="text-xs text-gray-600 mt-1">Complete jobs will appear here</p>
+        </div>
+      )}
+    </>}
+
+    {/* ═══ RATING DISTRIBUTION DETAIL ═══ */}
+    {metric === "rating_distribution_detail" && analytics && <>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {[5, 4, 3, 2, 1].map(star => (
+          <div key={star} className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+            <div className="flex items-center gap-1 mb-1">
+              {Array.from({ length: star }, (_, i) => (
+                <svg key={i} className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+              ))}
+              {Array.from({ length: 5 - star }, (_, i) => (
+                <svg key={i} className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+              ))}
+            </div>
+            <p className="text-2xl font-bold text-white font-mono">{analytics.rating_distribution[String(star)] || 0}</p>
+            <p className="text-xs text-gray-500 mt-1">ratings</p>
+          </div>
+        ))}
+      </div>
+      <div className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.04]">
+        <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-4">Distribution Bars</h4>
+        {[5, 4, 3, 2, 1].map(star => {
+          const total = Object.values(analytics.rating_distribution).reduce((a, b) => a + b, 0);
+          const count = analytics.rating_distribution[String(star)] || 0;
+          return (
+            <div key={star} className="flex items-center gap-3 mb-3 last:mb-0">
+              <span className="text-xs text-gray-400 w-4 text-right">{star}</span>
+              <svg className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+              <div className="flex-1 h-4 bg-white/[0.04] rounded-full overflow-hidden">
+                <div className="h-full bg-amber-500 rounded-full transition-all duration-700" style={{ width: `${pct(count, total)}%` }} />
+              </div>
+              <span className="text-xs font-mono text-white w-8 text-right">{count}</span>
+              <span className="text-xs text-gray-500 w-10 text-right">{pct(count, total)}%</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="bg-white/[0.02] rounded-xl border border-white/[0.04] mt-4 p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-500">Average Rating</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map(s => {
+                const totalR = Object.values(analytics.rating_distribution).reduce((a, b) => a + b, 0);
+                const avg = totalR > 0
+                  ? Object.entries(analytics.rating_distribution).reduce((sum, [k, v]) => sum + Number(k) * v, 0) / totalR
+                  : 0;
+                return <svg key={s} className={`w-5 h-5 ${s <= Math.round(avg) ? "text-amber-400" : "text-gray-600"}`} fill="currentColor" viewBox="0 0 24 24"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>;
+              })}
+            </div>
+            <span className="text-lg font-bold text-white font-mono">
+              {(() => {
+                const totalR = Object.values(analytics.rating_distribution).reduce((a, b) => a + b, 0);
+                return totalR > 0 ? (Object.entries(analytics.rating_distribution).reduce((sum, [k, v]) => sum + Number(k) * v, 0) / totalR).toFixed(2) : "—";
+              })()}
+            </span>
+          </div>
+        </div>
+      </div>
+    </>}
+  </ModalShell>;
+}
+
 export default function AdminPage() {
   const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
@@ -384,6 +1145,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [metricModal, setMetricModal] = useState<MetricType | null>(null);
   const refreshRef = useRef(false);
 
   const [stats, setStats] = useState<Stats | null>(null);
@@ -451,6 +1213,7 @@ export default function AdminPage() {
   return <div className="min-h-screen bg-[#0a0a0f] text-white">
     {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
     {selectedUserId && <UserModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} onToast={toastFn} />}
+    {metricModal && stats && <MetricModal metric={metricModal} stats={stats} analytics={analytics} users={users} jobs={jobs} txs={txs} onClose={() => setMetricModal(null)} />}
 
     {/* MOBILE TOGGLE */}
     <button onClick={() => setSidebarOpen(!sidebarOpen)} className="fixed top-4 left-4 z-[9997] lg:hidden p-2 rounded-xl bg-[#111118] border border-white/[0.06]"><I.Menu /></button>
@@ -488,6 +1251,14 @@ export default function AdminPage() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-xs text-emerald-400"><span className="flex h-2 w-2 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" /><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" /></span>Live · 30s</div>
           <button onClick={loadData} className="p-2 rounded-xl text-gray-500 hover:text-white hover:bg-white/[0.04] transition-all"><I.Refresh /></button>
+          <NotificationBell />
+          <div className="h-5 w-px bg-white/[0.06]" />
+          <button onClick={logout} className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs text-gray-500 hover:text-gray-300 hover:bg-white/[0.04] transition-all">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+            </svg>
+            Cerrar Sesión
+          </button>
         </div>
       </header>
 
@@ -497,36 +1268,60 @@ export default function AdminPage() {
         {section === "overview" && stats && <>
           <div className="mb-6"><h2 className="text-xl font-bold text-white">Platform Overview</h2><p className="text-sm text-gray-500 mt-1">Real-time metrics · Auto-refreshes every 30 seconds</p></div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <KpiCard label="Total Users" value={stats.total_users} color="bg-blue-500/10 text-blue-400" icon={<I.Users />} trend={`${((stats.total_workers / Math.max(stats.total_users, 1)) * 100).toFixed(0)}% workers`} />
-            <KpiCard label="Active Jobs" value={stats.active_jobs} color="bg-emerald-500/10 text-emerald-400" icon={<I.Briefcase />} />
-            <KpiCard label="Volume (USDT)" value={stats.total_volume_usdt} color="bg-violet-500/10 text-violet-400" icon={<I.Dollar />} fmt="curr" />
-            <KpiCard label="Transactions" value={stats.total_transactions} color="bg-amber-500/10 text-amber-400" icon={<I.Wallet />} />
+            <KpiCard label="Total Users" value={stats.total_users} color="bg-blue-500/10 text-blue-400" icon={<I.Users />} trend={`${((stats.total_workers / Math.max(stats.total_users, 1)) * 100).toFixed(0)}% workers`} onClick={() => setMetricModal("users_detail")} />
+            <KpiCard label="Active Jobs" value={stats.active_jobs} color="bg-emerald-500/10 text-emerald-400" icon={<I.Briefcase />} onClick={() => setMetricModal("jobs_detail")} />
+            <KpiCard label="Volume (USDT)" value={stats.total_volume_usdt} color="bg-violet-500/10 text-violet-400" icon={<I.Dollar />} fmt="curr" onClick={() => setMetricModal("volume_detail")} />
+            <KpiCard label="Transactions" value={stats.total_transactions} color="bg-amber-500/10 text-amber-400" icon={<I.Wallet />} onClick={() => setMetricModal("transactions_detail")} />
           </div>
-          <div className="grid lg:grid-cols-3 gap-4 mb-6">
-            <div className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <button onClick={() => setMetricModal("jobs_detail")} className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5 text-left w-full hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 active:scale-[0.99] transition-all cursor-pointer">
               <h3 className="text-sm font-semibold text-white mb-4">Job Distribution</h3>
               <div className="space-y-3">
-                {[
-                  { l: "Active", v: stats.active_jobs, m: stats.total_jobs, c: "bg-blue-500" },
-                  { l: "Completed", v: stats.completed_jobs, m: stats.total_jobs, c: "bg-emerald-500" },
-                  { l: "Disputed", v: stats.disputed_jobs, m: stats.total_jobs, c: "bg-red-500" },
-                ].map(({ l, v, m, c }) => (
+                {(() => {
+                  const cancelled = jobs.filter(j => j.status === "cancelled").length;
+                  return [
+                    { l: "Active", v: stats.active_jobs, m: stats.total_jobs, c: "bg-blue-500" },
+                    { l: "Completed", v: stats.completed_jobs, m: stats.total_jobs, c: "bg-emerald-500" },
+                    { l: "Cancelled", v: cancelled, m: stats.total_jobs, c: "bg-gray-500" },
+                    { l: "Disputed", v: stats.disputed_jobs, m: stats.total_jobs, c: "bg-red-500" },
+                  ];
+                })().map(({ l, v, m, c }) => (
                   <div key={l} className="flex items-center gap-3"><span className="text-xs text-gray-400 w-20">{l}</span><div className="flex-1 h-2 bg-white/[0.04] rounded-full overflow-hidden"><div className={`h-full rounded-full ${c}`} style={{ width: `${m > 0 ? (v / m) * 100 : 0}%` }} /></div><span className="text-xs font-mono text-white w-8 text-right">{v}</span></div>
                 ))}
               </div>
-            </div>
-            <div className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5">
+            </button>
+            <button onClick={() => setMetricModal("new_users_detail")} className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5 text-left w-full hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 active:scale-[0.99] transition-all cursor-pointer">
               <h3 className="text-sm font-semibold text-white mb-4">User Growth (30d)</h3>
               {analytics?.user_growth ? <MiniChart data={analytics.user_growth} h={60} /> : <div className="h-[60px] flex items-center justify-center"><span className="text-xs text-gray-600">No data</span></div>}
               <div className="flex items-center justify-between mt-3 text-xs">
                 <span className="text-gray-500">New today: <strong className="text-white">{analytics?.new_users_today ?? 0}</strong></span>
                 <span className={`${(analytics?.growth_rate ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>{analytics?.growth_rate ?? 0}% growth</span>
               </div>
-            </div>
-            <div className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5">
+            </button>
+            <button onClick={() => setMetricModal("rating_distribution_detail")} className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5 text-left w-full hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 active:scale-[0.99] transition-all cursor-pointer">
               <h3 className="text-sm font-semibold text-white mb-4">Rating Distribution</h3>
               {analytics?.rating_distribution ? <BarChart data={analytics.rating_distribution} /> : <div className="h-[100px] flex items-center justify-center"><span className="text-xs text-gray-600">No data</span></div>}
-            </div>
+            </button>
+            <button onClick={() => setMetricModal("jobs_detail")} className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5 text-left w-full hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 active:scale-[0.99] transition-all cursor-pointer">
+              <h3 className="text-sm font-semibold text-white mb-4">Top Cities</h3>
+              <div className="space-y-2">
+                {(() => {
+                  const cities: Record<string, number> = {};
+                  jobs.forEach(j => { const loc = j.location || "Unknown"; cities[loc] = (cities[loc] || 0) + 1; });
+                  const sorted = Object.entries(cities).sort(([, a], [, b]) => b - a).slice(0, 5);
+                  const maxV = sorted.length > 0 ? sorted[0][1] : 1;
+                  return sorted.map(([city, count]) => (
+                    <div key={city} className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 w-20 truncate">{city}</span>
+                      <div className="flex-1 h-2 bg-white/[0.04] rounded-full overflow-hidden">
+                        <div className="h-full bg-violet-500 rounded-full" style={{ width: `${(count / maxV) * 100}%` }} />
+                      </div>
+                      <span className="text-xs font-mono text-white w-6 text-right">{count}</span>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </button>
           </div>
           <div className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4"><h3 className="text-sm font-semibold text-white">Recent Users</h3><button onClick={() => setSection("users")} className="text-xs text-blue-400 hover:text-blue-300">View all</button></div>
@@ -547,20 +1342,20 @@ export default function AdminPage() {
           <div className="mb-6"><h2 className="text-xl font-bold text-white">Advanced Analytics</h2><p className="text-sm text-gray-500 mt-1">Growth metrics, trends, and platform performance</p></div>
           
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <KpiCard label="New Users Today" value={analytics.new_users_today} color="bg-blue-500/10 text-blue-400" icon={<I.Users />} trend={`${analytics.growth_rate}%`} />
-            <KpiCard label="Active Today" value={analytics.active_users_today} color="bg-emerald-500/10 text-emerald-400" icon={<I.TrendingUp />} />
-            <KpiCard label="Growth Rate" value={`${analytics.growth_rate}%`} color="bg-violet-500/10 text-violet-400" icon={<I.Chart />} />
-            <KpiCard label="Total Jobs" value={stats?.total_jobs ?? 0} color="bg-amber-500/10 text-amber-400" icon={<I.Briefcase />} />
+            <KpiCard label="New Users Today" value={analytics.new_users_today} color="bg-blue-500/10 text-blue-400" icon={<I.Users />} trend={`${analytics.growth_rate}%`} onClick={() => setMetricModal("new_users_detail")} />
+            <KpiCard label="Active Today" value={analytics.active_users_today} color="bg-emerald-500/10 text-emerald-400" icon={<I.TrendingUp />} onClick={() => setMetricModal("active_detail")} />
+            <KpiCard label="Growth Rate" value={`${analytics.growth_rate}%`} color="bg-violet-500/10 text-violet-400" icon={<I.Chart />} onClick={() => setMetricModal("growth_detail")} />
+            <KpiCard label="Total Jobs" value={stats?.total_jobs ?? 0} color="bg-amber-500/10 text-amber-400" icon={<I.Briefcase />} onClick={() => setMetricModal("total_jobs_detail")} />
           </div>
 
           <div className="grid lg:grid-cols-2 gap-4 mb-6">
-            <div className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5">
+            <button onClick={() => setMetricModal("new_users_detail")} className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5 text-left w-full hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 active:scale-[0.99] transition-all cursor-pointer">
               <div className="flex items-center justify-between mb-4"><h3 className="text-sm font-semibold text-white">User Growth (30 days)</h3><span className="text-xs text-gray-500">Daily signups</span></div>
               <div className="h-48 flex items-end">
                 {analytics.user_growth.length > 0 ? <MiniChart data={analytics.user_growth} h={160} w={600} /> : <div className="w-full text-center text-xs text-gray-600">No data yet</div>}
               </div>
-            </div>
-            <div className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5">
+            </button>
+            <button onClick={() => setMetricModal("volume_detail")} className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5 text-left w-full hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 active:scale-[0.99] transition-all cursor-pointer">
               <div className="flex items-center justify-between mb-4"><h3 className="text-sm font-semibold text-white">Revenue Timeline (30 days)</h3><span className="text-xs text-gray-500">Deposits vs withdrawals</span></div>
               {analytics.revenue_timeline.length > 0 ? (
                 <div className="space-y-2">
@@ -577,11 +1372,11 @@ export default function AdminPage() {
                   ))}
                 </div>
               ) : <div className="h-24 flex items-center justify-center text-xs text-gray-600">No transactions yet</div>}
-            </div>
+            </button>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-4">
-            <div className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5">
+            <button onClick={() => setMetricModal("top_workers_detail")} className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5 text-left w-full hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 active:scale-[0.99] transition-all cursor-pointer">
               <h3 className="text-sm font-semibold text-white mb-4">Top Workers by Earnings</h3>
               {analytics.top_workers.length > 0 ? (
                 <div className="space-y-2">
@@ -595,13 +1390,13 @@ export default function AdminPage() {
                   ))}
                 </div>
               ) : <div className="h-24 flex items-center justify-center text-xs text-gray-600">No workers with earnings yet</div>}
-            </div>
-            <div className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5">
+            </button>
+            <button onClick={() => setMetricModal("rating_distribution_detail")} className="bg-[#111118] border border-white/[0.06] rounded-2xl p-5 text-left w-full hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5 active:scale-[0.99] transition-all cursor-pointer">
               <h3 className="text-sm font-semibold text-white mb-4">Rating Distribution</h3>
               {analytics.rating_distribution ? (
                 <BarChart data={analytics.rating_distribution} color="#f59e0b" h={160} />
               ) : <div className="h-24 flex items-center justify-center text-xs text-gray-600">No ratings yet</div>}
-            </div>
+            </button>
           </div>
         </>}
 

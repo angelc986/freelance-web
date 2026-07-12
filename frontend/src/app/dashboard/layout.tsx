@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import Logo from "@/components/Logo";
+import NotificationBell from "@/components/NotificationBell";
 import Link from "next/link";
 
 // ─── SVG ICONS ───
@@ -212,10 +213,11 @@ export default function DashboardLayout({
             </Link>
           </div>
           <div className="hidden md:block" />
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <span className="text-sm text-gray hidden sm:inline">
               {user.full_name}
             </span>
+            <NotificationBell />
             <Link
               href="/dashboard/settings"
               className="w-8 h-8 rounded-full bg-gray-100 text-gray hover:bg-gray-200 transition-colors flex items-center justify-center"
@@ -229,10 +231,11 @@ export default function DashboardLayout({
                 localStorage.removeItem("refresh_token");
                 window.location.href = "/";
               }}
-              className="w-8 h-8 rounded-full bg-gray-100 text-gray hover:bg-gray-200 transition-colors flex items-center justify-center"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all"
               title="Cerrar sesión"
             >
-              <IconLogout className="w-4 h-4" />
+              <IconLogout className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Salir</span>
             </button>
           </div>
         </header>

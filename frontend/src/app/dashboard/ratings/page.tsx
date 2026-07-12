@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserRatings, type UserRatingSummary } from "@/lib/api";
+import EmptyState from "@/components/EmptyState";
 
 export default function RatingsPage() {
   const { user } = useAuth();
@@ -26,6 +27,7 @@ export default function RatingsPage() {
   const pct = (n: number) => (total ? Math.round((n / total) * 100) : 0);
 
   return (
+    <PullToRefresh onRefresh={loadRatings}>
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-2 mb-6">
@@ -45,21 +47,15 @@ export default function RatingsPage() {
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : total === 0 ? (
-        <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
-          <p className="text-5xl mb-4">⭐</p>
-          <h2 className="text-lg font-bold text-dark mb-2">Sin calificaciones aún</h2>
-          <p className="text-sm text-gray mb-6">
-            {user.role === "worker"
-              ? "Completa trabajos para recibir reseñas de los contratistas."
-              : "Publica y completa trabajos para recibir reseñas."}
-          </p>
-          <Link
-            href={user.role === "worker" ? "/jobs" : "/jobs/new"}
-            className="inline-block px-5 py-2.5 bg-primary text-white font-medium rounded-xl hover:bg-primary-dark transition-colors"
-          >
-            {user.role === "worker" ? "Buscar trabajos" : "Publicar trabajo"}
-          </Link>
-        </div>
+        <EmptyState
+          title="Sin calificaciones aún"
+          description={user.role === "worker"
+            ? "Completa trabajos para recibir reseñas de los contratistas."
+            : "Publica y completa trabajos para recibir reseñas."}
+          variant="ratings"
+          actionLabel={user.role === "worker" ? "Buscar trabajos" : "Publicar trabajo"}
+          actionHref={user.role === "worker" ? "/jobs" : "/jobs/new"}
+        />
       ) : (
         <div className="grid lg:grid-cols-5 gap-6">
           {/* LEFT: Average + breakdown */}
@@ -152,5 +148,6 @@ export default function RatingsPage() {
         </div>
       )}
     </div>
+    </PullToRefresh>
   );
 }

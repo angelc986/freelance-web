@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description:
     "TurnoGO conecta trabajadores con negocios locales. Encuentra trabajo por horas o contrata ayuda confiable cerca de ti. Pagos seguros en USDT.",
   manifest: "/manifest.json",
+  keywords: ["trabajo", "empleo", "turnos", "Venezuela", "USDT", "freelance", "trabajo por horas", "contratar ayuda"],
+  authors: [{ name: "TurnoGO" }],
   appleWebApp: {
     capable: true,
     title: "TurnoGO",
@@ -27,7 +29,15 @@ export const metadata: Metadata = {
     description:
       "Conectamos trabajadores con negocios en Venezuela. Rápido, seguro y sin papeleo.",
     type: "website",
+    locale: "es_VE",
+    siteName: "TurnoGO",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "TurnoGO — Trabajo local, sin complicaciones",
+    description: "Conectamos trabajadores con negocios en Venezuela. Rápido, seguro y sin papeleo.",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
