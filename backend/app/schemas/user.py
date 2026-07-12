@@ -13,6 +13,15 @@ class UserLogin(BaseModel):
     email: str
     password: str
 
+class UpdateProfileRequest(BaseModel):
+    full_name: str | None = None
+    phone: str | None = None
+
+
+class UpdateWalletRequest(BaseModel):
+    wallet_address: str
+
+
 class UserResponse(BaseModel):
     id: int
     email: str

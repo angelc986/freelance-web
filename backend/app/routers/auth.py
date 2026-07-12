@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
+from app.limiter import limiter
 from app.models.user import User
-from app.schemas.user import UserCreate, UserLogin, UserResponse
+from app.schemas.user import UserCreate, UserLogin, UserResponse, UpdateProfileRequest, UpdateWalletRequest
 from passlib.context import CryptContext
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
@@ -42,7 +43,8 @@ def create_refresh_token(data: dict):
 
 
 @router.post("/register", response_model=UserResponse)
-def register(user: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email ya registrado")
@@ -50,6 +52,10 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.cedula == user.cedula).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Cédula ya registrada")
+
+    db_user = db.query(User).filter(User.phone == user.phone).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Teléfono ya registrado")
 
     hashed_password = pwd_context.hash(user.password)
     db_user = User(
@@ -67,7 +73,8 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login")
-def login(user: UserLogin, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login(request: Request, user: UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.email == user.email).first()
     if not db_user:
         raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
@@ -145,3 +152,70 @@ def refresh(refresh_token: str, db: Session = Depends(get_db)):
         "refresh_token": new_refresh_token,
         "token_type": "bearer",
     }
+
+
+@router.patch("/me", response_model=UserResponse)
+def update_profile(
+    request: UpdateProfileRequest,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    """
+    👤 EDITAR PERFIL
+    
+    Actualiza tu nombre y/o teléfono.
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Token inválido")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    if request.full_name:
+        user.full_name = request.full_name
+    if request.phone:
+        # Check if phone is taken by another user
+        existing = db.query(User).filter(User.phone == request.phone, User.id != user.id).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Teléfono ya registrado por otro usuario")
+        user.phone = request.phone
+
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.patch("/me/wallet", response_model=UserResponse)
+def update_wallet(
+    request: UpdateWalletRequest,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    """
+    💼 REGISTRAR WALLET
+    
+    Guarda tu dirección de wallet en tu perfil.
+    Solo podrás retirar USDT a esta dirección.
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Token inválido")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    user.wallet_address = request.wallet_address
+    db.commit()
+    db.refresh(user)
+    return user

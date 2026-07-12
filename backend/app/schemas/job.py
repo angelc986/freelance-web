@@ -25,6 +25,11 @@ class JobResponse(BaseModel):
     worker_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
+    dispute_reason: Optional[str] = None
+    review_requested_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+
+class DisputeRequest(BaseModel):
+    reason: str

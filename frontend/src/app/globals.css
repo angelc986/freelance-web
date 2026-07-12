@@ -1,0 +1,167 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-primary: #2563EB;
+  --color-primary-dark: #1D4ED8;
+  --color-primary-darker: #1E40AF;
+  --color-primary-light: #DBEAFE;
+  --color-primary-lighter: #EFF6FF;
+  --color-secondary: #059669;
+  --color-secondary-dark: #047857;
+  --color-secondary-light: #D1FAE5;
+  --color-dark: #0F172A;
+  --color-gray: #64748B;
+  --color-gray-light: #CBD5E1;
+  --color-light: #F8FAFC;
+  --color-accent: #F59E0B;
+  --color-accent-light: #FEF3C7;
+
+  --font-sans: var(--font-inter);
+  --font-mono: ui-monospace, monospace;
+}
+
+/* ========== BASE ========== */
+body {
+  background: #ffffff;
+  color: var(--color-dark);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ========== FLOATING PARTICLES ========== */
+@keyframes float-particle {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
+  25% { transform: translateY(-30px) translateX(15px); opacity: 0.5; }
+  50% { transform: translateY(-15px) translateX(-10px); opacity: 0.4; }
+  75% { transform: translateY(-40px) translateX(5px); opacity: 0.6; }
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: #2563EB;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* ========== GRADIENT ANIMATION ========== */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+/* ========== WAVE SEPARATOR ========== */
+.wave-separator {
+  position: relative;
+  width: 100%;
+  height: 80px;
+  overflow: hidden;
+}
+
+.wave-separator svg {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ========== FLOATING CARD (for glassmorphism) ========== */
+@keyframes float-card {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: float-card 4s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-card 4s ease-in-out 1.5s infinite;
+}
+
+/* ========== GRID MOVING BACKGROUND ========== */
+@keyframes grid-shift {
+  0% { transform: translateX(0) translateY(0); }
+  100% { transform: translateX(30px) translateY(30px); }
+}
+
+.animate-grid {
+  animation: grid-shift 20s linear infinite;
+}
+
+/* ========== GLOW PULSE ========== */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.1); }
+  50% { box-shadow: 0 0 40px rgba(37, 99, 235, 0.2); }
+}
+
+.glow-hover:hover {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* ========== SCROLL REVEAL ========== */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out forwards;
+}
+
+.animate-delay-100 { animation-delay: 0.1s; }
+.animate-delay-200 { animation-delay: 0.2s; }
+.animate-delay-300 { animation-delay: 0.3s; }
+.animate-delay-400 { animation-delay: 0.4s; }
+.animate-delay-500 { animation-delay: 0.5s; }
+
+/* ========== GLASS CARD ========== */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(37, 99, 235, 0.1);
+}
+
+/* ========== SHINE EFFECT ON HOVER ========== */
+@keyframes shine {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.shine-hover {
+  background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.08), transparent);
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+}
+
+.shine-hover:hover {
+  animation: shine 1.5s ease-in-out;
+}
+
+/* ========== BORDER GRADIENT ========== */
+.border-gradient {
+  border: 1px solid transparent;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-image:
+    linear-gradient(white, white),
+    linear-gradient(135deg, #2563EB, #059669, #2563EB);
+}
