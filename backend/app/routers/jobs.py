@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import Request,  APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timezone, timedelta
@@ -9,6 +9,7 @@ from app.schemas.job import JobCreate, JobResponse, DisputeRequest
 from app.schemas.application import ApplicationCreate, ApplicationResponse
 from app.services.auth import get_current_user
 from app.models.user import User
+from app.limiter import limiter
 
 router = APIRouter(prefix="/api/v1/jobs", tags=["jobs"])
 
@@ -25,7 +26,8 @@ def get_db():
 
 
 @router.post("/", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
-def create_job(job: JobCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+@limiter.limit("10/minute")
+def create_job(request: Request, job: JobCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Crear un trabajo (solo contractors)"""
     if current_user.role not in ("contractor", "both"):
         raise HTTPException(status_code=403, detail="Solo contractors pueden crear trabajos")
@@ -118,7 +120,8 @@ def get_job(job_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{job_id}/apply", response_model=ApplicationResponse, status_code=status.HTTP_201_CREATED)
-def apply_to_job(job_id: int, application: ApplicationCreate, db: Session = Depends(get_db),
+@limiter.limit("10/minute")
+def apply_to_job(request: Request, job_id: int, application: ApplicationCreate, db: Session = Depends(get_db),
                  current_user: User = Depends(get_current_user)):
     """Un worker aplica a un trabajo"""
     job = db.query(Job).filter(Job.id == job_id).first()
@@ -167,7 +170,8 @@ def list_applications(job_id: int, db: Session = Depends(get_db),
 
 
 @router.post("/{job_id}/accept/{application_id}", response_model=JobResponse)
-def accept_application(job_id: int, application_id: int, db: Session = Depends(get_db),
+@limiter.limit("20/minute")
+def accept_application(request: Request, job_id: int, application_id: int, db: Session = Depends(get_db),
                        current_user: User = Depends(get_current_user)):
     """Aceptar un worker (solo el contractor dueño)"""
     job = db.query(Job).filter(Job.id == job_id).first()
@@ -207,7 +211,8 @@ def accept_application(job_id: int, application_id: int, db: Session = Depends(g
 
 
 @router.post("/{job_id}/complete-request", response_model=JobResponse)
-def request_complete(job_id: int, db: Session = Depends(get_db),
+@limiter.limit("10/minute")
+def request_complete(request: Request, job_id: int, db: Session = Depends(get_db),
                      current_user: User = Depends(get_current_user)):
     """El worker solicita marcar el trabajo como terminado"""
     job = db.query(Job).filter(Job.id == job_id).first()
@@ -226,7 +231,8 @@ def request_complete(job_id: int, db: Session = Depends(get_db),
 
 
 @router.post("/{job_id}/approve", response_model=JobResponse)
-def approve_job(job_id: int, db: Session = Depends(get_db),
+@limiter.limit("10/minute")
+def approve_job(request: Request, job_id: int, db: Session = Depends(get_db),
                 current_user: User = Depends(get_current_user)):
     """El contractor aprueba que el trabajo está bien hecho"""
     job = db.query(Job).filter(Job.id == job_id).first()
@@ -245,7 +251,8 @@ def approve_job(job_id: int, db: Session = Depends(get_db),
 
 
 @router.post("/{job_id}/dispute", response_model=JobResponse)
-def dispute_job(job_id: int, dispute: DisputeRequest, db: Session = Depends(get_db),
+@limiter.limit("10/minute")
+def dispute_job(request: Request, job_id: int, dispute: DisputeRequest, db: Session = Depends(get_db),
                 current_user: User = Depends(get_current_user)):
     """El contractor disputa el trabajo"""
     job = db.query(Job).filter(Job.id == job_id).first()
@@ -265,7 +272,8 @@ def dispute_job(job_id: int, dispute: DisputeRequest, db: Session = Depends(get_
 
 
 @router.post("/{job_id}/cancel", response_model=JobResponse)
-def cancel_job(job_id: int, db: Session = Depends(get_db),
+@limiter.limit("10/minute")
+def cancel_job(request: Request, job_id: int, db: Session = Depends(get_db),
                current_user: User = Depends(get_current_user)):
     """El contratista cancela el trabajo"""
     job = db.query(Job).filter(Job.id == job_id).first()
@@ -283,7 +291,8 @@ def cancel_job(job_id: int, db: Session = Depends(get_db),
 
 
 @router.post("/{job_id}/check-in", response_model=JobResponse)
-def check_in(job_id: int, db: Session = Depends(get_db),
+@limiter.limit("10/minute")
+def check_in(request: Request, job_id: int, db: Session = Depends(get_db),
              current_user: User = Depends(get_current_user)):
     """El worker confirma que llegó al lugar del trabajo"""
     job = db.query(Job).filter(Job.id == job_id).first()
@@ -305,7 +314,8 @@ def check_in(job_id: int, db: Session = Depends(get_db),
 # ──────────────────────────────────────────────
 
 @router.post("/process-timeouts")
-def process_timeouts(db: Session = Depends(get_db)):
+@limiter.limit("2/minute")
+def process_timeouts(request: Request, db: Session = Depends(get_db)):
     """
     ⏰ TIMEOUT 48h
     

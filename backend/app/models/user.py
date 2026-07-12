@@ -12,6 +12,7 @@ class User(Base):
     cedula = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
     role = Column(String, default="worker")  # worker o contractor
+    is_admin = Column(Boolean, default=False)
     wallet_address = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     balance = Column(Float, default=0.0)  # Saldo en USDT

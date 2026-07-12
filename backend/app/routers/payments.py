@@ -2,7 +2,7 @@ import secrets
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
@@ -27,6 +27,7 @@ from app.services.blockchain import (
     scan_deposits as blockchain_scan_deposits,
 )
 from app.config import get_settings
+from app.limiter import limiter
 
 router = APIRouter(prefix="/api/v1/payments", tags=["payments"])
 
@@ -111,7 +112,8 @@ def _try_blockchain_transfer(to_address: str, amount: float) -> tuple[Optional[s
 
 
 @router.get("/health")
-def payment_health():
+@limiter.exempt
+def payment_health(request: Request):
     """
     🔗 Verifica que el servicio de pagos está conectado a Polygon.
     """
@@ -127,8 +129,9 @@ def payment_health():
 
 
 @router.post("/deposit", response_model=TransactionResponse, status_code=201)
-def deposit(
-    request: DepositRequest,
+@limiter.limit("5/minute")
+def deposit(request: Request, 
+    deposit_data: DepositRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -145,8 +148,8 @@ def deposit(
 
     # Verificar en blockchain
     verification = verify_transaction(
-        tx_hash=request.tx_hash,
-        expected_amount=request.amount,
+        tx_hash=deposit_data.tx_hash,
+        expected_amount=deposit_data.amount,
         expected_to=settings.SYSTEM_WALLET_ADDRESS,
     )
 
@@ -159,9 +162,9 @@ def deposit(
     transaction = Transaction(
         user_id=current_user.id,
         type="deposit",
-        amount=request.amount,
-        network=request.network,
-        tx_hash=request.tx_hash,
+        amount=deposit_data.amount,
+        network=deposit_data.network,
+        tx_hash=deposit_data.tx_hash,
         from_address=verification["from_address"],
         to_address=settings.SYSTEM_WALLET_ADDRESS,
         confirmations=verification["confirmations"],
@@ -171,7 +174,7 @@ def deposit(
 
     db.add(transaction)
     user = db.query(User).filter(User.id == current_user.id).first()
-    user.balance += request.amount
+    user.balance += deposit_data.amount
 
     db.commit()
     db.refresh(transaction)
@@ -182,7 +185,8 @@ def deposit(
 
 
 @router.get("/balance", response_model=BalanceResponse)
-def get_balance(
+@limiter.limit("30/minute")
+def get_balance(request: Request, 
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -200,7 +204,8 @@ def get_balance(
 
 
 @router.post("/release/{job_id}", response_model=TransactionResponse)
-def release_payment(
+@limiter.limit("10/minute")
+def release_payment(request: Request, 
     job_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -287,7 +292,8 @@ def release_payment(
 
 
 @router.post("/refund/{job_id}", response_model=TransactionResponse)
-def refund_payment(
+@limiter.limit("3/minute")
+def refund_payment(request: Request, 
     job_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -335,8 +341,9 @@ def refund_payment(
 
 
 @router.post("/withdraw", response_model=TransactionResponse)
-def withdraw(
-    request: WithdrawRequest,
+@limiter.limit("5/minute")
+def withdraw(request: Request, 
+    withdraw_data: WithdrawRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -348,14 +355,14 @@ def withdraw(
     y hay que confirmarla con POST /payments/confirm/{tx_id}.
     """
     # Validar saldo
-    if current_user.balance < request.amount:
+    if current_user.balance < withdraw_data.amount:
         raise HTTPException(
             status_code=400,
             detail=f"Saldo insuficiente. Tienes ${current_user.balance:.2f}",
         )
 
     # Monto mínimo
-    if request.amount < 1.0:
+    if withdraw_data.amount < 1.0:
         raise HTTPException(
             status_code=400,
             detail="El monto mínimo de retiro es $1 USDT",
@@ -367,7 +374,7 @@ def withdraw(
             status_code=400,
             detail="Primero registra tu wallet en PATCH /api/v1/auth/me/wallet",
         )
-    if current_user.wallet_address != request.to_address:
+    if current_user.wallet_address != withdraw_data.to_address:
         raise HTTPException(
             status_code=400,
             detail="Solo puedes retirar a tu wallet registrada",
@@ -384,7 +391,7 @@ def withdraw(
     # ─────────────────────────────────────────────────
     # ¿Requiere doble confirmación?
     # ─────────────────────────────────────────────────
-    requires_confirmation = request.amount > LARGE_TX_THRESHOLD
+    requires_confirmation = withdraw_data.amount > LARGE_TX_THRESHOLD
 
     if requires_confirmation:
         # NO descontamos balance todavía — solo crear la tx pendiente
@@ -392,9 +399,9 @@ def withdraw(
         transaction = Transaction(
             user_id=current_user.id,
             type="withdraw",
-            amount=request.amount,
+            amount=withdraw_data.amount,
             network="polygon",
-            to_address=request.to_address,
+            to_address=withdraw_data.to_address,
             from_address=settings.SYSTEM_WALLET_ADDRESS,
             status="pending_confirmation",
             requires_confirmation=True,
@@ -410,20 +417,20 @@ def withdraw(
     # Monto normal (< $100) — ejecutar directo
     # ─────────────────────────────────────────────────
     user = db.query(User).filter(User.id == current_user.id).first()
-    user.balance -= request.amount
+    user.balance -= withdraw_data.amount
 
     tx_hash, blockchain_status, _ = _try_blockchain_transfer(
-        request.to_address, request.amount
+        withdraw_data.to_address, withdraw_data.amount
     )
 
     transaction = Transaction(
         user_id=current_user.id,
         type="withdraw",
-        amount=request.amount,
+        amount=withdraw_data.amount,
         network="polygon",
         tx_hash=tx_hash,
         from_address=settings.SYSTEM_WALLET_ADDRESS,
-        to_address=request.to_address,
+        to_address=withdraw_data.to_address,
         status=blockchain_status,
         confirmed_at=datetime.now(timezone.utc),
     )
@@ -438,9 +445,10 @@ def withdraw(
 
 
 @router.post("/confirm/{transaction_id}", response_model=TransactionResponse)
-def confirm_transaction(
+@limiter.limit("10/minute")
+def confirm_transaction(request: Request, 
     transaction_id: int,
-    request: ConfirmPaymentRequest,
+    confirm_data: ConfirmPaymentRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -470,7 +478,7 @@ def confirm_transaction(
         )
 
     # Validar token
-    if tx.confirmation_token != request.confirmation_token:
+    if tx.confirmation_token != confirm_data.confirmation_token:
         raise HTTPException(
             status_code=400,
             detail="Token de confirmación inválido",
@@ -554,7 +562,8 @@ def confirm_transaction(
 
 
 @router.get("/history", response_model=List[TransactionResponse])
-def get_history(
+@limiter.limit("30/minute")
+def get_history(request: Request, 
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -575,7 +584,8 @@ def get_history(
 
 
 @router.post("/scan-deposits")
-def scan_new_deposits(
+@limiter.limit("2/minute")
+def scan_new_deposits(request: Request, 
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -703,7 +713,8 @@ class WebhookDepositPayload(BaseModel):
 
 
 @router.post("/webhook/deposit")
-def webhook_deposit(
+@limiter.exempt
+def webhook_deposit(request: Request, 
     payload: WebhookDepositPayload,
     db: Session = Depends(get_db),
 ):

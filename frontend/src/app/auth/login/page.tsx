@@ -25,8 +25,12 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      await login(email, password);
-      router.push("/dashboard");
+      const user = await login(email, password);
+      if (user.is_admin) {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: any) {
       setError(err.message || "Error al iniciar sesión");
     } finally {

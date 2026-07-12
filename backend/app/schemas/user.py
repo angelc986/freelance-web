@@ -29,8 +29,10 @@ class UserResponse(BaseModel):
     full_name: str
     cedula: str
     role: str
+    is_admin: bool = False
     wallet_address: Optional[str] = None
     is_active: bool
+    balance: float = 0.0
     rating_avg: float
 
     class Config:

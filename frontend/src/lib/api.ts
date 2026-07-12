@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 
 export interface User {
   id: number;
@@ -6,9 +6,11 @@ export interface User {
   phone: string;
   full_name: string;
   cedula: string;
-  role: "worker" | "contractor";
+  role: string;
+  is_admin: boolean;
   wallet_address: string | null;
   is_active: boolean;
+  balance: number;
   rating_avg: number;
 }
 
