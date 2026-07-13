@@ -9,6 +9,7 @@ from app.database import SessionLocal
 from app.models.user import User
 from app.models.job import Job
 from app.models.transaction import Transaction
+from app.services.audit import log_action
 from app.schemas.payment import (
     DepositRequest,
     TransactionResponse,
@@ -176,6 +177,8 @@ def deposit(request: Request,
     user = db.query(User).filter(User.id == current_user.id).first()
     user.balance += deposit_data.amount
 
+    log_action(current_user.id, "deposit", {"amount": deposit_data.amount, "tx_hash": deposit_data.tx_hash}, ip=request.client.host)
+
     db.commit()
     db.refresh(transaction)
     return transaction
@@ -282,6 +285,8 @@ def release_payment(request: Request,
         confirmed_at=datetime.now(timezone.utc),
     )
 
+    log_action(current_user.id, "payment_release", {"job_id": job_id, "amount": job.budget, "worker_id": job.worker_id}, ip=request.client.host)
+
     db.add(transaction)
     db.commit()
     db.refresh(transaction)
@@ -330,6 +335,8 @@ def refund_payment(request: Request,
         status="confirmed",
         confirmed_at=datetime.now(timezone.utc),
     )
+
+    log_action(contractor.id, "refund", {"job_id": job_id, "amount": job.budget}, ip=request.client.host)
 
     db.add(transaction)
     db.commit()
@@ -434,6 +441,8 @@ def withdraw(request: Request,
         status=blockchain_status,
         confirmed_at=datetime.now(timezone.utc),
     )
+
+    log_action(current_user.id, "withdraw", {"amount": withdraw_data.amount, "wallet": withdraw_data.to_address}, ip=request.client.host)
 
     db.add(transaction)
     db.commit()
@@ -552,6 +561,8 @@ def confirm_transaction(request: Request,
     tx.confirmation_token = None
     tx.confirmation_expires_at = None
     tx.requires_confirmation = False
+
+    log_action(current_user.id, f"confirm_{tx.type}", {"transaction_id": transaction_id, "amount": tx.amount}, ip=request.client.host)
 
     db.commit()
     db.refresh(tx)
@@ -819,6 +830,8 @@ def webhook_deposit(request: Request,
     db.add(tx)
     db.commit()
     db.refresh(tx)
+
+    log_action(user.id, "webhook_deposit", {"amount": payload.amount, "tx_hash": payload.tx_hash}, ip=request.client.host)
 
     return {
         "status": "credited",

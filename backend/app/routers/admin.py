@@ -13,6 +13,7 @@ from app.schemas.user import UserResponse
 from app.schemas.job import JobResponse
 from app.schemas.payment import TransactionResponse
 from app.services.auth import get_current_admin
+from app.services.audit import log_action
 from app.limiter import limiter
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
@@ -163,6 +164,8 @@ def admin_toggle_user_status(
 
     user.is_active = is_active
     db.commit()
+
+    log_action(admin_user.id, f"admin_{'activate' if is_active else 'suspend'}_user", {"target_user_id": user_id}, ip=request.client.host)
     return {"message": f"Usuario {'activado' if is_active else 'suspendido'} exitosamente"}
 
 
@@ -182,6 +185,8 @@ def admin_toggle_admin_role(
 
     user.is_admin = is_admin
     db.commit()
+
+    log_action(admin_user.id, f"admin_{'grant' if is_admin else 'revoke'}_admin", {"target_user_id": user_id}, ip=request.client.host)
     return {"message": f"Permisos de admin {'otorgados' if is_admin else 'revocados'} exitosamente"}
 
 
@@ -307,6 +312,8 @@ def admin_resolve_dispute(
         raise HTTPException(status_code=400, detail="Resolución inválida. Usa: approve, cancel, refund")
 
     db.commit()
+
+    log_action(admin.id, "admin_resolve_dispute", {"job_id": job_id, "resolution": resolution, "client_id": job.client_id, "worker_id": job.worker_id}, ip=request.client.host)
     return {"message": f"Disputa resuelta: {resolution}", "job_status": job.status}
 
 

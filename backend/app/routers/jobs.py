@@ -9,6 +9,7 @@ from app.schemas.job import JobCreate, JobResponse, DisputeRequest
 from app.schemas.application import ApplicationCreate, ApplicationResponse
 from app.services.auth import get_current_user
 from app.models.user import User
+from app.services.event_manager import publish
 from app.limiter import limiter
 
 router = APIRouter(prefix="/api/v1/jobs", tags=["jobs"])
