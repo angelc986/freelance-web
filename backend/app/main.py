@@ -31,7 +31,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="TurnoGO API",
-    version="1.0.0",
+    version="1.0.1",  # test persistencia PostgreSQL
 )
 
 # Middleware para mantener HTTPS detrás del proxy de Railway
