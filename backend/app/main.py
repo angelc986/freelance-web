@@ -59,13 +59,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Incluir routers
-app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
-app.include_router(jobs_router, prefix="/api/v1/jobs", tags=["Jobs"])
-app.include_router(payments_router, prefix="/api/v1/payments", tags=["Payments"])
-app.include_router(ratings_router, prefix="/api/v1/ratings", tags=["Ratings"])
-app.include_router(users_router, prefix="/api/v1/users", tags=["Users"])
-app.include_router(admin_router, prefix="/api/v1/admin", tags=["Admin"])
+# Incluir routers (cada router ya tiene su prefix propio, excepto events)
+app.include_router(auth_router)
+app.include_router(jobs_router)
+app.include_router(payments_router)
+app.include_router(ratings_router)
+app.include_router(users_router)
+app.include_router(admin_router)
 app.include_router(events_router, prefix="/api/v1/events", tags=["Events"])
 
 
