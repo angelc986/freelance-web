@@ -5,18 +5,25 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserRatings, type UserRatingSummary } from "@/lib/api";
 import EmptyState from "@/components/EmptyState";
+import PullToRefresh from "@/components/PullToRefresh";
 
 export default function RatingsPage() {
   const { user } = useAuth();
   const [data, setData] = useState<UserRatingSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const loadRatings = async () => {
     if (!user) return;
-    getUserRatings(user.id)
-      .then(setData)
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    setLoading(true);
+    try {
+      const d = await getUserRatings(user.id);
+      setData(d);
+    } catch {}
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadRatings();
   }, [user]);
 
   if (!user) return null;

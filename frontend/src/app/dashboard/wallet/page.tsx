@@ -395,7 +395,7 @@ export default function WalletPage() {
               description={isContractor ? "Deposita fondos para empezar" : "Completa trabajos para recibir pagos"}
               variant="wallet"
               actionLabel={isContractor ? "Depositar fondos" : undefined}
-              actionFn={isContractor ? () => setShowDeposit(true) : undefined}
+              actionFn={isContractor ? () => setTab("deposit") : undefined}
             />
           ) : (
             <div className="divide-y divide-gray-100">
