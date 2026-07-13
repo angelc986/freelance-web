@@ -64,7 +64,7 @@ app.include_router(payments_router)
 app.include_router(ratings_router)
 app.include_router(users_router)
 app.include_router(admin_router)
-app.include_router(events_router, prefix="/api/v1/events", tags=["Events"])
+app.include_router(events_router)
 
 
 @app.get("/api/v1/health")
