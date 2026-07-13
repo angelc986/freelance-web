@@ -31,8 +31,6 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="TurnoGO API",
     version="1.0.0",
-    # No redirigir /jobs a /jobs/ ni viceversa
-    redirect_slashes=False,
 )
 
 # Rate limiting
