@@ -1,6 +1,7 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.limiter import limiter
@@ -32,6 +33,18 @@ app = FastAPI(
     title="TurnoGO API",
     version="1.0.0",
 )
+
+# Middleware para mantener HTTPS detrás del proxy de Railway
+@app.middleware("http")
+async def https_redirect(request: Request, call_next):
+    response = await call_next(request)
+    # Si es un redirect 307, asegurar que Location use HTTPS
+    if response.status_code == 307:
+        location = response.headers.get("location", "")
+        if location.startswith("http://"):
+            location = location.replace("http://", "https://", 1)
+            return RedirectResponse(location, status_code=307)
+    return response
 
 # Rate limiting
 app.state.limiter = limiter

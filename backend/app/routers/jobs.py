@@ -27,6 +27,7 @@ def get_db():
 
 
 @router.post("/", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", include_in_schema=False, response_model=JobResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("10/minute")
 def create_job(request: Request, job: JobCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Crear un trabajo (solo contractors)"""
@@ -86,6 +87,7 @@ def my_jobs(db: Session = Depends(get_db), current_user: User = Depends(get_curr
 
 
 @router.get("/", response_model=List[JobResponse])
+@router.get("", include_in_schema=False, response_model=List[JobResponse])
 def list_jobs(status_filter: str = "open", db: Session = Depends(get_db)):
     """Listar trabajos (filtro por status, default: open)"""
     jobs = db.query(Job).filter(Job.status == status_filter).all()
