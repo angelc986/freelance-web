@@ -1235,7 +1235,7 @@ export default function AdminPage() {
       </nav>
       <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-white/[0.04]">
         <div className="flex items-center gap-3 px-3 py-2"><Avatar name={user.full_name} /><div className="flex-1 min-w-0"><p className="text-xs font-medium text-white truncate">{user.full_name}</p><p className="text-[10px] text-gray-500">Administrator</p></div></div>
-        <button onClick={logout} className="w-full mt-1 flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-500 hover:text-red-400 hover:bg-red-500/[0.04] transition-all"><I.LogOut /><span>Sign Out</span></button>
+        <button onClick={() => { logout(); router.push("/"); }} className="w-full mt-1 flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-500 hover:text-red-400 hover:bg-red-500/[0.04] transition-all"><I.LogOut /><span>Sign Out</span></button>
       </div>
     </aside>
     {sidebarOpen && <div className="fixed inset-0 z-[9995] bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />}
@@ -1253,7 +1253,7 @@ export default function AdminPage() {
           <button onClick={loadData} className="p-2 rounded-xl text-gray-500 hover:text-white hover:bg-white/[0.04] transition-all"><I.Refresh /></button>
           <NotificationBell />
           <div className="h-5 w-px bg-white/[0.06]" />
-          <button onClick={logout} className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs text-gray-500 hover:text-gray-300 hover:bg-white/[0.04] transition-all">
+          <button onClick={() => { logout(); router.push("/"); }} className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs text-gray-500 hover:text-gray-300 hover:bg-white/[0.04] transition-all">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
             </svg>
