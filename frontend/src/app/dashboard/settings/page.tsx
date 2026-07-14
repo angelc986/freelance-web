@@ -127,7 +127,7 @@ export default function SettingsPage() {
   const walletChanged = wallet !== (user.wallet_address || "");
 
   return (
-    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
+    <div className="max-w-3xl mx-auto space-y-3 sm:space-y-6">
       {/* HEADER */}
       <div className="flex items-center gap-3 sm:gap-3">
         <Link href="/dashboard" className="w-8 h-8 rounded-lg bg-gray-100 text-gray flex items-center justify-center hover:bg-gray-200 transition-colors shrink-0">
@@ -135,27 +135,27 @@ export default function SettingsPage() {
         </Link>
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-dark">Configuración</h1>
-          <p className="text-gray text-xs sm:text-sm mt-0.5">Administra tu perfil y wallet</p>
+          <p className="text-gray text-sm mt-0.5">Administra tu perfil y wallet</p>
         </div>
       </div>
 
       {/* PROFILE */}
       <section className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="sm:bg-gradient-to-r sm:from-blue-50 sm:to-white bg-transparent px-3 sm:px-6 py-2 sm:py-4 border-b border-gray-100">
+        <div className="sm:bg-gradient-to-r sm:from-blue-50 sm:to-white bg-transparent px-2.5 sm:px-6 py-1.5 sm:py-4 border-b border-gray-100">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-100 text-blue-600 items-center justify-center">
               <IconUser className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-semibold text-dark">Información personal</h2>
-              <p className="text-[11px] sm:text-xs text-gray">Nombre y teléfono</p>
+              <p className="text-xs sm:text-xs text-gray">Nombre y teléfono</p>
             </div>
           </div>
         </div>
 
-        <form onSubmit={handleSaveProfile} className="p-3 sm:p-6 space-y-3 sm:space-y-4">
+        <form onSubmit={handleSaveProfile} className="p-2.5 sm:p-6 space-y-2 sm:space-y-4">
           {/* Avatar */}
-          <div className="flex items-center gap-2.5 sm:gap-4 pb-2.5 sm:pb-4 border-b border-gray-100">
+          <div className="flex items-center gap-2 sm:gap-4 pb-2 sm:pb-4 border-b border-gray-100">
             <div className="relative">
               <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-base sm:text-2xl font-bold overflow-hidden ring-2 ring-gray-200">
                 {avatarPreview || avatarUrl ? (
@@ -207,7 +207,7 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-dark mb-1 sm:mb-1.5">Email</label>
+            <label className="block text-sm font-medium text-dark mb-1 sm:mb-1.5">Email</label>
             <input
               type="email"
               value={user.email}
@@ -218,7 +218,7 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-dark mb-1 sm:mb-1.5">
+            <label className="block text-sm font-medium text-dark mb-1 sm:mb-1.5">
               Nombre completo <span className="text-red-500">*</span>
             </label>
             <input
@@ -232,7 +232,7 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-dark mb-1 sm:mb-1.5">
+            <label className="block text-sm font-medium text-dark mb-1 sm:mb-1.5">
               Teléfono <span className="text-red-500">*</span>
             </label>
             <input
@@ -265,21 +265,21 @@ export default function SettingsPage() {
 
       {/* WALLET */}
       <section className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="sm:bg-gradient-to-r sm:from-emerald-50 sm:to-white bg-transparent px-3 sm:px-6 py-2 sm:py-4 border-b border-gray-100">
+        <div className="sm:bg-gradient-to-r sm:from-emerald-50 sm:to-white bg-transparent px-2.5 sm:px-6 py-1.5 sm:py-4 border-b border-gray-100">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-100 text-emerald-600 items-center justify-center">
               <IconWallet className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-semibold text-dark">Wallet USDT</h2>
-              <p className="text-[11px] sm:text-xs text-gray">Dirección de Polygon</p>
+              <p className="text-xs sm:text-xs text-gray">Dirección de Polygon</p>
             </div>
           </div>
         </div>
 
-        <form onSubmit={handleSaveWallet} className="p-3 sm:p-6 space-y-3 sm:space-y-4">
+        <form onSubmit={handleSaveWallet} className="p-2.5 sm:p-6 space-y-2 sm:space-y-4">
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-dark mb-1 sm:mb-1.5">
+            <label className="block text-sm font-medium text-dark mb-1 sm:mb-1.5">
               Dirección de wallet <span className="text-red-500">*</span>
             </label>
             <input
@@ -335,7 +335,7 @@ export default function SettingsPage() {
 
       {/* ACCOUNT INFO */}
       <section className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="sm:bg-gradient-to-r sm:from-violet-50 sm:to-white bg-transparent px-3 sm:px-6 py-2 sm:py-4 border-b border-gray-100">
+        <div className="sm:bg-gradient-to-r sm:from-violet-50 sm:to-white bg-transparent px-2.5 sm:px-6 py-1.5 sm:py-4 border-b border-gray-100">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-violet-100 text-violet-600 items-center justify-center">
               <IconInfo className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -346,7 +346,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="p-3 sm:p-6 space-y-0.5 text-sm">
+        <div className="p-2.5 sm:p-6 space-y-0.5 text-sm">
           <div className="flex justify-between py-2 sm:py-3 px-1.5 sm:px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
             <span className="text-sm sm:text-sm text-gray">Rol</span>
             <span className="text-sm sm:text-sm text-dark font-medium">
@@ -375,7 +375,7 @@ export default function SettingsPage() {
       </section>
 
       {/* LOGOUT */}
-      <div className="pt-2">
+      <div className="pt-1">
         <button
           onClick={() => {
             localStorage.removeItem("access_token");
