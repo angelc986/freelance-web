@@ -127,37 +127,37 @@ export default function SettingsPage() {
   const walletChanged = wallet !== (user.wallet_address || "");
 
   return (
-    <div className="max-w-3xl mx-auto space-y-2 sm:space-y-6">
+    <div className="max-w-3xl mx-auto space-y-1 sm:space-y-6">
       {/* HEADER */}
-      <div className="flex items-center gap-3 sm:gap-3">
-        <Link href="/dashboard" className="w-8 h-8 rounded-lg bg-gray-100 text-gray flex items-center justify-center hover:bg-gray-200 transition-colors shrink-0">
+      <div className="flex items-center gap-3">
+        <Link href="/dashboard" className="w-8 h-8 rounded-lg bg-gray-100 text-gray flex items-center justify-center hover:bg-gray-200 transition-colors">
           <IconArrowLeft className="w-4 h-4" />
         </Link>
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-dark">Configuración</h1>
+          <h1 className="text-2xl font-bold text-dark">Configuración</h1>
           <p className="text-gray text-sm mt-0.5">Administra tu perfil y wallet</p>
         </div>
       </div>
 
       {/* PROFILE */}
-      <section className="bg-white sm:bg-white rounded-xl sm:rounded-2xl sm:border border-gray-200 overflow-hidden">
-        <div className="sm:bg-gradient-to-r sm:from-blue-50 sm:to-white px-3 sm:px-6 py-2 sm:py-4 border-b border-gray-100">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex sm:flex w-7 h-7 sm:w-9 sm:h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-100 text-blue-600 items-center justify-center">
-              <IconUser className="w-4 h-4 sm:w-5 sm:h-5" />
+      <section className="sm:bg-white sm:rounded-2xl sm:border sm:border-gray-200 overflow-hidden">
+        <div className="hidden sm:flex bg-gradient-to-r from-blue-50 to-white px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+              <IconUser className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-base font-semibold text-dark">Información personal</h2>
-              <p className="text-[11px] sm:block text-xs text-gray">Nombre y teléfono</p>
+              <h2 className="font-semibold text-dark">Información personal</h2>
+              <p className="text-xs text-gray">Nombre y teléfono</p>
             </div>
           </div>
         </div>
 
-        <form onSubmit={handleSaveProfile} className="p-2 sm:p-6 space-y-2 sm:space-y-4">
+        <form onSubmit={handleSaveProfile} className="sm:p-6 space-y-4">
           {/* Avatar */}
-          <div className="flex items-center gap-2 sm:gap-4 pb-2 sm:pb-4 border-b border-gray-100">
+          <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
             <div className="relative">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-lg sm:text-2xl font-bold overflow-hidden ring-2 ring-gray-200">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden ring-2 ring-gray-200">
                 {avatarPreview || avatarUrl ? (
                   <img src={avatarPreview || avatarUrl || ""} alt="" className="w-full h-full object-cover" />
                 ) : (
@@ -177,8 +177,8 @@ export default function SettingsPage() {
               </button>
             </div>
             <div>
-              <p className="text-xs sm:text-sm font-medium text-dark">Foto de perfil</p>
-              <p className="text-[11px] sm:block text-xs text-gray mt-0.5">JPG, PNG o WebP. Max 5MB.</p>
+              <p className="text-sm font-medium text-dark">Foto de perfil</p>
+              <p className="text-xs text-gray mt-0.5">JPG, PNG o WebP. Max 5MB.</p>
               {avatarUploading && (
                 <p className="text-xs text-primary mt-1 flex items-center gap-1.5">
                   <span className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -207,7 +207,7 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-base sm:text-sm font-medium text-dark mb-1 sm:mb-1.5">Email</label>
+            <label className="block text-sm font-medium text-dark mb-1.5">Email</label>
             <input
               type="email"
               value={user.email}
@@ -218,7 +218,7 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-base sm:text-sm font-medium text-dark mb-1 sm:mb-1.5">
+            <label className="block text-sm font-medium text-dark mb-1.5">
               Nombre completo <span className="text-red-500">*</span>
             </label>
             <input
@@ -226,13 +226,13 @@ export default function SettingsPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-base sm:text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
               placeholder="Tu nombre completo"
             />
           </div>
 
           <div>
-            <label className="block text-base sm:text-sm font-medium text-dark mb-1 sm:mb-1.5">
+            <label className="block text-sm font-medium text-dark mb-1.5">
               Teléfono <span className="text-red-500">*</span>
             </label>
             <input
@@ -240,7 +240,7 @@ export default function SettingsPage() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-base sm:text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
               placeholder="+1 234 567 8900"
             />
           </div>
@@ -254,7 +254,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={savingProfile}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary text-white px-5 sm:px-6 py-3 sm:py-2.5 rounded-xl text-sm font-medium hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="inline-flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             {savingProfile ? (
               <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Guardando...</>
@@ -264,22 +264,22 @@ export default function SettingsPage() {
       </section>
 
       {/* WALLET */}
-      <section className="bg-white sm:bg-white rounded-xl sm:rounded-2xl sm:border border-gray-200 overflow-hidden">
-        <div className="sm:bg-gradient-to-r sm:from-emerald-50 sm:to-white px-3 sm:px-6 py-2 sm:py-4 border-b border-gray-100">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex sm:flex w-7 h-7 sm:w-9 sm:h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-100 text-emerald-600 items-center justify-center">
-              <IconWallet className="w-4 h-4 sm:w-5 sm:h-5" />
+      <section className="sm:bg-white sm:rounded-2xl sm:border sm:border-gray-200 overflow-hidden">
+        <div className="hidden sm:flex bg-gradient-to-r from-emerald-50 to-white px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <IconWallet className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-base font-semibold text-dark">Wallet USDT</h2>
-              <p className="text-[11px] sm:block text-xs text-gray">Dirección de Polygon</p>
+              <h2 className="font-semibold text-dark">Wallet USDT</h2>
+              <p className="text-xs text-gray">Dirección donde recibirás tus pagos en Polygon</p>
             </div>
           </div>
         </div>
 
-        <form onSubmit={handleSaveWallet} className="p-2 sm:p-6 space-y-2 sm:space-y-4">
+        <form onSubmit={handleSaveWallet} className="sm:p-6 space-y-4">
           <div>
-            <label className="block text-base sm:text-sm font-medium text-dark mb-1 sm:mb-1.5">
+            <label className="block text-sm font-medium text-dark mb-1.5">
               Dirección de wallet <span className="text-red-500">*</span>
             </label>
             <input
@@ -287,7 +287,7 @@ export default function SettingsPage() {
               value={wallet}
               onChange={(e) => setWallet(e.target.value)}
               placeholder="0x..."
-              className={"w-full px-3 sm:px-3.5 py-2 sm:py-2.5 border rounded-xl text-base sm:text-sm font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all " + (wallet && !walletValid ? "border-red-300 bg-red-50" : "border-gray-200")}
+              className={"w-full px-3.5 py-2.5 border rounded-xl text-sm font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all " + (wallet && !walletValid ? "border-red-300 bg-red-50" : "border-gray-200")}
             />
             {wallet && !walletValid && (
               <p className="text-xs text-red-500 mt-1.5">Dirección inválida. Debe empezar con 0x y tener 42 caracteres.</p>
@@ -322,7 +322,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={savingWallet || !walletValid || !walletChanged}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary text-white px-5 sm:px-6 py-3 sm:py-2.5 rounded-xl text-sm font-medium hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="inline-flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             {savingWallet ? (
               <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Guardando...</>
@@ -331,63 +331,76 @@ export default function SettingsPage() {
         </form>
       </section>
 
-
-
-      {/* ACCOUNT INFO */}
-      <section className="bg-white sm:bg-white rounded-xl sm:rounded-2xl sm:border border-gray-200 overflow-hidden">
-        <div className="sm:bg-gradient-to-r sm:from-violet-50 sm:to-white px-3 sm:px-6 py-2 sm:py-4 border-b border-gray-100">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex sm:flex w-7 h-7 sm:w-9 sm:h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-violet-100 text-violet-600 items-center justify-center">
-              <IconInfo className="w-4 h-4 sm:w-5 sm:h-5" />
+      {/* CERRAR SESION */}
+      <section className="sm:bg-white sm:rounded-2xl sm:border sm:border-gray-200 overflow-hidden">
+        <div className="hidden sm:flex bg-gradient-to-r from-red-50 to-white px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-red-100 text-red-500 flex items-center justify-center">
+              <IconLogout className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-base font-semibold text-dark">Información de la cuenta</h2>
+              <h2 className="font-semibold text-dark">Cerrar sesión</h2>
+              <p className="text-xs text-gray">Salir de tu cuenta</p>
             </div>
           </div>
         </div>
 
-        <div className="p-2 sm:p-6 space-y-0.5 text-sm">
-          <div className="flex justify-between py-2 sm:py-3 px-1.5 sm:px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-base sm:text-sm text-gray">Rol</span>
-            <span className="text-base sm:text-sm text-dark font-medium">
+        <div className="sm:p-6 space-y-4">
+          <p className="text-sm text-gray">Al cerrar sesión tendrás que volver a iniciar sesión para acceder al dashboard.</p>
+          <button
+            onClick={() => {
+              localStorage.removeItem("access_token");
+              localStorage.removeItem("refresh_token");
+              router.push("/");
+            }}
+            className="inline-flex items-center gap-2 bg-gray-100 text-gray px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-red-50 hover:text-red-500 hover:-translate-y-0.5 transition-all"
+          >
+            <IconLogout className="w-4 h-4" />
+            Cerrar sesión
+          </button>
+        </div>
+      </section>
+
+      {/* ACCOUNT INFO */}
+      <section className="sm:bg-white sm:rounded-2xl sm:border sm:border-gray-200 overflow-hidden">
+        <div className="hidden sm:flex bg-gradient-to-r from-violet-50 to-white px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center">
+              <IconInfo className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-dark">Información de la cuenta</h2>
+            </div>
+          </div>
+        </div>
+
+        <div className="sm:p-6 space-y-0.5 text-sm">
+          <div className="flex justify-between py-3 px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
+            <span className="text-gray">Rol</span>
+            <span className="text-dark font-medium">
               {user.role === "worker" ? "Trabajador" : "Contratista"}
             </span>
           </div>
-          <div className="flex justify-between py-2 sm:py-3 px-1.5 sm:px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-sm sm:text-sm text-gray">Cédula</span>
-            <span className="text-sm sm:text-sm text-dark font-medium">{user.cedula}</span>
+          <div className="flex justify-between py-3 px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
+            <span className="text-gray">Cédula</span>
+            <span className="text-dark font-medium">{user.cedula}</span>
           </div>
-          <div className="flex justify-between py-2 sm:py-3 px-1.5 sm:px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-sm sm:text-sm text-gray">Calificación</span>
-            <span className="text-sm sm:text-sm text-dark font-medium flex items-center gap-1">
+          <div className="flex justify-between py-3 px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
+            <span className="text-gray">Calificación</span>
+            <span className="text-dark font-medium flex items-center gap-1">
               <IconStar className="w-4 h-4 text-amber-400" />
               {user.rating_avg.toFixed(1)}
             </span>
           </div>
-          <div className="flex justify-between py-2 sm:py-3 px-1.5 sm:px-3 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-sm sm:text-sm text-gray">Estado</span>
-            <span className={"font-medium flex items-center gap-1.5 text-sm sm:text-sm " + (user.is_active ? "text-emerald-600" : "text-red-500")}>
+          <div className="flex justify-between py-3 px-3 rounded-lg hover:bg-gray-50/50 transition-colors">
+            <span className="text-gray">Estado</span>
+            <span className={"font-medium flex items-center gap-1.5 " + (user.is_active ? "text-emerald-600" : "text-red-500")}>
               <span className={"w-2 h-2 rounded-full " + (user.is_active ? "bg-emerald-500" : "bg-red-500")} />
               {user.is_active ? "Activa" : "Inactiva"}
             </span>
           </div>
         </div>
       </section>
-
-      {/* LOGOUT */}
-      <div className="pt-1">
-        <button
-          onClick={() => {
-            localStorage.removeItem("access_token");
-            localStorage.removeItem("refresh_token");
-            router.push("/");
-          }}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium text-gray bg-gray-50 hover:bg-red-50 hover:text-red-500 transition-all border border-gray-200"
-        >
-          <IconLogout className="w-4 h-4" />
-          Cerrar sesión
-        </button>
-      </div>
     </div>
   );
 }
