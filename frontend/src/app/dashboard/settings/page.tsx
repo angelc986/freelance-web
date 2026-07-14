@@ -127,21 +127,21 @@ export default function SettingsPage() {
   const walletChanged = wallet !== (user.wallet_address || "");
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
       {/* HEADER */}
-      <div className="flex items-center gap-3">
-        <Link href="/dashboard" className="w-8 h-8 rounded-lg bg-gray-100 text-gray flex items-center justify-center hover:bg-gray-200 transition-colors">
+      <div className="flex items-center gap-3 sm:gap-3">
+        <Link href="/dashboard" className="w-8 h-8 rounded-lg bg-gray-100 text-gray flex items-center justify-center hover:bg-gray-200 transition-colors shrink-0">
           <IconArrowLeft className="w-4 h-4" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-dark">Configuración</h1>
-          <p className="text-gray text-sm mt-0.5">Administra tu perfil y wallet</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-dark">Configuración</h1>
+          <p className="text-gray text-xs sm:text-sm mt-0.5">Administra tu perfil y wallet</p>
         </div>
       </div>
 
       {/* PROFILE */}
       <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-50 to-white px-6 py-4 border-b border-gray-100">
+        <div className="bg-gradient-to-r from-blue-50 to-white px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
               <IconUser className="w-5 h-5" />
@@ -153,11 +153,11 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSaveProfile} className="p-6 space-y-4">
+        <form onSubmit={handleSaveProfile} className="p-4 sm:p-6 space-y-4">
           {/* Avatar */}
           <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
             <div className="relative">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden ring-2 ring-gray-200">
+              <div className="w-20 h-20 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl sm:text-2xl font-bold overflow-hidden ring-2 ring-gray-200">
                 {avatarPreview || avatarUrl ? (
                   <img src={avatarPreview || avatarUrl || ""} alt="" className="w-full h-full object-cover" />
                 ) : (
@@ -265,7 +265,7 @@ export default function SettingsPage() {
 
       {/* WALLET */}
       <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-emerald-50 to-white px-6 py-4 border-b border-gray-100">
+        <div className="bg-gradient-to-r from-emerald-50 to-white px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
               <IconWallet className="w-5 h-5" />
@@ -277,7 +277,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSaveWallet} className="p-6 space-y-4">
+        <form onSubmit={handleSaveWallet} className="p-4 sm:p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-dark mb-1.5">
               Dirección de wallet <span className="text-red-500">*</span>
@@ -333,7 +333,7 @@ export default function SettingsPage() {
 
       {/* CERRAR SESION */}
       <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-red-50 to-white px-6 py-4 border-b border-gray-100">
+        <div className="bg-gradient-to-r from-red-50 to-white px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-red-100 text-red-500 flex items-center justify-center">
               <IconLogout className="w-5 h-5" />
@@ -345,7 +345,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-4 sm:p-6 space-y-4">
           <p className="text-sm text-gray">Al cerrar sesión tendrás que volver a iniciar sesión para acceder al dashboard.</p>
           <button
             onClick={() => {
@@ -363,7 +363,7 @@ export default function SettingsPage() {
 
       {/* ACCOUNT INFO */}
       <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-violet-50 to-white px-6 py-4 border-b border-gray-100">
+        <div className="bg-gradient-to-r from-violet-50 to-white px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center">
               <IconInfo className="w-5 h-5" />
@@ -374,27 +374,27 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="p-6 space-y-0.5 text-sm">
-          <div className="flex justify-between py-3 px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-gray">Rol</span>
-            <span className="text-dark font-medium">
+        <div className="p-4 sm:p-6 space-y-0.5 text-sm">
+          <div className="flex justify-between py-2.5 sm:py-3 px-2 sm:px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
+            <span className="text-xs sm:text-sm text-gray">Rol</span>
+            <span className="text-sm sm:text-sm text-dark font-medium">
               {user.role === "worker" ? "Trabajador" : "Contratista"}
             </span>
           </div>
-          <div className="flex justify-between py-3 px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-gray">Cédula</span>
-            <span className="text-dark font-medium">{user.cedula}</span>
+          <div className="flex justify-between py-2.5 sm:py-3 px-2 sm:px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
+            <span className="text-xs sm:text-sm text-gray">Cédula</span>
+            <span className="text-sm sm:text-sm text-dark font-medium">{user.cedula}</span>
           </div>
-          <div className="flex justify-between py-3 px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-gray">Calificación</span>
-            <span className="text-dark font-medium flex items-center gap-1">
+          <div className="flex justify-between py-2.5 sm:py-3 px-2 sm:px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
+            <span className="text-xs sm:text-sm text-gray">Calificación</span>
+            <span className="text-sm sm:text-sm text-dark font-medium flex items-center gap-1">
               <IconStar className="w-4 h-4 text-amber-400" />
               {user.rating_avg.toFixed(1)}
             </span>
           </div>
-          <div className="flex justify-between py-3 px-3 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-gray">Estado</span>
-            <span className={"font-medium flex items-center gap-1.5 " + (user.is_active ? "text-emerald-600" : "text-red-500")}>
+          <div className="flex justify-between py-2.5 sm:py-3 px-2 sm:px-3 rounded-lg hover:bg-gray-50/50 transition-colors">
+            <span className="text-xs sm:text-sm text-gray">Estado</span>
+            <span className={"font-medium flex items-center gap-1.5 text-sm sm:text-sm " + (user.is_active ? "text-emerald-600" : "text-red-500")}>
               <span className={"w-2 h-2 rounded-full " + (user.is_active ? "bg-emerald-500" : "bg-red-500")} />
               {user.is_active ? "Activa" : "Inactiva"}
             </span>

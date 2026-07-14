@@ -214,7 +214,7 @@ export default function DashboardPage() {
     },
     {
       label: "Balance",
-      value: "$" + balance.toFixed(2),
+      value: "$" + balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       icon: <IconWallet />,
       href: "/dashboard/wallet",
       theme: themes[2],
@@ -278,25 +278,27 @@ export default function DashboardPage() {
           <Link
             key={s.label}
             href={s.href}
-            className={`group relative overflow-hidden rounded-xl sm:rounded-2xl border ${s.theme.border} ${s.theme.gradient} p-4 sm:p-5 hover:shadow-lg ${s.theme.shadow} hover:-translate-y-1 transition-all duration-300`}
+            className={`group relative overflow-hidden rounded-xl sm:rounded-2xl border ${s.theme.border} ${s.theme.gradient} p-3 sm:p-5 hover:shadow-lg ${s.theme.shadow} hover:-translate-y-1 transition-all duration-300`}
           >
-            {/* Gradient accent bar */}
-            <div className={`absolute top-0 left-0 right-0 h-0.5 sm:h-1 bg-gradient-to-r ${s.theme.bg}`} />
+            {/* Gradient accent bar - solo desktop */}
+            <div className={`hidden sm:block absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${s.theme.bg}`} />
 
-            <div className="relative z-10">
-              {/* Icon circle */}
-              <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl ${s.theme.light} flex items-center justify-center ${s.theme.icon} mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-300`}>
+            <div className="relative z-10 flex sm:block items-center gap-3 sm:gap-0">
+              {/* Icon */}
+              <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-xl ${s.theme.light} flex items-center justify-center ${s.theme.icon} shrink-0 group-hover:scale-110 transition-transform duration-300`}>
                 {s.icon}
               </div>
 
-              {/* Value */}
-              <div className="flex items-baseline gap-1">
-                <p className="text-xl sm:text-2xl font-bold text-dark">{s.value}</p>
-                {(s as any).suffix && <span className="text-xs sm:text-sm text-gray">{(s as any).suffix}</span>}
-              </div>
+              <div className="min-w-0">
+                {/* Value */}
+                <div className="flex items-baseline gap-1">
+                  <p className="text-lg sm:text-2xl font-bold text-dark truncate">{s.value}</p>
+                  {(s as any).suffix && <span className="text-xs sm:text-sm text-gray">{(s as any).suffix}</span>}
+                </div>
 
-              {/* Label */}
-              <p className="text-xs sm:text-sm text-gray mt-0.5 sm:mt-1 group-hover:text-dark transition-colors">{s.label}</p>
+                {/* Label */}
+                <p className="text-[11px] sm:text-sm text-gray mt-0 sm:mt-1 group-hover:text-dark transition-colors truncate">{s.label}</p>
+              </div>
             </div>
           </Link>
         ))}
