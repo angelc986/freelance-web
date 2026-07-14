@@ -189,7 +189,7 @@ export default function DashboardJobsPage() {
             <IconArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-dark">
+            <h1 className="text-lg sm:text-xl font-bold text-dark">
               {isWorker ? "Mis postulaciones" : "Mis trabajos"}
             </h1>
             <p className="text-sm text-gray mt-0.5">{jobs.length} en total</p>
@@ -216,7 +216,7 @@ export default function DashboardJobsPage() {
             <button
               key={t.key}
               onClick={() => setFilter(t.key)}
-              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-sm font-medium transition-all ${
                 filter === t.key
                   ? "bg-primary text-white shadow-sm"
                   : "bg-white border border-gray-200 text-gray hover:border-primary/40 hover:text-primary"
@@ -225,7 +225,7 @@ export default function DashboardJobsPage() {
               {t.icon}
               {t.label}
               {count > 0 && (
-                <span className={`ml-0.5 text-[11px] font-semibold px-1.5 py-0.5 rounded-full ${
+                <span className={`ml-0.5 text-[10px] sm:text-[11px] font-semibold px-1.5 py-0.5 rounded-full ${
                   filter === t.key ? "bg-white/20" : "bg-gray-100 text-gray"
                 }`}>
                   {count}
@@ -263,7 +263,7 @@ export default function DashboardJobsPage() {
                   <Link
                     key={job.id}
                     href={`/jobs/${job.id}`}
-                    className="group bg-white rounded-2xl p-5 border border-gray-200 hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-between gap-4 animate-stagger-pop"
+                    className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-200 hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-between gap-3 sm:gap-4 animate-stagger-pop"
                     style={{ animationDelay: `${idx * 0.05}s` }}
                   >
                     <div className="min-w-0 flex-1">
@@ -273,7 +273,7 @@ export default function DashboardJobsPage() {
                         </h3>
                         {getAppBadge(job)}
                       </div>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-gray">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 text-xs text-gray">
                         <span className="inline-flex items-center gap-1">
                           <IconLocation className="w-3.5 h-3.5" />
                           {job.location}
@@ -291,8 +291,8 @@ export default function DashboardJobsPage() {
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
-                      <p className="text-lg font-bold text-primary">${job.budget}</p>
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-full border ${st.color}`}>
+                      <p className="text-base sm:text-lg font-bold text-primary">${job.budget}</p>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-medium rounded-full border ${st.color}`}>
                         <span>{st.icon}</span>
                         {st.label}
                       </span>
