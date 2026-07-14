@@ -140,20 +140,20 @@ export default function SettingsPage() {
       </div>
 
       {/* PROFILE */}
-      <section className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="sm:bg-gradient-to-r sm:from-blue-50 sm:to-white bg-transparent px-2.5 sm:px-6 py-1.5 sm:py-4 border-b border-gray-100">
+      <section className="sm:bg-white sm:rounded-xl sm:rounded-2xl sm:border sm:border-gray-200 overflow-hidden">
+        <div className="sm:bg-gradient-to-r sm:from-blue-50 sm:to-white px-0 sm:px-6 py-0.5 sm:py-4 border-b-0 sm:border-b border-gray-100">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-100 text-blue-600 items-center justify-center">
               <IconUser className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-semibold text-dark">Información personal</h2>
-              <p className="text-xs sm:text-xs text-gray">Nombre y teléfono</p>
+              <h2 className="text-base sm:text-base font-semibold text-dark">Información personal</h2>
+              <p className="hidden sm:block text-xs text-gray">Nombre y teléfono</p>
             </div>
           </div>
         </div>
 
-        <form onSubmit={handleSaveProfile} className="p-2.5 sm:p-6 space-y-2 sm:space-y-4">
+        <form onSubmit={handleSaveProfile} className="p-2 sm:p-6 space-y-2 sm:space-y-4">
           {/* Avatar */}
           <div className="flex items-center gap-2 sm:gap-4 pb-2 sm:pb-4 border-b border-gray-100">
             <div className="relative">
@@ -177,8 +177,8 @@ export default function SettingsPage() {
               </button>
             </div>
             <div>
-              <p className="text-sm font-medium text-dark">Foto de perfil</p>
-              <p className="text-xs text-gray mt-0.5">JPG, PNG o WebP. Max 5MB.</p>
+              <p className="text-xs sm:text-sm font-medium text-dark">Foto de perfil</p>
+              <p className="hidden sm:block text-xs text-gray mt-0.5">JPG, PNG o WebP. Max 5MB.</p>
               {avatarUploading && (
                 <p className="text-xs text-primary mt-1 flex items-center gap-1.5">
                   <span className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -264,20 +264,20 @@ export default function SettingsPage() {
       </section>
 
       {/* WALLET */}
-      <section className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="sm:bg-gradient-to-r sm:from-emerald-50 sm:to-white bg-transparent px-2.5 sm:px-6 py-1.5 sm:py-4 border-b border-gray-100">
+      <section className="sm:bg-white sm:rounded-xl sm:rounded-2xl sm:border sm:border-gray-200 overflow-hidden">
+        <div className="sm:bg-gradient-to-r sm:from-emerald-50 sm:to-white px-0 sm:px-6 py-0.5 sm:py-4 border-b-0 sm:border-b border-gray-100">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-100 text-emerald-600 items-center justify-center">
               <IconWallet className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-semibold text-dark">Wallet USDT</h2>
-              <p className="text-xs sm:text-xs text-gray">Dirección de Polygon</p>
+              <h2 className="text-base sm:text-base font-semibold text-dark">Wallet USDT</h2>
+              <p className="hidden sm:block text-xs text-gray">Dirección de Polygon</p>
             </div>
           </div>
         </div>
 
-        <form onSubmit={handleSaveWallet} className="p-2.5 sm:p-6 space-y-2 sm:space-y-4">
+        <form onSubmit={handleSaveWallet} className="p-2 sm:p-6 space-y-2 sm:space-y-4">
           <div>
             <label className="block text-sm font-medium text-dark mb-1 sm:mb-1.5">
               Dirección de wallet <span className="text-red-500">*</span>
@@ -334,19 +334,19 @@ export default function SettingsPage() {
 
 
       {/* ACCOUNT INFO */}
-      <section className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="sm:bg-gradient-to-r sm:from-violet-50 sm:to-white bg-transparent px-2.5 sm:px-6 py-1.5 sm:py-4 border-b border-gray-100">
+      <section className="sm:bg-white sm:rounded-xl sm:rounded-2xl sm:border sm:border-gray-200 overflow-hidden">
+        <div className="sm:bg-gradient-to-r sm:from-violet-50 sm:to-white px-0 sm:px-6 py-0.5 sm:py-4 border-b-0 sm:border-b border-gray-100">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-violet-100 text-violet-600 items-center justify-center">
               <IconInfo className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-semibold text-dark">Información de la cuenta</h2>
+              <h2 className="text-base sm:text-base font-semibold text-dark">Información de la cuenta</h2>
             </div>
           </div>
         </div>
 
-        <div className="p-2.5 sm:p-6 space-y-0.5 text-sm">
+        <div className="p-2 sm:p-6 space-y-0.5 text-sm">
           <div className="flex justify-between py-2 sm:py-3 px-1.5 sm:px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
             <span className="text-sm sm:text-sm text-gray">Rol</span>
             <span className="text-sm sm:text-sm text-dark font-medium">
