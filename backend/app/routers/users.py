@@ -8,6 +8,7 @@ from app.models.job import Job
 from app.models.application import Application
 from app.models.transaction import Transaction
 from app.services.auth import get_current_user
+from app.services.cloudinary_service import upload_avatar as cloudinary_upload
 import os, shutil, uuid
 from sqlalchemy import update as sa_update
 from pydantic import BaseModel
@@ -216,15 +217,29 @@ async def upload_avatar(
     if len(contents) > 5 * 1024 * 1024:
         raise HTTPException(400, "La imagen es muy grande. Maximo 5MB.")
 
+    # Intentar subir a Cloudinary primero
+    cloudinary_url = cloudinary_upload(contents, current_user.id, file.filename or "avatar.jpg")
+
+    if cloudinary_url:
+        # Cloudinary funciono -> guardar URL en BD
+        db.execute(
+            sa_update(User).where(User.id == current_user.id).values(
+                avatar_url=cloudinary_url
+            )
+        )
+        db.commit()
+        return {"avatar_url": cloudinary_url}
+
+    # Fallback: guardar localmente (Railway ephemeral, pero util para dev)
     import os, uuid
     ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
     filename = f"avatar_{current_user.id}_{uuid.uuid4().hex[:8]}.{ext}"
     filepath = os.path.join("uploads", filename)
+    os.makedirs("uploads", exist_ok=True)
 
     with open(filepath, "wb") as f:
         f.write(contents)
 
-    from sqlalchemy import update as sa_update
     db.execute(
         sa_update(User).where(User.id == current_user.id).values(
             avatar_url=f"/uploads/{filename}"

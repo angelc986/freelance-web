@@ -94,16 +94,21 @@ export function updateWallet(address: string): Promise<User> {
   });
 }
 
-export function uploadAvatar(file: File): Promise<{ avatar_url: string }> {
+export async function uploadAvatar(file: File): Promise<{ avatar_url: string }> {
   const formData = new FormData();
   formData.append("file", file);
   const token = localStorage.getItem("access_token");
   const base = API_BASE.replace("/api/v1", "");
-  return fetch(base + "/api/v1/users/avatar", {
+  const res = await fetch(base + "/api/v1/users/avatar", {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: formData,
-  }).then((r) => r.json());
+  });
+  const body = await res.json();
+  if (!res.ok) {
+    throw new Error(body.detail || "Error al subir la foto");
+  }
+  return body;
 }
 
 /* ===== JOBS ===== */

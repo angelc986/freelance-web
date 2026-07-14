@@ -79,15 +79,21 @@ export default function SettingsPage() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const apiImgBase = API_BASE.replace("/api/v1", "");
+  // Si avatar_url ya es absoluta (Cloudinary), usarla directo
+  const resolveAvatarUrl = (url: string | null) => {
+    if (!url) return null;
+    if (url.startsWith("http")) return url;
+    return API_BASE.replace("/api/v1", "") + url;
+  };
 
   useEffect(() => {
     if (user) {
       setName(user.full_name);
       setPhone(user.phone);
       setWallet(user.wallet_address || "");
-      if (user.avatar_url) setAvatarUrl(apiImgBase + user.avatar_url);
+      if (user.avatar_url) setAvatarUrl(resolveAvatarUrl(user.avatar_url));
     }
   }, [user]);
 
@@ -185,6 +191,9 @@ export default function SettingsPage() {
                   Subiendo...
                 </p>
               )}
+              {avatarError && (
+                <p className="text-xs text-red-500 mt-1">{avatarError}</p>
+              )}
             </div>
             <input
               ref={fileInputRef}
@@ -194,13 +203,17 @@ export default function SettingsPage() {
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
+                setAvatarError(null);
                 setAvatarPreview(URL.createObjectURL(file));
                 setAvatarUploading(true);
                 try {
                   const result = await uploadAvatar(file);
-                  setAvatarUrl(apiImgBase + result.avatar_url);
+                  setAvatarUrl(resolveAvatarUrl(result.avatar_url));
                   if (refreshUser) refreshUser();
-                } catch {}
+                } catch (err: any) {
+                  setAvatarError(err.message || "Error al subir la foto");
+                  setAvatarPreview(null);
+                }
                 setAvatarUploading(false);
               }}
             />
