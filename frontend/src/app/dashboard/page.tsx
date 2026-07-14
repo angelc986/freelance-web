@@ -198,11 +198,18 @@ export default function DashboardPage() {
 
   const stats = [
     {
+      label: "Balance",
+      value: "$" + balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      icon: <IconWallet />,
+      href: "/dashboard/wallet",
+      theme: themes[0],
+    },
+    {
       label: isWorker ? "Trabajos realizados" : "Trabajos publicados",
       value: isWorker ? completedJobs : totalJobs,
       icon: <IconBriefcase />,
       href: "/dashboard/jobs",
-      theme: themes[0],
+      theme: themes[1],
     },
     {
       label: "Calificación",
@@ -210,13 +217,6 @@ export default function DashboardPage() {
       suffix: " / 5.0",
       icon: <IconStar />,
       href: "/dashboard/ratings",
-      theme: themes[1],
-    },
-    {
-      label: "Balance",
-      value: "$" + balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-      icon: <IconWallet />,
-      href: "/dashboard/wallet",
       theme: themes[2],
     },
     {

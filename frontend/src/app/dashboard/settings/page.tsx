@@ -141,7 +141,7 @@ export default function SettingsPage() {
 
       {/* PROFILE */}
       <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-50 to-white px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+        <div className="bg-gradient-to-r from-blue-50 to-white px-3 sm:px-6 py-2.5 sm:py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
               <IconUser className="w-5 h-5" />
@@ -153,7 +153,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSaveProfile} className="p-4 sm:p-6 space-y-4">
+        <form onSubmit={handleSaveProfile} className="p-3 sm:p-6 space-y-3 sm:space-y-4">
           {/* Avatar */}
           <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
             <div className="relative">
@@ -254,7 +254,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={savingProfile}
-            className="inline-flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary text-white px-5 sm:px-6 py-3 sm:py-2.5 rounded-xl text-sm font-medium hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             {savingProfile ? (
               <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Guardando...</>
@@ -264,8 +264,8 @@ export default function SettingsPage() {
       </section>
 
       {/* WALLET */}
-      <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-emerald-50 to-white px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+      <section className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-emerald-50 to-white px-3 sm:px-6 py-2.5 sm:py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
               <IconWallet className="w-5 h-5" />
@@ -277,7 +277,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSaveWallet} className="p-4 sm:p-6 space-y-4">
+        <form onSubmit={handleSaveWallet} className="p-3 sm:p-6 space-y-3 sm:space-y-4">
           <div>
             <label className="block text-sm font-medium text-dark mb-1.5">
               Dirección de wallet <span className="text-red-500">*</span>
@@ -322,7 +322,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={savingWallet || !walletValid || !walletChanged}
-            className="inline-flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary text-white px-5 sm:px-6 py-3 sm:py-2.5 rounded-xl text-sm font-medium hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             {savingWallet ? (
               <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Guardando...</>
@@ -332,8 +332,8 @@ export default function SettingsPage() {
       </section>
 
       {/* CERRAR SESION */}
-      <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-red-50 to-white px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+      <section className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-red-50 to-white px-3 sm:px-6 py-2.5 sm:py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-red-100 text-red-500 flex items-center justify-center">
               <IconLogout className="w-5 h-5" />
@@ -345,15 +345,15 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="p-4 sm:p-6 space-y-4">
-          <p className="text-sm text-gray">Al cerrar sesión tendrás que volver a iniciar sesión para acceder al dashboard.</p>
+        <div className="p-3 sm:p-6 space-y-3 sm:space-y-4">
+          <p className="text-sm text-gray leading-relaxed">Al cerrar sesión tendrás que volver a iniciar sesión para acceder al dashboard.</p>
           <button
             onClick={() => {
               localStorage.removeItem("access_token");
               localStorage.removeItem("refresh_token");
               router.push("/");
             }}
-            className="inline-flex items-center gap-2 bg-gray-100 text-gray px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-red-50 hover:text-red-500 hover:-translate-y-0.5 transition-all"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gray-100 text-gray px-5 sm:px-6 py-3 sm:py-2.5 rounded-xl text-sm font-medium hover:bg-red-50 hover:text-red-500 hover:-translate-y-0.5 transition-all"
           >
             <IconLogout className="w-4 h-4" />
             Cerrar sesión
@@ -363,7 +363,7 @@ export default function SettingsPage() {
 
       {/* ACCOUNT INFO */}
       <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-violet-50 to-white px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+        <div className="bg-gradient-to-r from-violet-50 to-white px-3 sm:px-6 py-2.5 sm:py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center">
               <IconInfo className="w-5 h-5" />
@@ -374,26 +374,26 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="p-4 sm:p-6 space-y-0.5 text-sm">
-          <div className="flex justify-between py-2.5 sm:py-3 px-2 sm:px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-xs sm:text-sm text-gray">Rol</span>
+        <div className="p-3 sm:p-6 space-y-0.5 text-sm">
+          <div className="flex justify-between py-2 sm:py-3 px-1.5 sm:px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
+            <span className="text-sm sm:text-sm text-gray">Rol</span>
             <span className="text-sm sm:text-sm text-dark font-medium">
               {user.role === "worker" ? "Trabajador" : "Contratista"}
             </span>
           </div>
-          <div className="flex justify-between py-2.5 sm:py-3 px-2 sm:px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-xs sm:text-sm text-gray">Cédula</span>
+          <div className="flex justify-between py-2 sm:py-3 px-1.5 sm:px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
+            <span className="text-sm sm:text-sm text-gray">Cédula</span>
             <span className="text-sm sm:text-sm text-dark font-medium">{user.cedula}</span>
           </div>
-          <div className="flex justify-between py-2.5 sm:py-3 px-2 sm:px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-xs sm:text-sm text-gray">Calificación</span>
+          <div className="flex justify-between py-2 sm:py-3 px-1.5 sm:px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
+            <span className="text-sm sm:text-sm text-gray">Calificación</span>
             <span className="text-sm sm:text-sm text-dark font-medium flex items-center gap-1">
               <IconStar className="w-4 h-4 text-amber-400" />
               {user.rating_avg.toFixed(1)}
             </span>
           </div>
-          <div className="flex justify-between py-2.5 sm:py-3 px-2 sm:px-3 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-xs sm:text-sm text-gray">Estado</span>
+          <div className="flex justify-between py-2 sm:py-3 px-1.5 sm:px-3 rounded-lg hover:bg-gray-50/50 transition-colors">
+            <span className="text-sm sm:text-sm text-gray">Estado</span>
             <span className={"font-medium flex items-center gap-1.5 text-sm sm:text-sm " + (user.is_active ? "text-emerald-600" : "text-red-500")}>
               <span className={"w-2 h-2 rounded-full " + (user.is_active ? "bg-emerald-500" : "bg-red-500")} />
               {user.is_active ? "Activa" : "Inactiva"}
