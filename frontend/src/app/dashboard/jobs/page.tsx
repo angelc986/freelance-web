@@ -185,7 +185,7 @@ export default function DashboardJobsPage() {
       {/* HEADER */}
       <div className="flex items-center justify-between mb-6 animate-fade-in">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="w-8 h-8 rounded-lg bg-gray-100 text-gray flex items-center justify-center hover:bg-gray-200 transition-colors">
+          <Link href="/dashboard" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gray-100 text-gray flex items-center justify-center hover:bg-gray-200 transition-colors">
             <IconArrowLeft className="w-4 h-4" />
           </Link>
           <div>
