@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getUserRatings, type UserRatingSummary } from "@/lib/api";
 import EmptyState from "@/components/EmptyState";
 import PullToRefresh from "@/components/PullToRefresh";
+import { StatSkeleton, CardSkeleton } from "@/components/Skeleton";
 
 export default function RatingsPage() {
   const { user } = useAuth();
@@ -50,8 +51,44 @@ export default function RatingsPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-20">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="animate-fade-in">
+          <div className="grid lg:grid-cols-5 gap-6">
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                <div className="flex flex-col items-center mb-6">
+                  <div className="w-24 h-24 rounded-full bg-gray-200 shimmer mb-3" />
+                  <div className="h-4 w-32 bg-gray-200 rounded shimmer" />
+                </div>
+                <div className="space-y-3">
+                  {[1,2,3,4,5].map(i => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="h-4 w-3 bg-gray-200 rounded shimmer" />
+                      <div className="h-3 w-3 bg-gray-200 rounded shimmer" />
+                      <div className="flex-1 h-3 bg-gray-200 rounded-full shimmer" />
+                      <div className="h-4 w-4 bg-gray-200 rounded shimmer" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="lg:col-span-3 space-y-3">
+              {[1, 2].map(i => (
+                <div key={i} className="bg-white rounded-2xl border border-gray-200 p-5">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="h-4 w-28 bg-gray-200 rounded shimmer" />
+                      <div className="h-3 w-16 bg-gray-200 rounded shimmer" />
+                    </div>
+                    <div className="flex gap-0.5">
+                      {[1,2,3,4,5].map(s => <div key={s} className="w-4 h-4 bg-gray-200 rounded shimmer" />)}
+                    </div>
+                    <div className="h-4 bg-gray-200 rounded w-full shimmer" />
+                    <div className="h-4 bg-gray-200 rounded w-3/4 shimmer" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       ) : total === 0 ? (
         <EmptyState

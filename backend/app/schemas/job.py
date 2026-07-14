@@ -31,5 +31,35 @@ class JobResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class JobUpdate(BaseModel):
+    title: str
+    description: str
+    category: str
+    location: str
+    budget: float
+    duration: str
+
 class DisputeRequest(BaseModel):
     reason: str
+
+
+class ApplicationBrief(BaseModel):
+    """Info detallada de un aplicante para mostrar al contratista"""
+    id: int
+    worker_id: int
+    worker_name: str
+    worker_rating: float = 0.0
+    worker_email: str = ""
+    worker_phone: str = ""
+    worker_cedula: str = ""
+    worker_since: datetime | None = None
+    jobs_completed: int = 0
+    message: str | None = None
+    status: str
+    created_at: datetime
+
+
+class JobWithApplicants(BaseModel):
+    """Trabajo con lista de aplicantes"""
+    job: JobResponse
+    applicants: list[ApplicationBrief]

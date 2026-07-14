@@ -4,4 +4,5 @@ from .payments import router as payments_router
 from .admin import router as admin_router
 from .ratings import router as ratings_router
 from .events import router as events_router
+from .notifications import router as notifications_router
 from .users import router as users_router

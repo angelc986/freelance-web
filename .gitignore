@@ -34,3 +34,7 @@ Thumbs.db
 
 # Pytest cache
 .pytest_cache/
+
+uploads/
+*.pyc
+__pycache__/

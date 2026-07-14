@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+﻿from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database import SessionLocal
@@ -8,6 +8,8 @@ from app.models.job import Job
 from app.models.application import Application
 from app.models.transaction import Transaction
 from app.services.auth import get_current_user
+import os, shutil, uuid
+from sqlalchemy import update as sa_update
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -199,3 +201,35 @@ def get_user_ratings(user_id: int, db: Session = Depends(get_db)):
         breakdown=breakdown,
         reviews=reviews,
     )
+
+@router.post("/avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    allowed = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+    if file.content_type not in allowed:
+        raise HTTPException(400, "Formato no permitido. Usa JPG, PNG, WebP o GIF.")
+
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(400, "La imagen es muy grande. Maximo 5MB.")
+
+    import os, uuid
+    ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+    filename = f"avatar_{current_user.id}_{uuid.uuid4().hex[:8]}.{ext}"
+    filepath = os.path.join("uploads", filename)
+
+    with open(filepath, "wb") as f:
+        f.write(contents)
+
+    from sqlalchemy import update as sa_update
+    db.execute(
+        sa_update(User).where(User.id == current_user.id).values(
+            avatar_url=f"/uploads/{filename}"
+        )
+    )
+    db.commit()
+
+    return {"avatar_url": f"/uploads/{filename}"}

@@ -34,6 +34,7 @@ class UserResponse(BaseModel):
     is_active: bool
     balance: float = 0.0
     rating_avg: float
+    avatar_url: str | None = None
 
     class Config:
         from_attributes = True

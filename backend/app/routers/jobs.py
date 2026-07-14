@@ -5,11 +5,12 @@ from datetime import datetime, timezone, timedelta
 from app.database import SessionLocal
 from app.models.job import Job
 from app.models.application import Application
-from app.schemas.job import JobCreate, JobResponse, DisputeRequest
+from app.schemas.job import JobCreate, JobUpdate, JobResponse, DisputeRequest, JobWithApplicants, ApplicationBrief
 from app.schemas.application import ApplicationCreate, ApplicationResponse
 from app.services.auth import get_current_user
 from app.models.user import User
 from app.services.event_manager import publish
+from app.routers.notifications import create_notification
 from app.limiter import limiter
 
 router = APIRouter(prefix="/api/v1/jobs", tags=["jobs"])
@@ -44,6 +45,28 @@ def create_job(request: Request, job: JobCreate, db: Session = Depends(get_db), 
         client_id=current_user.id,
     )
     db.add(db_job)
+    db.commit()
+    db.refresh(db_job)
+    return db_job
+
+
+@router.put("/{job_id}", response_model=JobResponse)
+def update_job(job_id: int, job: JobUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Editar un trabajo (solo el dueño, solo si está abierto)"""
+    db_job = db.query(Job).filter(Job.id == job_id).first()
+    if not db_job:
+        raise HTTPException(status_code=404, detail="Trabajo no encontrado")
+    if db_job.client_id != current_user.id:
+        raise HTTPException(status_code=403, detail="No eres el dueño de este trabajo")
+    if db_job.status != "open":
+        raise HTTPException(status_code=400, detail="Solo se puede editar un trabajo abierto")
+
+    db_job.title = job.title
+    db_job.description = job.description
+    db_job.category = job.category
+    db_job.location = job.location
+    db_job.budget = job.budget
+    db_job.duration = job.duration
     db.commit()
     db.refresh(db_job)
     return db_job
@@ -92,6 +115,57 @@ def list_jobs(status_filter: str = "open", db: Session = Depends(get_db)):
     """Listar trabajos (filtro por status, default: open)"""
     jobs = db.query(Job).filter(Job.status == status_filter).all()
     return jobs
+
+
+@router.get("/my-applicants", response_model=list[JobWithApplicants])
+def my_applicants(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    ? MIS POSTULANTES
+    Solo contractors: devuelve todos los trabajos con sus aplicantes.
+    """
+    if current_user.role != "contractor":
+        raise HTTPException(status_code=403, detail="Solo contratistas")
+
+    jobs = db.query(Job).filter(
+        Job.client_id == current_user.id,
+        Job.status.in_(["open", "in_progress"])
+    ).order_by(Job.created_at.desc()).all()
+
+    result = []
+    for job in jobs:
+        apps = db.query(Application).filter(
+            Application.job_id == job.id,
+            Application.status.in_(["pending", "accepted", "rejected"])
+        ).all()
+
+        applicants = []
+        for app in apps:
+            worker = db.query(User).filter(User.id == app.worker_id).first()
+            if not worker:
+                continue
+            # Contar trabajos completados como worker
+            jobs_done = db.query(Job).filter(
+                Job.worker_id == worker.id,
+                Job.status == "completed"
+            ).count()
+            applicants.append(ApplicationBrief(
+                id=app.id,
+                worker_id=app.worker_id,
+                worker_name=worker.full_name,
+                worker_rating=worker.rating_avg or 0.0,
+                worker_email=worker.email or "",
+                worker_phone=worker.phone or "",
+                worker_cedula=worker.cedula or "",
+                worker_since=worker.created_at,
+                jobs_completed=jobs_done,
+                message=app.message,
+                status=app.status,
+                created_at=app.created_at,
+            ))
+
+        result.append(JobWithApplicants(job=job, applicants=applicants))
+
+    return result
 
 
 @router.get("/my-applications", response_model=List[ApplicationResponse])
@@ -158,6 +232,10 @@ def apply_to_job(request: Request, job_id: int, application: ApplicationCreate, 
         "worker_name": current_user.full_name,
         "message": f"{current_user.full_name} aplicó a tu trabajo '{job.title}'"
     })
+    create_notification(job.client_id, "job_applied", f"{current_user.full_name} aplicó a tu trabajo '{job.title}'", {
+        "job_id": job.id,
+        "job_title": job.title,
+    })
     return db_app
 
 
@@ -218,6 +296,10 @@ def accept_application(request: Request, job_id: int, application_id: int, db: S
         "job_title": job.title,
         "message": f"Fuiste aceptado para '{job.title}'"
     })
+    create_notification(job.worker_id, "job_accepted", f"Fuiste aceptado para '{job.title}'", {
+        "job_id": job.id,
+        "job_title": job.title,
+    })
     return job
 
 
@@ -246,6 +328,10 @@ def request_complete(request: Request, job_id: int, db: Session = Depends(get_db
         "job_title": job.title,
         "message": f"{current_user.full_name} marcó '{job.title}' como completado"
     })
+    create_notification(job.client_id, "job_review_pending", f"{current_user.full_name} marcó '{job.title}' como completado", {
+        "job_id": job.id,
+        "job_title": job.title,
+    })
     return job
 
 
@@ -270,6 +356,10 @@ def approve_job(request: Request, job_id: int, db: Session = Depends(get_db),
         "job_id": job.id,
         "job_title": job.title,
         "message": f"'{job.title}' fue aprobado y completado"
+    })
+    create_notification(job.worker_id, "job_completed", f"'{job.title}' fue aprobado y completado", {
+        "job_id": job.id,
+        "job_title": job.title,
     })
     return job
 
@@ -322,6 +412,10 @@ def cancel_job(request: Request, job_id: int, db: Session = Depends(get_db),
             "job_id": job.id,
             "job_title": job.title,
             "message": f"'{job.title}' fue cancelado"
+        })
+        create_notification(job.worker_id, "job_cancelled", f"'{job.title}' fue cancelado", {
+            "job_id": job.id,
+            "job_title": job.title,
         })
     return job
 

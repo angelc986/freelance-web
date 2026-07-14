@@ -5,6 +5,17 @@ const nextConfig: NextConfig = {
   // En produccion (Vercel), se sete en las env vars de Vercel
   // apuntando al backend en Railway
 
+  async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8003/api/v1";
+    const backendBase = apiUrl.replace("/api/v1", "");
+    return [
+      {
+        source: "/uploads/:path*",
+        destination: backendBase + "/uploads/:path*",
+      },
+    ];
+  },
+
   async headers() {
     return [
       {

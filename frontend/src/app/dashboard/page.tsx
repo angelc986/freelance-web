@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import EmptyState from "@/components/EmptyState";
 import PullToRefresh from "@/components/PullToRefresh";
+import { StatSkeleton, CardSkeleton, ActivitySkeleton } from "@/components/Skeleton";
 import { myJobs, getMyApplications, getBalance, type Job, type Application } from "@/lib/api";
 
 // ─── TYPES ───
@@ -229,14 +230,14 @@ export default function DashboardPage() {
 
   const quickActions = isWorker
     ? [
-        { label: "Buscar trabajos", href: "/jobs", icon: <IconSearch />, desc: "Encuentra turnos cerca de ti", gradient: "from-sky-400 to-blue-500" },
-        { label: "Mis postulaciones", href: "/dashboard/jobs", icon: <IconClipboard />, desc: "Revisa el estado de tus aplicaciones", gradient: "from-violet-400 to-purple-500" },
-        { label: "Wallet", href: "/dashboard/wallet", icon: <IconCreditCard />, desc: "Revisa tu saldo y movimientos", gradient: "from-emerald-400 to-teal-500" },
+        { label: "Buscar trabajos", href: "/jobs", icon: <IconSearch />, desc: "Encuentra turnos cerca de ti", color: "bg-blue-50 text-blue-600" },
+        { label: "Mis postulaciones", href: "/dashboard/jobs", icon: <IconClipboard />, desc: "Revisa el estado de tus aplicaciones", color: "bg-violet-50 text-violet-600" },
+        { label: "Mi billetera", href: "/dashboard/wallet", icon: <IconCreditCard />, desc: "Revisa tu saldo y movimientos", color: "bg-emerald-50 text-emerald-600" },
       ]
     : [
-        { label: "Publicar trabajo", href: "/jobs/new", icon: <IconPlusCircle />, desc: "Crea un nuevo turno disponible", gradient: "from-sky-400 to-blue-500" },
-        { label: "Ver candidatos", href: "/dashboard/jobs", icon: <IconUsers />, desc: "Revisa quién aplicó a tus trabajos", gradient: "from-violet-400 to-purple-500" },
-        { label: "Depositar fondos", href: "/dashboard/wallet", icon: <IconCreditCard />, desc: "Agrega USDT a tu wallet", gradient: "from-emerald-400 to-teal-500" },
+        { label: "Publicar trabajo", href: "/jobs/new", icon: <IconPlusCircle />, desc: "Crea un nuevo turno disponible", color: "bg-blue-50 text-blue-600" },
+        { label: "Ver candidatos", href: "/dashboard/candidates", icon: <IconUsers />, desc: "Revisa quién aplicó a tus trabajos", color: "bg-violet-50 text-violet-600" },
+        { label: "Depositar fondos", href: "/dashboard/wallet", icon: <IconCreditCard />, desc: "Agrega USDT a tu wallet", color: "bg-emerald-50 text-emerald-600" },
       ];
 
   const statusMap: Record<string, { label: string; color: string }> = {
@@ -260,10 +261,9 @@ export default function DashboardPage() {
     <PullToRefresh onRefresh={loadData}>
     <div className="max-w-5xl mx-auto space-y-8">
       {/* ═══════ WELCOME ═══════ */}
-      <div>
+      <div className="animate-fade-in">
         <h1 className="text-2xl font-bold text-dark">
           Hola, {user.full_name.split(" ")[0]}
-          <span className="ml-1.5 inline-block hover:scale-110 transition-transform">👋</span>
         </h1>
         <p className="text-gray text-sm mt-1">
           {isWorker
@@ -272,8 +272,8 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* ═══════ STATS CARDS ═══════ */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* ═══════ STATS CARDS (stagger entrance) ═══════ */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 stagger-children">
         {stats.map((s, i) => (
           <Link
             key={s.label}
@@ -305,15 +305,15 @@ export default function DashboardPage() {
       {/* ═══════ QUICK ACTIONS ═══════ */}
       <div>
         <h2 className="text-lg font-semibold text-dark mb-4">Acciones rápidas</h2>
-        <div className="grid sm:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-3 gap-5 stagger-children">
           {quickActions.map((a) => (
             <Link
               key={a.label}
               href={a.href}
               className="group relative bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden"
             >
-              {/* Icon with gradient background */}
-              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${a.gradient} flex items-center justify-center text-white mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+              {/* Icon with subtle background */}
+              <div className={`w-12 h-12 rounded-2xl ${a.color} flex items-center justify-center mb-4 group-hover:scale-105 transition-all duration-300`}>
                 {a.icon}
               </div>
 
@@ -321,13 +321,6 @@ export default function DashboardPage() {
                 {a.label}
               </h3>
               <p className="text-sm text-gray mt-1 leading-relaxed">{a.desc}</p>
-
-              {/* Arrow hint on hover */}
-              <div className="absolute top-5 right-5 text-gray-200 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
-              </div>
             </Link>
           ))}
         </div>
@@ -344,15 +337,16 @@ export default function DashboardPage() {
             </div>
             <h2 className="font-semibold text-dark">Actividad reciente</h2>
           </div>
-          <Link href="/dashboard/jobs" className="text-xs font-medium text-primary hover:text-primary-dark transition-colors">
-            Ver todo →
+          <Link href="/dashboard/jobs" className="inline-flex items-center gap-1 text-xs font-medium text-gray hover:text-primary transition-colors">
+            Ver todo
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
           </Link>
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-10">
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
+          <ActivitySkeleton />
         ) : activity.length === 0 ? (
           <EmptyState
             title="Sin actividad aún"

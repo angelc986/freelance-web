@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 
 export interface User {
   id: number;
@@ -12,6 +12,7 @@ export interface User {
   is_active: boolean;
   balance: number;
   rating_avg: number;
+  avatar_url: string | null;
 }
 
 export interface AuthTokens {
@@ -93,6 +94,18 @@ export function updateWallet(address: string): Promise<User> {
   });
 }
 
+export function uploadAvatar(file: File): Promise<{ avatar_url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const token = localStorage.getItem("access_token");
+  const base = API_BASE.replace("/api/v1", "");
+  return fetch(base + "/api/v1/users/avatar", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  }).then((r) => r.json());
+}
+
 /* ===== JOBS ===== */
 
 export interface Job {
@@ -147,6 +160,20 @@ export function createJob(data: {
   });
 }
 
+export function updateJob(jobId: number, data: {
+  title: string;
+  description: string;
+  category: string;
+  location: string;
+  budget: number;
+  duration: string;
+}): Promise<Job> {
+  return request(`/jobs/${jobId}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
 export function applyToJob(jobId: number, message: string): Promise<Application> {
   return request(`/jobs/${jobId}/apply`, {
     method: "POST",
@@ -160,6 +187,30 @@ export function getApplications(jobId: number): Promise<Application[]> {
 
 export function getMyApplications(): Promise<Application[]> {
   return request("/jobs/my-applications");
+}
+
+export interface ApplicantBrief {
+  id: number;
+  worker_id: number;
+  worker_name: string;
+  worker_rating: number;
+  worker_email: string;
+  worker_phone: string;
+  worker_cedula: string;
+  worker_since: string | null;
+  jobs_completed: number;
+  message: string | null;
+  status: string;
+  created_at: string;
+}
+
+export interface JobWithApplicants {
+  job: Job;
+  applicants: ApplicantBrief[];
+}
+
+export function getMyApplicants(): Promise<JobWithApplicants[]> {
+  return request("/jobs/my-applicants");
 }
 
 export interface RatingInfo {
@@ -179,6 +230,33 @@ export function rateJob(jobId: number, data: { rating: number; comment?: string 
   });
 }
 
+// ─── Notifications ───
+export interface NotificationItem {
+  id: number;
+  event: string;
+  message: string;
+  data?: any;
+  read: boolean;
+  created_at: string;
+}
+
+export function getNotifications(limit = 20): Promise<NotificationItem[]> {
+  return request(`/notifications?limit=${limit}`);
+}
+
+export function getUnreadCount(): Promise<{ count: number }> {
+  return request("/notifications/unread-count");
+}
+
+export function markNotificationRead(id: number): Promise<any> {
+  return request(`/notifications/${id}/read`, { method: "PUT" });
+}
+
+export function markAllNotificationsRead(): Promise<any> {
+  return request("/notifications/read-all", { method: "PUT" });
+}
+
+// ─── Ratings ───
 export function getJobRatings(jobId: number): Promise<RatingInfo[]> {
   return request(`/jobs/${jobId}/ratings`);
 }
@@ -274,6 +352,7 @@ export interface UserPublic {
   rating_avg: number;
   is_active: boolean;
   created_at: string | null;
+  avatar_url: string | null;
 }
 
 export function getUser(userId: number): Promise<UserPublic> {

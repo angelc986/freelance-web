@@ -29,7 +29,7 @@ def _get_user_from_token(token: str = Query(...)) -> User:
         db.close()
 
 @router.get("/api/v1/events")
-def sse_events(
+async def sse_events(
     request: Request,
     current_user: User = Depends(_get_user_from_token),
 ):

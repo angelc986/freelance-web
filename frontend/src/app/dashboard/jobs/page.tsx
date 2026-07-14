@@ -40,6 +40,31 @@ function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
   );
 }
 
+function IconClock({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+}
+
+function IconLocation({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+    </svg>
+  );
+}
+
+function IconChat({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+    </svg>
+  );
+}
+
 // ─── STATUS CONFIG ───
 const statusConfig: Record<string, { label: string; color: string; icon: string }> = {
   open:          { label: "Abierto",        color: "bg-emerald-50 text-emerald-600 border-emerald-200",         icon: "🟢" },
@@ -55,6 +80,40 @@ const appBadgeConfig: Record<string, { label: string; color: string }> = {
   rejected: { label: "Rechazado",  color: "bg-red-50 text-red-500 border-red-200" },
   accepted: { label: "Aceptado",   color: "bg-emerald-50 text-emerald-600 border-emerald-200" },
 };
+
+const statusSvgs: Record<string, string> = {
+  open: "🟢",
+  in_progress: "🔵",
+  checked_in: "🟡",
+  review_pending: "🟣",
+  completed: "✅",
+  cancelled: "❌",
+};
+
+// ─── SKELETON ───
+function ListSkeleton() {
+  return (
+    <div className="space-y-3">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="bg-white rounded-2xl p-5 border border-gray-200">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 space-y-3">
+              <div className="h-5 bg-gray-200 rounded-lg w-2/3 shimmer" />
+              <div className="flex gap-4">
+                <div className="h-3 bg-gray-200 rounded w-20 shimmer" />
+                <div className="h-3 bg-gray-200 rounded w-16 shimmer" />
+              </div>
+            </div>
+            <div className="text-right space-y-2">
+              <div className="h-7 bg-gray-200 rounded-lg w-16 shimmer" />
+              <div className="h-5 bg-gray-200 rounded-full w-20 shimmer" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // ─── PAGE ───
 export default function DashboardJobsPage() {
@@ -124,7 +183,7 @@ export default function DashboardJobsPage() {
   return (
     <div className="max-w-5xl mx-auto">
       {/* HEADER */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 animate-fade-in">
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="w-8 h-8 rounded-lg bg-gray-100 text-gray flex items-center justify-center hover:bg-gray-200 transition-colors">
             <IconArrowLeft className="w-4 h-4" />
@@ -139,7 +198,7 @@ export default function DashboardJobsPage() {
         {!isWorker && (
           <Link
             href="/jobs/new"
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary-dark hover:-translate-y-0.5 transition-all shadow-sm"
+            className="btn-ripple inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary-dark hover:-translate-y-0.5 transition-all shadow-sm"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -150,7 +209,7 @@ export default function DashboardJobsPage() {
       </div>
 
       {/* TABS */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 animate-fade-in" style={{ animationDelay: "0.05s" }}>
         {tabs.map((t) => {
           const count = counts[t.key as keyof typeof counts];
           return (
@@ -179,32 +238,33 @@ export default function DashboardJobsPage() {
 
       {/* LIST */}
       {loading ? (
-        <div className="flex justify-center py-20">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
+        <ListSkeleton />
       ) : (
         <PullToRefresh onRefresh={loadJobs}>
           {filtered.length === 0 ? (
-            <EmptyState
-              title={filter === "active" ? "No tienes trabajos activos" :
-                      filter === "completed" ? "No hay trabajos completados" :
-                      "No hay trabajos cancelados"}
-              description={isWorker
-                ? "Postúlate a un trabajo para empezar."
-                : "Publica tu primer trabajo para empezar."}
-              variant="jobs"
-              actionLabel={isWorker ? "Buscar trabajos" : "Publicar trabajo"}
-              actionHref={isWorker ? "/jobs" : "/jobs/new"}
-            />
+            <div className="animate-fade-in">
+              <EmptyState
+                title={filter === "active" ? "No tienes trabajos activos" :
+                        filter === "completed" ? "No hay trabajos completados" :
+                        "No hay trabajos cancelados"}
+                description={isWorker
+                  ? "Postúlate a un trabajo para empezar."
+                  : "Publica tu primer trabajo para empezar."}
+                variant="jobs"
+                actionLabel={isWorker ? "Buscar trabajos" : "Publicar trabajo"}
+                actionHref={isWorker ? "/jobs" : "/jobs/new"}
+              />
+            </div>
           ) : (
             <div className="space-y-3">
-              {filtered.map((job) => {
+              {filtered.map((job, idx) => {
                 const st = statusConfig[job.status] || { label: job.status, color: "bg-gray-100 text-gray border-gray-200", icon: "📌" };
                 return (
                   <Link
                     key={job.id}
                     href={`/jobs/${job.id}`}
-                    className="group bg-white rounded-2xl p-5 border border-gray-200 hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-between gap-4"
+                    className="group bg-white rounded-2xl p-5 border border-gray-200 hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-between gap-4 animate-stagger-pop"
+                    style={{ animationDelay: `${idx * 0.05}s` }}
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -215,16 +275,17 @@ export default function DashboardJobsPage() {
                       </div>
                       <div className="flex items-center gap-3 mt-1.5 text-xs text-gray">
                         <span className="inline-flex items-center gap-1">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                          </svg>
+                          <IconLocation className="w-3.5 h-3.5" />
                           {job.location}
                         </span>
-                        <span>⏱️ {job.duration}</span>
+                        <span className="inline-flex items-center gap-1">
+                          <IconClock className="w-3.5 h-3.5" />
+                          {job.duration}
+                        </span>
                         {isWorker && applications.get(job.id)?.message && (
-                          <span className="text-gray truncate max-w-[150px]">
-                            💬 {applications.get(job.id)?.message}
+                          <span className="inline-flex items-center gap-1 text-gray truncate max-w-[150px]">
+                            <IconChat className="w-3.5 h-3.5" />
+                            {applications.get(job.id)?.message}
                           </span>
                         )}
                       </div>

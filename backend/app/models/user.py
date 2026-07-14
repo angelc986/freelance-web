@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime
+﻿from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime
 from sqlalchemy.sql import func
 from app.database import Base
 
@@ -17,4 +17,5 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     balance = Column(Float, default=0.0)  # Saldo en USDT
     rating_avg = Column(Float, default=0.0)
+    avatar_url = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

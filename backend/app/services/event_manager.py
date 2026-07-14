@@ -1,8 +1,8 @@
 import json
 import queue
 import threading
-import time
-from typing import Generator
+import asyncio
+from typing import AsyncGenerator, Generator
 
 # Colas de eventos por usuario: user_id -> list[queue.Queue]
 _queues: dict[int, list[queue.Queue]] = {}
@@ -40,16 +40,19 @@ def publish(user_id: int, event: str, data: dict):
         for q in dead:
             _queues[user_id].remove(q)
 
-def event_generator(user_id: int) -> Generator[str, None, None]:
-    """Generador SSE para un usuario. Thread-safe."""
+async def event_generator(user_id: int) -> AsyncGenerator[str, None]:
+    """Generador SSE asincrono. Thread-safe."""
     q = subscribe(user_id)
     try:
+        # Send immediate connection confirmation
+        yield ": connected\n\n"
         while True:
             try:
-                msg = q.get(timeout=30)
+                msg = q.get_nowait()
                 yield f"data: {msg}\n\n"
             except queue.Empty:
-                yield f": heartbeat\n\n"
+                yield ": heartbeat\n\n"
+                await asyncio.sleep(5)  # Heartbeat every 5s
     except GeneratorExit:
         pass
     finally:

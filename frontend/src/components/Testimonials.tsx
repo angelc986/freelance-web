@@ -31,7 +31,7 @@ export default function Testimonials() {
   const stars = (n: number) => "★".repeat(n) + "☆".repeat(5 - n);
 
   return (
-    <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+    <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto stagger-children">
       {testimonials.map((t, i) => (
         <div
           key={i}

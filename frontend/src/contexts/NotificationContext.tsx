@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { useAuth } from "./AuthContext";
+import { getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, type NotificationItem } from "@/lib/api";
 
 interface Notification {
   id: string;
@@ -34,90 +35,119 @@ export function useNotifications() {
   return useContext(NotificationContext);
 }
 
+const STORAGE_PREFIX = "turnogo_notifs_";
+const MAX_NOTIFS = 50;
+
+function getStorageKey(userId: number) {
+  return `${STORAGE_PREFIX}${userId}`;
+}
+
+function loadFromStorage(userId: number): Notification[] {
+  try {
+    const raw = localStorage.getItem(getStorageKey(userId));
+    if (!raw) return [];
+    const parsed: Notification[] = JSON.parse(raw);
+    return parsed.slice(0, MAX_NOTIFS);
+  } catch {
+    return [];
+  }
+}
+
+function saveToStorage(userId: number, notifs: Notification[]) {
+  try {
+    localStorage.setItem(getStorageKey(userId), JSON.stringify(notifs.slice(0, MAX_NOTIFS)));
+  } catch {
+    // localStorage full or unavailable
+  }
+}
+
+function toLocalNotif(item: NotificationItem): Notification {
+  return {
+    id: `notif-${item.id}`,
+    event: item.event,
+    message: item.message,
+    data: item.data,
+    read: item.read,
+    created_at: item.created_at,
+  };
+}
+
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [connected, setConnected] = useState(false);
-  const evRef = useRef<EventSource | null>(null);
-  const idCounter = useRef(0);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const addNotif = useCallback((event: string, message: string, data?: any) => {
-    idCounter.current += 1;
-    const n: Notification = {
-      id: `notif-${idCounter.current}-${Date.now()}`,
-      event,
-      message,
-      data,
-      read: false,
-      created_at: new Date().toISOString(),
-    };
-    setNotifications(prev => [n, ...prev].slice(0, 50)); // max 50
-  }, []);
-
+  // Load local + fetch from API on mount
   useEffect(() => {
     if (!user) {
-      evRef.current?.close();
-      evRef.current = null;
+      setNotifications([]);
       setConnected(false);
       return;
     }
 
-    const token = localStorage.getItem("access_token");
-    if (!token) return;
+    const saved = loadFromStorage(user.id);
+    setNotifications(saved);
 
-    const connect = () => {
-      const es = new EventSource(`${process.env.NEXT_PUBLIC_API_URL || "/api/v1"}/events?token=${token}`);
+    // Initial fetch
+    getNotifications(20).then((items) => {
+      if (items.length > 0) {
+        const local = items.map(toLocalNotif);
+        setNotifications(local);
+        saveToStorage(user.id, local);
+        setConnected(true);
+      }
+    }).catch(() => {});
 
-      es.onopen = () => setConnected(true);
-
-      es.onmessage = (e) => {
-        if (!e.data) return;
-        try {
-          const { event, data } = JSON.parse(e.data);
-          const icons: Record<string, string> = {
-            job_applied: "📋",
-            job_accepted: "✅",
-            job_completed: "🎉",
-            job_disputed: "⚠️",
-            job_cancelled: "❌",
-            job_review_pending: "👀",
-          };
-          addNotif(event, data?.message || "Nueva notificación", data);
-        } catch {}
-      };
-
-      es.onerror = () => {
+    // Poll every 10 seconds
+    const poll = setInterval(() => {
+      getNotifications(20).then((items) => {
+        if (items.length > 0) {
+          const local = items.map(toLocalNotif);
+          setNotifications(local);
+          saveToStorage(user.id, local);
+        }
+        setConnected(true);
+      }).catch(() => {
         setConnected(false);
-        es.close();
-        // Reconnect after 5s
-        setTimeout(connect, 5000);
-      };
+      });
+    }, 10000);
 
-      evRef.current = es;
-    };
-
-    connect();
+    pollRef.current = poll;
 
     return () => {
-      evRef.current?.close();
-      evRef.current = null;
+      if (pollRef.current) clearInterval(pollRef.current);
+      pollRef.current = null;
       setConnected(false);
     };
-  }, [user, addNotif]);
+  }, [user?.id]);
 
-  const markRead = useCallback((id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const markRead = useCallback(async (id: string) => {
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    // Extract numeric ID
+    const numId = parseInt(id.replace("notif-", ""));
+    if (!isNaN(numId)) {
+      try {
+        await markNotificationRead(numId);
+      } catch {}
+    }
   }, []);
 
-  const markAllRead = useCallback(() => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markAllRead = useCallback(async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await markAllNotificationsRead();
+    } catch {}
   }, []);
 
   const clear = useCallback(() => {
     setNotifications([]);
-  }, []);
+    if (user) {
+      localStorage.removeItem(getStorageKey(user.id));
+    }
+  }, [user]);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <NotificationContext.Provider value={{ notifications, unreadCount, markRead, markAllRead, clear, connected }}>

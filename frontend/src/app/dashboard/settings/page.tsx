@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateProfile, updateWallet } from "@/lib/api";
+import { updateProfile, updateWallet, uploadAvatar, API_BASE } from "@/lib/api";
 
 // ─── SVG ICONS ───
 function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
@@ -76,11 +76,18 @@ export default function SettingsPage() {
   const [savingWallet, setSavingWallet] = useState(false);
   const [walletMsg, setWalletMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const apiImgBase = API_BASE.replace("/api/v1", "");
+
   useEffect(() => {
     if (user) {
       setName(user.full_name);
       setPhone(user.phone);
       setWallet(user.wallet_address || "");
+      if (user.avatar_url) setAvatarUrl(apiImgBase + user.avatar_url);
     }
   }, [user]);
 
@@ -147,6 +154,58 @@ export default function SettingsPage() {
         </div>
 
         <form onSubmit={handleSaveProfile} className="p-6 space-y-4">
+          {/* Avatar */}
+          <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden ring-2 ring-gray-200">
+                {avatarPreview || avatarUrl ? (
+                  <img src={avatarPreview || avatarUrl || ""} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  user.full_name.charAt(0).toUpperCase()
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={avatarUploading}
+                className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all disabled:opacity-50"
+              >
+                <svg className="w-4 h-4 text-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                </svg>
+              </button>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-dark">Foto de perfil</p>
+              <p className="text-xs text-gray mt-0.5">JPG, PNG o WebP. Max 5MB.</p>
+              {avatarUploading && (
+                <p className="text-xs text-primary mt-1 flex items-center gap-1.5">
+                  <span className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  Subiendo...
+                </p>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setAvatarPreview(URL.createObjectURL(file));
+                setAvatarUploading(true);
+                try {
+                  const result = await uploadAvatar(file);
+                  setAvatarUrl(apiImgBase + result.avatar_url);
+                  if (refreshUser) refreshUser();
+                } catch {}
+                setAvatarUploading(false);
+              }}
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-dark mb-1.5">Email</label>
             <input
