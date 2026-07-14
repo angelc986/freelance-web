@@ -127,7 +127,7 @@ export default function SettingsPage() {
   const walletChanged = wallet !== (user.wallet_address || "");
 
   return (
-    <div className="max-w-3xl mx-auto p-4 sm:p-6 space-y-3 sm:space-y-4 sm:space-y-6">
+    <div className="max-w-3xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* HEADER */}
       <div className="flex items-center gap-3">
         <Link href="/dashboard" className="w-8 h-8 rounded-lg bg-gray-100 text-gray flex items-center justify-center hover:bg-gray-200 transition-colors">
@@ -140,7 +140,7 @@ export default function SettingsPage() {
       </div>
 
       {/* PROFILE */}
-      <section className="sm:bg-white sm:rounded-2xl sm:border sm:border-gray-200 overflow-hidden">
+      <section className="bg-white rounded-2xl border border-gray-100 sm:border-gray-200 overflow-hidden shadow-sm sm:shadow-none">
         <div className="hidden sm:flex bg-gradient-to-r from-blue-50 to-white px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
@@ -153,7 +153,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSaveProfile} className="sm:p-6 space-y-3 sm:space-y-4">
+        <form onSubmit={handleSaveProfile} className="p-4 sm:p-6 space-y-4">
           {/* Avatar */}
           <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
             <div className="relative">
@@ -264,7 +264,7 @@ export default function SettingsPage() {
       </section>
 
       {/* WALLET */}
-      <section className="sm:bg-white sm:rounded-2xl sm:border sm:border-gray-200 overflow-hidden">
+      <section className="bg-white rounded-2xl border border-gray-100 sm:border-gray-200 overflow-hidden shadow-sm sm:shadow-none">
         <div className="hidden sm:flex bg-gradient-to-r from-emerald-50 to-white px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
@@ -277,7 +277,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSaveWallet} className="sm:p-6 space-y-3 sm:space-y-4">
+        <form onSubmit={handleSaveWallet} className="p-4 sm:p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-dark mb-1.5">
               Dirección de wallet <span className="text-red-500">*</span>
@@ -332,7 +332,7 @@ export default function SettingsPage() {
       </section>
 
       {/* CERRAR SESION */}
-      <section className="sm:bg-white sm:rounded-2xl sm:border sm:border-gray-200 overflow-hidden">
+      <section className="bg-transparent sm:bg-white sm:rounded-2xl sm:border sm:border-gray-200 overflow-hidden">
         <div className="hidden sm:flex bg-gradient-to-r from-red-50 to-white px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-red-100 text-red-500 flex items-center justify-center">
@@ -345,24 +345,26 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="sm:p-6 space-y-3 sm:space-y-4">
-          <p className="hidden sm:block text-sm text-gray">Al cerrar sesión tendrás que volver a iniciar sesión para acceder al dashboard.</p>
+        <div className="sm:p-6">
+          <p className="hidden sm:block text-sm text-gray mb-4">
+            Al cerrar sesión tendrás que volver a iniciar sesión para acceder al dashboard.
+          </p>
           <button
             onClick={() => {
               localStorage.removeItem("access_token");
               localStorage.removeItem("refresh_token");
               router.push("/");
             }}
-            className="inline-flex items-center gap-2 bg-gray-100 text-gray px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-red-50 hover:text-red-500 hover:-translate-y-0.5 transition-all"
+            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-white sm:bg-gray-100 text-red-500 sm:text-gray px-6 py-3 sm:py-2.5 rounded-xl text-base sm:text-sm font-medium border border-red-100 sm:border-transparent hover:bg-red-50 hover:text-red-600 transition-all shadow-sm sm:shadow-none"
           >
-            <IconLogout className="w-4 h-4" />
+            <IconLogout className="w-5 h-5 sm:w-4 sm:h-4" />
             Cerrar sesión
           </button>
         </div>
       </section>
 
       {/* ACCOUNT INFO */}
-      <section className="sm:bg-white sm:rounded-2xl sm:border sm:border-gray-200 overflow-hidden">
+      <section className="bg-white rounded-2xl border border-gray-100 sm:border-gray-200 overflow-hidden shadow-sm sm:shadow-none">
         <div className="hidden sm:flex bg-gradient-to-r from-violet-50 to-white px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center">
@@ -374,7 +376,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="sm:p-6 space-y-0.5 text-sm">
+        <div className="p-4 sm:p-6 space-y-0.5 text-sm">
           <div className="flex justify-between py-3 px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
             <span className="text-gray">Rol</span>
             <span className="text-dark font-medium">
