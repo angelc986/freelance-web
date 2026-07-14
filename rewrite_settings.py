@@ -1,14 +1,20 @@
-﻿"use client";
+import re
 
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
-import { updateProfile, updateWallet, uploadAvatar, API_BASE } from "@/lib/api";
+path = r'C:\Users\yochi\Desktop\freelance-web\frontend\src\app\dashboard\settings\page.tsx'
 
-// ─── SVG ICONS ───
-function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
-  return (
+with open(path, 'r', encoding='utf-8') as f:
+    content = f.read()
+
+# Find the return block
+start = content.find('  return (')
+end = content.rfind('  );\n}')
+
+if start == -1 or end == -1:
+    print("ERROR: Could not find return block")
+    exit(1)
+
+# The new mobile-first JSX
+new_jsx = '''  return (
     <div className="max-w-3xl mx-auto sm:space-y-6">
       {/* HEADER */}
       <div className="flex items-center gap-3 px-0 sm:px-0">
@@ -16,7 +22,7 @@ function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
           <IconArrowLeft className="w-4 h-4" />
         </Link>
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-dark">Configuración</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-dark">Configuraci\u00f3n</h1>
           <p className="text-gray text-xs sm:text-sm mt-0.5">Administra tu perfil y wallet</p>
         </div>
       </div>
@@ -30,8 +36,8 @@ function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
               <IconUser className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-semibold text-dark">Información personal</h2>
-              <p className="text-xs text-gray">Nombre y teléfono</p>
+              <h2 className="font-semibold text-dark">Informaci\u00f3n personal</h2>
+              <p className="text-xs text-gray">Nombre y tel\u00e9fono</p>
             </div>
           </div>
         </div>
@@ -115,7 +121,7 @@ function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
 
           <div>
             <label className="block text-sm font-medium text-dark mb-1">
-              Teléfono <span className="text-red-500">*</span>
+              Tel\u00e9fono <span className="text-red-500">*</span>
             </label>
             <input
               type="tel"
@@ -157,7 +163,7 @@ function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
             </div>
             <div>
               <h2 className="font-semibold text-dark">Wallet USDT</h2>
-              <p className="text-xs text-gray">Dirección para recibir pagos en Polygon</p>
+              <p className="text-xs text-gray">Direcci\u00f3n para recibir pagos en Polygon</p>
             </div>
           </div>
         </div>
@@ -165,7 +171,7 @@ function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
         <form onSubmit={handleSaveWallet} className="sm:p-6 space-y-3">
           <div>
             <label className="block text-sm font-medium text-dark mb-1">
-              Dirección de wallet <span className="text-red-500">*</span>
+              Direcci\u00f3n de wallet <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -175,10 +181,10 @@ function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
               className={"w-full px-3.5 py-2.5 border rounded-xl text-sm font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all " + (wallet && !walletValid ? "border-red-300 bg-red-50" : "border-gray-200")}
             />
             {wallet && !walletValid && (
-              <p className="text-xs text-red-500 mt-1.5">Dirección inválida. Debe empezar con 0x y tener 42 caracteres.</p>
+              <p className="text-xs text-red-500 mt-1.5">Direcci\u00f3n inv\u00e1lida. Debe empezar con 0x y tener 42 caracteres.</p>
             )}
             <p className="text-xs text-gray mt-1.5">
-              Solo direcciones de Polygon (red principal). Asegúrate de que sea correcta &mdash; los fondos no se pueden recuperar si envías a una dirección incorrecta.
+              Solo direcciones de Polygon (red principal). Aseg\u00farate de que sea correcta &mdash; los fondos no se pueden recuperar si env\u00edas a una direcci\u00f3n incorrecta.
             </p>
           </div>
 
@@ -227,7 +233,7 @@ function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
               <IconInfo className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-semibold text-dark">Información de la cuenta</h2>
+              <h2 className="font-semibold text-dark">Informaci\u00f3n de la cuenta</h2>
             </div>
           </div>
         </div>
@@ -240,11 +246,11 @@ function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
             </span>
           </div>
           <div className="flex justify-between py-2 px-1.5 border-b border-gray-50 rounded-lg">
-            <span className="text-sm text-gray">Cédula</span>
+            <span className="text-sm text-gray">C\u00e9dula</span>
             <span className="text-sm text-dark font-medium">{user.cedula}</span>
           </div>
           <div className="flex justify-between py-2 px-1.5 border-b border-gray-50 rounded-lg">
-            <span className="text-sm text-gray">Calificación</span>
+            <span className="text-sm text-gray">Calificaci\u00f3n</span>
             <span className="text-sm text-dark font-medium flex items-center gap-1">
               <IconStar className="w-4 h-4 text-amber-400" />
               {user.rating_avg.toFixed(1)}
@@ -274,9 +280,16 @@ function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium text-gray bg-gray-50 hover:bg-red-50 hover:text-red-500 transition-all border border-gray-200"
         >
           <IconLogout className="w-4 h-4" />
-          Cerrar sesión
+          Cerrar sesi\u00f3n
         </button>
       </div>
     </div>
   );
-}
+}'''
+
+content = content[:start] + new_jsx + content[end + len('  );\n}'):]
+
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(content)
+
+print("Done! Settings page rewritten.")
