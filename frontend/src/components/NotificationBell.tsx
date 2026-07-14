@@ -121,9 +121,20 @@ export default function NotificationBell() {
       {/* Connection dot */}
       <span className={`absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full border border-white ${connected ? "bg-emerald-400" : "bg-gray-300"}`} />
 
+      {/* Mobile backdrop */}
+      {open && <div className="fixed inset-0 z-[9998] md:hidden" onClick={() => setOpen(false)} />}
+
       {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden z-[9999] animate-page-enter">
+        <div className="
+          fixed md:absolute
+          left-4 right-4 md:left-auto md:right-0
+          top-20 md:top-full md:mt-2
+          z-[9999]
+          bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden
+          animate-page-enter
+          max-h-[75vh] flex flex-col
+        ">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
             <div className="flex items-center gap-2">

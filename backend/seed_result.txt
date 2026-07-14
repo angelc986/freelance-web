@@ -1,0 +1,3 @@
+ERR: admin@turnogo.com - 500: Internal Server Error
+ERR: contratista@test.com - 500: Internal Server Error
+ERR: empleado@test.com - 500: Internal Server Error

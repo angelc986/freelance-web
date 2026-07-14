@@ -248,8 +248,31 @@ export default function DashboardLayout({
         </header>
 
         {/* Content with page transition */}
-        <main key={pathname} className="flex-1 p-4 sm:p-6 lg:p-8 animate-page-enter">{children}</main>
+        <main key={pathname} className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 sm:pb-6 lg:pb-8 animate-page-enter">{children}</main>
       </div>
+
+      {/* MOBILE BOTTOM NAV */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 pb-[env(safe-area-inset-bottom,0px)]">
+        <div className="flex items-center justify-around h-14">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${
+                  isActive ? "text-primary" : "text-gray hover:text-dark"
+                }`}
+              >
+                <div className={isActive ? "scale-110 transition-transform" : ""}>
+                  {item.icon}
+                </div>
+                <span className="text-[10px] font-medium">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

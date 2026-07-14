@@ -259,13 +259,13 @@ export default function DashboardPage() {
 
   return (
     <PullToRefresh onRefresh={loadData}>
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
       {/* ═══════ WELCOME ═══════ */}
       <div className="animate-fade-in">
-        <h1 className="text-2xl font-bold text-dark">
+        <h1 className="text-xl sm:text-2xl font-bold text-dark">
           Hola, {user.full_name.split(" ")[0]}
         </h1>
-        <p className="text-gray text-sm mt-1">
+        <p className="text-xs sm:text-sm text-gray mt-0.5 sm:mt-1">
           {isWorker
             ? "Encuentra trabajos cerca de ti y empieza a ganar."
             : "Publica turnos y encuentra trabajadores verificados."}
@@ -273,30 +273,30 @@ export default function DashboardPage() {
       </div>
 
       {/* ═══════ STATS CARDS (stagger entrance) ═══════ */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 stagger-children">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 stagger-children">
         {stats.map((s, i) => (
           <Link
             key={s.label}
             href={s.href}
-            className={`group relative overflow-hidden rounded-2xl border ${s.theme.border} ${s.theme.gradient} p-5 hover:shadow-lg ${s.theme.shadow} hover:-translate-y-1 transition-all duration-300`}
+            className={`group relative overflow-hidden rounded-xl sm:rounded-2xl border ${s.theme.border} ${s.theme.gradient} p-4 sm:p-5 hover:shadow-lg ${s.theme.shadow} hover:-translate-y-1 transition-all duration-300`}
           >
             {/* Gradient accent bar */}
-            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${s.theme.bg}`} />
+            <div className={`absolute top-0 left-0 right-0 h-0.5 sm:h-1 bg-gradient-to-r ${s.theme.bg}`} />
 
             <div className="relative z-10">
               {/* Icon circle */}
-              <div className={`w-11 h-11 rounded-xl ${s.theme.light} flex items-center justify-center ${s.theme.icon} mb-3 group-hover:scale-110 transition-transform duration-300`}>
+              <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl ${s.theme.light} flex items-center justify-center ${s.theme.icon} mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-300`}>
                 {s.icon}
               </div>
 
               {/* Value */}
               <div className="flex items-baseline gap-1">
-                <p className="text-2xl font-bold text-dark">{s.value}</p>
-                {(s as any).suffix && <span className="text-sm text-gray">{(s as any).suffix}</span>}
+                <p className="text-xl sm:text-2xl font-bold text-dark">{s.value}</p>
+                {(s as any).suffix && <span className="text-xs sm:text-sm text-gray">{(s as any).suffix}</span>}
               </div>
 
               {/* Label */}
-              <p className="text-sm text-gray mt-1 group-hover:text-dark transition-colors">{s.label}</p>
+              <p className="text-xs sm:text-sm text-gray mt-0.5 sm:mt-1 group-hover:text-dark transition-colors">{s.label}</p>
             </div>
           </Link>
         ))}
@@ -304,38 +304,38 @@ export default function DashboardPage() {
 
       {/* ═══════ QUICK ACTIONS ═══════ */}
       <div>
-        <h2 className="text-lg font-semibold text-dark mb-4">Acciones rápidas</h2>
-        <div className="grid sm:grid-cols-3 gap-5 stagger-children">
+        <h2 className="text-base sm:text-lg font-semibold text-dark mb-3 sm:mb-4">Acciones rápidas</h2>
+        <div className="grid sm:grid-cols-3 gap-3 sm:gap-5 stagger-children">
           {quickActions.map((a) => (
             <Link
               key={a.label}
               href={a.href}
-              className="group relative bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+              className="group relative bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-4 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden"
             >
               {/* Icon with subtle background */}
-              <div className={`w-12 h-12 rounded-2xl ${a.color} flex items-center justify-center mb-4 group-hover:scale-105 transition-all duration-300`}>
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl ${a.color} flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 transition-all duration-300`}>
                 {a.icon}
               </div>
 
-              <h3 className="font-semibold text-dark group-hover:text-primary transition-colors">
+              <h3 className="font-semibold text-sm sm:text-base text-dark group-hover:text-primary transition-colors">
                 {a.label}
               </h3>
-              <p className="text-sm text-gray mt-1 leading-relaxed">{a.desc}</p>
+              <p className="text-xs sm:text-sm text-gray mt-0.5 sm:mt-1 leading-relaxed">{a.desc}</p>
             </Link>
           ))}
         </div>
       </div>
 
       {/* ═══════ RECENT ACTIVITY ═══════ */}
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="font-semibold text-dark">Actividad reciente</h2>
+            <h2 className="text-sm sm:text-base font-semibold text-dark">Actividad reciente</h2>
           </div>
           <Link href="/dashboard/jobs" className="inline-flex items-center gap-1 text-xs font-medium text-gray hover:text-primary transition-colors">
             Ver todo
@@ -363,16 +363,16 @@ export default function DashboardPage() {
                 <Link
                   key={i}
                   href={act.type === "transaction" ? "/dashboard/wallet" : `/jobs/${act.id}`}
-                  className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50/70 transition-colors group"
+                  className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50/70 transition-colors group"
                 >
                   {/* Timeline dot */}
                   <div className="relative flex items-center justify-center">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                    <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center ${
                       act.type === "job" ? "bg-blue-50 text-blue-600" :
                       act.type === "application" ? "bg-violet-50 text-violet-600" :
                       "bg-emerald-50 text-emerald-600"
                     }`}>
-                      {IconComp && IconComp("w-4 h-4")}
+                      {IconComp && IconComp("w-3.5 h-3.5 sm:w-4 sm:h-4")}
                     </div>
                     {/* Dot connector */}
                     {i < activity.length - 1 && (
@@ -381,13 +381,13 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-dark">
+                    <p className="text-xs sm:text-sm text-dark">
                       <span className="font-medium">{act.action}</span>
                       <span className="text-gray ml-1">{act.title}</span>
                     </p>
                   </div>
 
-                  <span className={`inline-block flex-shrink-0 px-2.5 py-1 text-[11px] font-medium rounded-full ${st.color}`}>
+                  <span className={`inline-block flex-shrink-0 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-medium rounded-full ${st.color}`}>
                     {st.label}
                   </span>
                 </Link>
