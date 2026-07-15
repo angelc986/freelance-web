@@ -395,7 +395,7 @@ function AuthPageInner() {
 
  <div className="glass-container">
  {/* ─── Logo superior en todas las pantallas ─── */}
- <div className="absolute top-4 left-4 z-30">
+ <div className="absolute top-[calc(env(safe-area-inset-top,0px)+6px)] left-4 z-30">
  <Logo size="sm" />
  </div>
 
@@ -404,6 +404,13 @@ function AuthPageInner() {
 
  {/* ═══════ 1. WELCOME ═══════ */}
  <div className={screenClass("welcome")}>
+ {/* Volver a la página principal */}
+ <div className="stagger" style={{position:"absolute",top:"calc(env(safe-area-inset-top,0px) + 48px)",left:16,zIndex:5}}>
+ <a href="/" className="flex items-center gap-1.5 text-gray-400 hover:text-primary transition-colors text-[13px] font-medium" style={{textDecoration:"none"}}>
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+ Volver
+ </a>
+ </div>
  <div className="flex-1 flex flex-col justify-center items-center text-center">
  <div className="stagger">
  <div className="logo-container mx-auto mb-6">

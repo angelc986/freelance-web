@@ -221,58 +221,73 @@ export default function Home() {
 
         {/* Mobile menu */}
         {menuOpen && (
-          <div className="md:hidden bg-white border-b border-gray-200 px-4 py-4 space-y-3 animate-fade-in">
-            {/* Mobile: solo nav links (sin login/register) */}
-            <div className="pt-3 border-t border-gray-100 space-y-1">
-              {navLinks.map((link) => {
-                if (link.href === "#como-funciona") {
-                  return (
-                    <button
-                      key={link.href}
-                      onClick={() => {
-                        setMenuOpen(false);
-                        document.getElementById("como-funciona")?.scrollIntoView({ behavior: "smooth" });
-                        setInfoOpen(true);
-                      }}
-                      className="block w-full text-left text-gray hover:text-dark transition-colors text-sm font-medium py-2"
-                    >
-                      {link.label}
-                    </button>
-                  );
-                }
-                if (link.href === "#categorias") {
-                  return (
-                    <button
-                      key={link.href}
-                      onClick={() => {
-                        setMenuOpen(false);
-                        document.getElementById("categorias")?.scrollIntoView({ behavior: "smooth" });
-                        setCatOpen(true);
-                      }}
-                      className="block w-full text-left text-gray hover:text-dark transition-colors text-sm font-medium py-2"
-                    >
-                      {link.label}
-                    </button>
-                  );
-                }
-                return (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    className="block text-gray hover:text-dark transition-colors text-sm font-medium py-2"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {link.label}
-                  </a>
-                );
-              })}
-            </div>
+          <div className="md:hidden bg-white border-b border-gray-200 px-4 py-4 space-y-2 animate-fade-in">
+            <a
+              href="/auth?screen=login"
+              className="block w-full text-center px-5 py-3 text-sm font-semibold text-dark border border-gray-light rounded-full hover:border-primary hover:text-primary active:bg-primary/5 transition-all"
+              onClick={() => setMenuOpen(false)}
+            >
+              Iniciar sesión
+            </a>
+            <a
+              href="/auth?screen=register"
+              className="block w-full text-center px-5 py-3 text-sm font-semibold text-white bg-primary rounded-full hover:bg-primary-dark active:bg-primary-darker transition-all shadow-sm"
+              onClick={() => setMenuOpen(false)}
+            >
+              Registrarse
+            </a>
           </div>
         )}
       </header>
 
+      {/* Barra de navegación visible: Cómo funciona, Categorías, Para empresas */}
+      <div className="fixed left-0 right-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-200/70"
+        style={{ top: "calc(4rem + env(safe-area-inset-top, 0px))" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-10 flex items-center justify-center gap-6 sm:gap-8 overflow-x-auto">
+          {navLinks.map((link) => {
+            if (link.href === "#como-funciona") {
+              return (
+                <button
+                  key={link.href}
+                  onClick={() => {
+                    document.getElementById("como-funciona")?.scrollIntoView({ behavior: "smooth" });
+                    setInfoOpen(true);
+                  }}
+                  className="text-gray-500 hover:text-primary transition-colors text-xs sm:text-sm font-medium whitespace-nowrap"
+                >
+                  {link.label}
+                </button>
+              );
+            }
+            if (link.href === "#categorias") {
+              return (
+                <button
+                  key={link.href}
+                  onClick={() => {
+                    document.getElementById("categorias")?.scrollIntoView({ behavior: "smooth" });
+                    setCatOpen(true);
+                  }}
+                  className="text-gray-500 hover:text-primary transition-colors text-xs sm:text-sm font-medium whitespace-nowrap"
+                >
+                  {link.label}
+                </button>
+              );
+            }
+            return (
+              <a
+                key={link.href}
+                href={link.href}
+                className="text-gray-500 hover:text-primary transition-colors text-xs sm:text-sm font-medium whitespace-nowrap"
+              >
+                {link.label}
+              </a>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ========== HERO ========== */}
-      <section className="relative pt-[calc(6rem+env(safe-area-inset-top,0px))] sm:pt-[calc(8rem+env(safe-area-inset-top,0px))] pb-16 sm:pb-24 overflow-hidden">
+      <section className="relative pt-[calc(8.5rem+env(safe-area-inset-top,0px))] sm:pt-[calc(10rem+env(safe-area-inset-top,0px))] pb-16 sm:pb-24 overflow-hidden">
         {/* Animated gradient background */}
         <div className="absolute inset-0 -z-20 bg-gradient-to-br from-primary-lighter via-white to-secondary-light/20 animate-gradient" />
 
