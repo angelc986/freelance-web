@@ -383,6 +383,8 @@ function AuthPageInner() {
 
  return (
  <>
+ {/* DEBUG */}
+ <div style={{position:"fixed",bottom:0,right:0,background:"#EF4444",color:"#fff",padding:"2px 8px",fontSize:"11px",zIndex:99999,borderRadius:"4px 0 0 0",fontWeight:"bold",fontFamily:"monospace"}}>v0715-0709</div>
  {/* ═══════ CONTAINER ═══════ */}
  <div className="phone-frame">
  <canvas ref={meshRef} className="mesh-canvas" />
