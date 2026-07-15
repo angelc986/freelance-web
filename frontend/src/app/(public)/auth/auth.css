@@ -104,3 +104,56 @@ button {
  background-image: none !important;
  border-width: 0 !important;
 }
+
+/* ==========================================================================
+ 🔴 PWA iOS STANDALONE PATCH — solo cuando la app está instalada
+    Tailwind h-full en <html> y min-h-full en <body> (layout.tsx)
+    tienen más especificidad que html,body en auth.css, forzando
+    height:100% que en modo standalone usa un viewport incorrecto.
+    Este parche usa !important + display-mode:standalone para
+    sobreescribir todo SIN tocar la versión web.
+   ========================================================================== */
+
+@media (display-mode: standalone) and (max-width: 480px) {
+  html, body {
+    background: #EFF6FF !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  .phone-frame {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: -80px !important;
+    height: calc(100dvh + 80px) !important;
+  }
+
+  .glass-container {
+    bottom: 0 !important;
+  }
+
+  .screen {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 24px) + 16px) !important;
+  }
+
+  /* Degradado de fusión: elimina la línea rígida entre el glass y el fondo */
+  .glass-container::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 120px;
+    background: linear-gradient(
+      to top,
+      #EFF6FF 0%,
+      rgba(239, 246, 255, 0.9) 35%,
+      rgba(255, 255, 255, 0.3) 75%,
+      transparent 100%
+    );
+    pointer-events: none;
+    z-index: 11;
+  }
+}
