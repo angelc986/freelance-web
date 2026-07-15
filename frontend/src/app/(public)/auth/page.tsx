@@ -393,7 +393,7 @@ function AuthPageInner() {
  <div className="aurora" />
  <canvas ref={particlesRef} className="particle-canvas" />
 
- <div className="glass-container" style={{"--safe-top":"env(safe-area-inset-top,0px)"} as React.CSSProperties}>
+ <div className="glass-container" style={{"--safe-top":"env(safe-area-inset-top,0px)","--safe-bottom":"env(safe-area-inset-bottom,0px)",paddingBottom:"env(safe-area-inset-bottom,0px)"} as React.CSSProperties}>
  {/* ─── Logo superior en todas las pantallas ─── */}
  <div className="absolute left-4 z-30" style={{top:"calc(var(--safe-top) + 14px)"}}>
  <Logo size="sm" />
