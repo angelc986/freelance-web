@@ -384,7 +384,7 @@ function AuthPageInner() {
  return (
  <>
  {/* ═══════ CONTAINER ═══════ */}
- <div className="phone-frame">
+ <div className="phone-frame" style={{paddingTop:"env(safe-area-inset-top,0px)"}}>
  <canvas ref={meshRef} className="mesh-canvas" />
  <div className="blob-layer">
  <div className="blob blob-1" /><div className="blob blob-2" />
