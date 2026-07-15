@@ -384,7 +384,7 @@ function AuthPageInner() {
  return (
  <>
  {/* ═══════ CONTAINER ═══════ */}
- <div className="phone-frame" style={{paddingTop:"env(safe-area-inset-top,0px)"}}>
+ <div className="phone-frame">
  <canvas ref={meshRef} className="mesh-canvas" />
  <div className="blob-layer">
  <div className="blob blob-1" /><div className="blob blob-2" />
@@ -393,7 +393,7 @@ function AuthPageInner() {
  <div className="aurora" />
  <canvas ref={particlesRef} className="particle-canvas" />
 
- <div className="glass-container">
+ <div className="glass-container" style={{top:"env(safe-area-inset-top,0px)"}}>
  {/* ─── Logo superior en todas las pantallas ─── */}
  <div className="absolute top-3 left-4 z-30">
  <Logo size="sm" />
