@@ -395,7 +395,7 @@ function AuthPageInner() {
 
  <div className="glass-container">
  {/* ─── Logo superior en todas las pantallas ─── */}
- <div className="absolute top-[calc(env(safe-area-inset-top,0px)+6px)] left-4 z-30">
+ <div className="absolute top-2 left-4 z-30">
  <Logo size="sm" />
  </div>
 
@@ -405,7 +405,7 @@ function AuthPageInner() {
  {/* ═══════ 1. WELCOME ═══════ */}
  <div className={screenClass("welcome")}>
  {/* Volver a la página principal */}
- <div className="stagger" style={{position:"absolute",top:"calc(env(safe-area-inset-top,0px) + 48px)",left:16,zIndex:5}}>
+ <div className="stagger" style={{position:"absolute",top:46,left:16,zIndex:5}}>
  <a href="/" className="btn-back" style={{marginLeft:0}}>
  <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
  </a>
