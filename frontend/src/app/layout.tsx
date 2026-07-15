@@ -14,6 +14,7 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {
@@ -26,9 +27,16 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "TurnoGO",
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
   },
+  appLinks: {},
   other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+    "apple-mobile-web-app-title": "TurnoGO",
+    "msapplication-TileColor": "#2563EB",
+    "msapplication-TileImage": "/icons/icon-192x192.png",
     "theme-color": "#2563EB",
   },
   openGraph: {
@@ -55,7 +63,12 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${inter.variable} h-full`}>
       <head>
-        <link rel="apple-touch-icon" href="/icons/icon-512.svg" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="384x384" href="/icons/icon-384x384.png" />
+        <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png" />
       </head>
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>
