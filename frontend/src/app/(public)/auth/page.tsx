@@ -393,9 +393,9 @@ function AuthPageInner() {
  <div className="aurora" />
  <canvas ref={particlesRef} className="particle-canvas" />
 
- <div className="glass-container" style={{"--safe-top":"env(safe-area-inset-top,0px)","--safe-bottom":"env(safe-area-inset-bottom,0px)",paddingBottom:"env(safe-area-inset-bottom,0px)"} as React.CSSProperties}>
+ <div className="glass-container">
  {/* ─── Logo superior en todas las pantallas ─── */}
- <div className="absolute left-4 z-30" style={{top:"calc(var(--safe-top) + 14px)"}}>
+ <div className="absolute left-4 z-30" style={{top:"calc(env(safe-area-inset-top,0px) + 14px)"}}>
  <Logo size="sm" />
  </div>
 
@@ -403,9 +403,9 @@ function AuthPageInner() {
  <Particles />
 
  {/* ═══════ 1. WELCOME ═══════ */}
- <div className={screenClass("welcome")}>
+ <div className={screenClass("welcome")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
  {/* Volver a la página principal */}
- <div className="stagger" style={{position:"absolute",top:"calc(var(--safe-top) + 52px)",left:14,zIndex:5}}>
+ <div className="stagger" style={{position:"absolute",top:"calc(env(safe-area-inset-top,0px) + 52px)",left:14,zIndex:5}}>
  <a href="/" className="btn-back" style={{marginLeft:0}}>
  <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
  </a>
@@ -437,7 +437,7 @@ function AuthPageInner() {
  </div>
 
  {/* ═══════ 2. REGISTER ═══════ */}
- <div className={screenClass("register")}>
+ <div className={screenClass("register")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
  <div className="top-bar">
  <button onClick={pop} className="btn-back">
  <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
@@ -509,7 +509,7 @@ function AuthPageInner() {
  </div>
 
  {/* ═══════ 3. LOGIN ═══════ */}
- <div className={screenClass("login")}>
+ <div className={screenClass("login")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
  <div className="top-bar">
  <button onClick={pop} className="btn-back">
  <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
@@ -562,7 +562,7 @@ function AuthPageInner() {
  </div>
 
  {/* ═══════ 4. RESET PASSWORD ═══════ */}
- <div className={screenClass("reset")}>
+ <div className={screenClass("reset")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
  <div className="top-bar">
  <button onClick={pop} className="btn-back">
  <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
@@ -589,7 +589,7 @@ function AuthPageInner() {
  </div>
 
  {/* ═══════ 5. CHECK EMAIL ═══════ */}
- <div className={screenClass("email")}>
+ <div className={screenClass("email")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
  <div className="flex-1 flex flex-col justify-center items-center text-center">
  <div className="pop-in">
  <div className="email-icon mx-auto mb-6">
