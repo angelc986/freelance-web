@@ -306,16 +306,17 @@ export default function AuthPage() {
  }, 1200);
  }
 
- // Reset stagger animations when screen changes
+ // ─── Stagger animation trigger ───
  useEffect(() => {
- setTimeout(() => {
- document.querySelectorAll(".stagger, .pop-in").forEach(el => {
- (el as HTMLElement).style.animation = "none";
- void (el as HTMLElement).offsetHeight;
- (el as HTMLElement).style.animation = "";
+ const timers: NodeJS.Timeout[] = [];
+ const items = document.querySelectorAll('.stagger');
+ items.forEach((el, i) => {
+ (el as HTMLElement).classList.remove('in');
+ const timer = setTimeout(() => (el as HTMLElement).classList.add('in'), i * 60);
+ timers.push(timer);
  });
- }, 50);
- }, [current]);
+ return () => timers.forEach(clearTimeout);
+ }, [current, transition]);
 
  const safeTop = "env(safe-area-inset-top, 0px)";
 
@@ -359,9 +360,8 @@ export default function AuthPage() {
  .screen-left{transform:translateX(-25%) scale(.94);opacity:0;filter:blur(6px);z-index:5;pointer-events:none}
  .screen-hidden{transform:translateX(105%);opacity:0;z-index:0;pointer-events:none}
 
- .stagger{opacity:0;transform:translateY(25px) scale(.98);animation:enter .5s cubic-bezier(.16,1,.3,1) forwards}
- @keyframes enter{to{opacity:1;transform:translateY(0) scale(1)}}
- .stagger-d0{animation-delay:0ms}.stagger-d1{animation-delay:60ms}.stagger-d2{animation-delay:120ms}.stagger-d3{animation-delay:180ms}.stagger-d4{animation-delay:240ms}.stagger-d5{animation-delay:300ms}.stagger-d6{animation-delay:360ms}.stagger-d7{animation-delay:420ms}.stagger-d8{animation-delay:480ms}
+ .stagger{opacity:0;transform:translateY(25px) scale(.98);transition:opacity .5s cubic-bezier(.16,1,.3,1),transform .5s cubic-bezier(.16,1,.3,1)}
+ .stagger.in{opacity:1;transform:translateY(0) scale(1)}
  @keyframes popIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
  .pop-in{animation:popIn .5s cubic-bezier(.16,1,.3,1) forwards;opacity:0}
 
@@ -436,7 +436,7 @@ export default function AuthPage() {
  {/* ═══════ 1. WELCOME ═══════ */}
  <div className={screenClass("welcome")}>
  <div className="flex-1 flex flex-col justify-center items-center text-center">
- <div className="stagger stagger-d1">
+ <div className="stagger">
  <div className="logo-container mx-auto mb-6">
  <div className="logo-mark">
  <svg viewBox="0 0 48 48" fill="none" style={{width:48,height:48}}>
@@ -451,14 +451,14 @@ export default function AuthPage() {
  <span className="logo-text">Turno<span style={{color:"#2563EB"}}>GO</span></span>
  </div>
  </div>
- <h1 className="text-[30px] font-extrabold mb-2 tracking-tight text-gray-900 stagger stagger-d2">Bienvenido</h1>
- <p className="text-gray-500 text-[15px] max-w-[260px] mx-auto leading-relaxed stagger stagger-d3">Encuentra trabajos, conecta y crece. Tu oportunidad empieza aquí.</p>
+ <h1 className="text-[30px] font-extrabold mb-2 tracking-tight text-gray-900 stagger">Bienvenido</h1>
+ <p className="text-gray-500 text-[15px] max-w-[260px] mx-auto leading-relaxed stagger">Encuentra trabajos, conecta y crece. Tu oportunidad empieza aquí.</p>
  </div>
  <div className="space-y-3 pb-2">
- <button onClick={() => push("register")} className="btn-main stagger stagger-d4">Comenzar</button>
- <button onClick={() => push("login")} className="ghost-btn stagger stagger-d5">Ya tengo una cuenta</button>
+ <div className="stagger"><button onClick={() => push("register")} className="btn-main">Comenzar</button></div>
+ <div className="stagger"><button onClick={() => push("login")} className="ghost-btn">Ya tengo una cuenta</button></div>
  </div>
- <p className="legal-text text-center mt-auto stagger stagger-d6">Al continuar aceptas nuestros <a href="#">Términos</a> y <a href="#">Privacidad</a>.</p>
+ <div className="stagger"><p className="legal-text text-center mt-auto">Al continuar aceptas nuestros <a href="#">Términos</a> y <a href="#">Privacidad</a>.</p></div>
  </div>
 
  {/* ═══════ 2. REGISTER ═══════ */}
@@ -474,7 +474,7 @@ export default function AuthPage() {
  </div>
  </div>
 
- <div className="stagger stagger-d1">
+ <div className="stagger">
  <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Crear cuenta</h2>
  <p className="text-gray-500 text-[14px] mb-6">Únete hoy — es gratis</p>
  </div>
@@ -482,17 +482,17 @@ export default function AuthPage() {
  {error && <div className="error-msg">{error}</div>}
 
  <form onSubmit={handleRegister}>
- <div className="stagger stagger-d2"><div className="input-group">
+ <div className="stagger"><div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
  <input type="text" className="input-field" placeholder="Nombre completo" value={regName} onChange={e => setRegName(e.target.value)} />
  </div></div>
 
- <div className="stagger stagger-d3"><div className="input-group">
+ <div className="stagger"><div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
  <input type="email" className="input-field" placeholder="Correo electrónico" value={regEmail} onChange={e => setRegEmail(e.target.value)} />
  </div></div>
 
- <div className="stagger stagger-d4"><div className="input-group">
+ <div className="stagger"><div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
  <input type={regShowPw ? "text" : "password"} className="input-field" placeholder="Contraseña" value={regPassword} onChange={e => setRegPassword(e.target.value)} />
  <button type="button" onClick={() => setRegShowPw(!regShowPw)} className="pw-toggle">
@@ -502,12 +502,12 @@ export default function AuthPage() {
  </button>
  </div></div>
 
- <div className="stagger stagger-d5">
+ <div className="stagger">
  <button type="submit" disabled={loading} className="btn-main mt-2 mb-6">{loading ? "Creando cuenta..." : "Crear Cuenta"}</button>
  </div>
  </form>
 
- <div className="stagger stagger-d6">
+ <div className="stagger">
  <div className="flex items-center gap-4 mb-5"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-400 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
  <div className="flex gap-3">
  <button className="btn-social"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5 5 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/></svg>Google</button>
@@ -529,7 +529,7 @@ export default function AuthPage() {
  </div>
  </div>
 
- <div className="stagger stagger-d1">
+ <div className="stagger">
  <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Bienvenido de nuevo</h2>
  <p className="text-gray-500 text-[14px] mb-6">Inicia sesión para continuar</p>
  </div>
@@ -537,12 +537,12 @@ export default function AuthPage() {
  {error && <div className="error-msg">{error}</div>}
 
  <form onSubmit={handleLogin}>
- <div className="stagger stagger-d2"><div className="input-group">
+ <div className="stagger"><div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
  <input type="email" className="input-field" placeholder="Correo electrónico" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} />
  </div></div>
 
- <div className="stagger stagger-d3"><div className="input-group mb-1">
+ <div className="stagger"><div className="input-group mb-1">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
  <input type={loginShowPw ? "text" : "password"} className="input-field" placeholder="Contraseña" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
  <button type="button" onClick={() => setLoginShowPw(!loginShowPw)} className="pw-toggle">
@@ -552,7 +552,7 @@ export default function AuthPage() {
  </button>
  </div></div>
 
- <div className="stagger stagger-d4">
+ <div className="stagger">
  <div className="flex justify-end mb-5">
  <button type="button" onClick={() => push("reset")} className="text-[#2563EB] text-[13px] font-semibold hover:underline">¿Olvidaste tu contraseña?</button>
  </div>
@@ -560,7 +560,7 @@ export default function AuthPage() {
  </div>
  </form>
 
- <div className="stagger stagger-d5">
+ <div className="stagger">
  <div className="flex items-center gap-4 mb-5"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-400 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
  <div className="flex gap-3">
  <button className="btn-social"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5 5 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/></svg>Google</button>
@@ -577,17 +577,17 @@ export default function AuthPage() {
  </button>
  </div>
 
- <div className="stagger stagger-d1">
+ <div className="stagger">
  <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Restablecer contraseña</h2>
  <p className="text-gray-500 text-[14px] leading-relaxed mb-6">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
  </div>
 
- <div className="stagger stagger-d2"><div className="input-group mb-6">
+ <div className="stagger"><div className="input-group mb-6">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
  <input type="email" className="input-field" placeholder="Correo electrónico" value={resetEmail} onChange={e => setResetEmail(e.target.value)} />
  </div></div>
 
- <div className="stagger stagger-d3">
+ <div className="stagger">
  <button onClick={simulateReset} className="btn-main mb-5" id="send-link-btn">Enviar Enlace</button>
  <button onClick={() => popTo("login")} className="link-btn w-full py-2">
  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
@@ -604,15 +604,15 @@ export default function AuthPage() {
  <svg fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
  </div>
  </div>
- <div className="stagger stagger-d1">
+ <div className="stagger">
  <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Revisa tu correo</h2>
  <p className="text-gray-500 text-[14px] max-w-[260px] mx-auto leading-relaxed mb-8">Te enviamos un enlace para restablecer tu contraseña.</p>
  </div>
- <div className="stagger stagger-d2 space-y-3">
+ <div className="stagger space-y-3">
  <button className="btn-main">Abrir Correo</button>
  <button className="ghost-btn">Reenviar enlace</button>
  </div>
- <div className="stagger stagger-d3">
+ <div className="stagger">
  <button onClick={() => popTo("login")} className="link-btn w-full py-2 mt-4">
  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
  Volver a iniciar sesión
