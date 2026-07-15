@@ -106,17 +106,16 @@ button {
 }
 
 /* ==========================================================================
- 🔴 PWA iOS STANDALONE PATCH — solo cuando la app está instalada
-    Tailwind h-full en <html> y min-h-full en <body> (layout.tsx)
-    tienen más especificidad que html,body en auth.css, forzando
-    height:100% que en modo standalone usa un viewport incorrecto.
-    Este parche usa !important + display-mode:standalone para
-    sobreescribir todo SIN tocar la versión web.
+ 🔴 PWA iOS STANDALONE — fusión invisible del glass-container
+    -webkit-mask-image desvanece la capa de vidrio hacia abajo
+    Degradado largo con backdrop-filter en ::before
+    Solo se activa con la app instalada (display-mode: standalone)
    ========================================================================== */
 
 @media (display-mode: standalone) and (max-width: 480px) {
   html, body {
     background: #EFF6FF !important;
+    height: 100vh !important;
     height: 100dvh !important;
     overflow: hidden !important;
   }
@@ -126,34 +125,51 @@ button {
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: -80px !important;
-    height: calc(100dvh + 80px) !important;
+    bottom: -120px !important;
+    height: calc(100vh + 120px) !important;
+    height: calc(100dvh + 120px) !important;
   }
 
+  /* MÁSCARA: desvanece el vidrio a transparente en el último 25% */
   .glass-container {
     bottom: 0 !important;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      black 0%,
+      black 72%,
+      rgba(0,0,0,0.85) 80%,
+      rgba(0,0,0,0.35) 90%,
+      transparent 100%
+    ) !important;
+    mask-image: linear-gradient(to bottom, black 0%, black 72%, rgba(0,0,0,0.35) 90%, transparent 100%) !important;
+  }
+
+  /* CAPA DE FUSIÓN: degradado largo pasando por azules antes de blanco */
+  .glass-container::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: -1px !important;
+    height: 240px !important;
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(239,246,255,0) 0%,
+        rgba(191,219,254,0.12) 18%,
+        rgba(191,219,254,0.25) 35%,
+        rgba(219,234,254,0.45) 55%,
+        rgba(239,246,255,0.72) 75%,
+        rgba(255,255,255,0.88) 90%,
+        #fff 100%
+      ) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    pointer-events: none !important;
+    z-index: 11 !important;
   }
 
   .screen {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 24px) + 16px) !important;
-  }
-
-  /* Degradado de fusión: elimina la línea rígida entre el glass y el fondo */
-  .glass-container::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 120px;
-    background: linear-gradient(
-      to top,
-      #EFF6FF 0%,
-      rgba(239, 246, 255, 0.9) 35%,
-      rgba(255, 255, 255, 0.3) 75%,
-      transparent 100%
-    );
-    pointer-events: none;
-    z-index: 11;
+    padding-bottom: calc(120px + env(safe-area-inset-bottom, 24px) + 20px) !important;
   }
 }
