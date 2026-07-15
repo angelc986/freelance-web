@@ -101,25 +101,25 @@ export default function InfoModal({ open, onClose }: Props) {
         </button>
 
         {/* Header */}
-        <div className="pt-8 pb-2 px-7">
+        <div className="pt-6 pb-1 px-6">
           <div className="flex items-center gap-2 mb-0.5">
-            <svg className="w-7 h-7 text-primary shrink-0" viewBox="0 0 28 28" fill="currentColor">
+            <svg className="w-6 h-6 text-primary shrink-0" viewBox="0 0 28 28" fill="currentColor">
               <circle cx="14" cy="14" r="12" />
               <path d="M9 14l3.5 3.5L19 11" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
             </svg>
-            <span className="font-bold text-lg text-dark">Cómo funciona TurnoGO</span>
+            <span className="font-bold text-base text-dark">Cómo funciona TurnoGO</span>
           </div>
-          <p className="text-sm text-gray leading-relaxed">
+          <p className="text-xs text-gray leading-relaxed">
             Así de fácil consigues trabajo o contratas ayuda en Venezuela.
           </p>
         </div>
 
         {/* Steps */}
-        <div className="px-7 pb-6 pt-2 space-y-0">
+        <div className="px-6 pb-4 pt-1 space-y-0">
           {steps.map((s, i) => (
-            <div key={i} className="flex gap-4 py-3 group">
+            <div key={i} className="flex gap-3 py-2 group">
               {/* Icon */}
-              <div className={`relative flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
+              <div className={`relative flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 ${
                 s.highlight
                   ? "bg-primary text-white shadow-md shadow-primary/25 group-hover:scale-110"
                   : "bg-primary/10 text-primary group-hover:bg-primary/15"
@@ -127,7 +127,7 @@ export default function InfoModal({ open, onClose }: Props) {
                 {s.icon}
                 {/* Connector line */}
                 {i < steps.length - 1 && (
-                  <div className={`absolute top-11 left-1/2 -translate-x-1/2 w-px h-4 ${
+                  <div className={`absolute top-10 left-1/2 -translate-x-1/2 w-px h-4 ${
                     s.highlight ? "bg-primary/30" : "bg-gray-200"
                   }`} />
                 )}
@@ -150,14 +150,14 @@ export default function InfoModal({ open, onClose }: Props) {
         </div>
 
         {/* Footer CTA */}
-        <div className="px-7 pb-7 pt-2">
+        <div className="px-6 pb-5 pt-1">
           <a
-            href="/auth/register"
-            className="block w-full py-3 bg-primary text-white font-semibold text-center rounded-2xl hover:bg-primary-dark transition-all shadow-md shadow-primary/20"
+            href="/auth"
+            className="block w-full py-2.5 bg-primary text-white font-semibold text-sm text-center rounded-2xl hover:bg-primary-dark transition-all shadow-md shadow-primary/20"
           >
             Empezar ahora
           </a>
-          <p className="text-center text-xs text-gray mt-2">Sin compromiso, créala en 2 minutos</p>
+          <p className="text-center text-[11px] text-gray mt-1.5">Sin compromiso, créala en 2 minutos</p>
         </div>
       </div>
     </div>
