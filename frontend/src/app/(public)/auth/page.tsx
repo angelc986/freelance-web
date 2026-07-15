@@ -1,0 +1,629 @@
+"use client";
+
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+
+/* ══════════════════════════════════════════════════════════════
+   SCREENS: welcome | register | login | reset | email
+   ══════════════════════════════════════════════════════════════ */
+type Screen = "welcome" | "register" | "login" | "reset" | "email";
+
+/* ══════════════════════════════════════════════════════════════
+   MESH GRADIENT (Canvas)
+   ══════════════════════════════════════════════════════════════ */
+function useMeshGradient(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
+ useEffect(() => {
+ const canvas = canvasRef.current;
+ if (!canvas) return;
+ const ctx = canvas.getContext("2d");
+ if (!ctx) return;
+
+ let nodes: { x: number; y: number; dx: number; dy: number; color: { r: number; g: number; b: number } }[] = [];
+ let frame = 0;
+ let animId = 0;
+
+ function init() {
+ const w = canvas!.clientWidth;
+ const h = canvas!.clientHeight;
+ canvas!.width = w;
+ canvas!.height = h;
+ nodes = [
+ { x: 0.15, y: 0.20, dx: 0.010, dy: 0.007, color: { r: 37, g: 99, b: 235 } },
+ { x: 0.78, y: 0.18, dx: -0.008, dy: 0.009, color: { r: 59, g: 130, b: 246 } },
+ { x: 0.82, y: 0.75, dx: 0.007, dy: -0.010, color: { r: 96, g: 165, b: 250 } },
+ { x: 0.18, y: 0.78, dx: -0.011, dy: -0.006, color: { r: 147, g: 197, b: 253 } },
+ { x: 0.50, y: 0.50, dx: 0.006, dy: 0.008, color: { r: 29, g: 78, b: 216 } },
+ ];
+ }
+
+ function draw() {
+ const w = canvas!.width;
+ const h = canvas!.height;
+ const imageData = ctx!.createImageData(w, h);
+ const data = imageData.data;
+
+ for (const n of nodes) {
+ n.x += n.dx; n.y += n.dy;
+ if (n.x < -0.15 || n.x > 1.15) n.dx *= -1;
+ if (n.y < -0.15 || n.y > 1.15) n.dy *= -1;
+ }
+
+ const step = 2;
+ for (let py = 0; py < h; py += step) {
+ for (let px = 0; px < w; px += step) {
+ const xn = px / w;
+ const yn = py / h;
+ let r = 0, g = 0, b = 0, tw = 0;
+ for (const n of nodes) {
+ const ds = (xn - n.x) * (xn - n.x) + (yn - n.y) * (yn - n.y);
+ const wgt = 1 / (ds * ds + 0.0002);
+ r += n.color.r * wgt; g += n.color.g * wgt; b += n.color.b * wgt; tw += wgt;
+ }
+ r = Math.min(255, Math.round(r / tw * 1.1));
+ g = Math.min(255, Math.round(g / tw * 1.1));
+ b = Math.min(255, Math.round(b / tw * 1.1));
+ const idx = (py * w + px) * 4;
+ for (let dy = 0; dy < step && py + dy < h; dy++) {
+ for (let dx = 0; dx < step && px + dx < w; dx++) {
+ const i = idx + (dy * w + dx) * 4;
+ data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = 255;
+ }
+ }
+ }
+ }
+
+ ctx!.putImageData(imageData, 0, 0);
+ frame++;
+ animId = window.setTimeout(() => requestAnimationFrame(draw), 40);
+ }
+
+ init();
+ draw();
+
+ const handleResize = () => { init(); };
+ window.addEventListener("resize", handleResize);
+
+ return () => {
+ window.removeEventListener("resize", handleResize);
+ cancelAnimationFrame(animId);
+ clearTimeout(animId);
+ };
+ }, [canvasRef]);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PARTICLES (Canvas)
+   ══════════════════════════════════════════════════════════════ */
+function useParticles(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
+ useEffect(() => {
+ const canvas = canvasRef.current;
+ if (!canvas) return;
+ const ctx = canvas.getContext("2d");
+ if (!ctx) return;
+
+ interface Particle {
+ x: number; y: number; size: number;
+ speedX: number; speedY: number; opacity: number; hue: string;
+ }
+ let particles: Particle[] = [];
+ let animId = 0;
+
+ function reset() {
+ const w = canvas!.clientWidth;
+ const h = canvas!.clientHeight;
+ canvas!.width = w;
+ canvas!.height = h;
+ particles = Array.from({ length: 12 }, () => ({
+ x: Math.random() * w,
+ y: Math.random() * h,
+ size: Math.random() * 3 + 1,
+ speedX: (Math.random() - 0.5) * 0.1,
+ speedY: (Math.random() - 0.5) * 0.1,
+ opacity: Math.random() * 0.12 + 0.02,
+ hue: Math.random() > 0.3 ? "37,99,235" : "59,130,246",
+ }));
+ }
+
+ function animate() {
+ const w = canvas!.width;
+ const h = canvas!.height;
+ ctx!.clearRect(0, 0, w, h);
+ for (const p of particles) {
+ p.x += p.speedX; p.y += p.speedY;
+ if (p.x < -10) p.x = w + 10; if (p.x > w + 10) p.x = -10;
+ if (p.y < -10) p.y = h + 10; if (p.y > h + 10) p.y = -10;
+ ctx!.beginPath();
+ ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+ ctx!.fillStyle = `rgba(${p.hue},${p.opacity})`;
+ ctx!.fill();
+ }
+ animId = requestAnimationFrame(animate);
+ }
+
+ reset();
+ animate();
+
+ const handleResize = () => reset();
+ window.addEventListener("resize", handleResize);
+ return () => {
+ window.removeEventListener("resize", handleResize);
+ cancelAnimationFrame(animId);
+ };
+ }, [canvasRef]);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RIPPLE HOOK
+   ══════════════════════════════════════════════════════════════ */
+function useRipple() {
+ useEffect(() => {
+ const handler = (e: MouseEvent) => {
+ const btn = (e.target as HTMLElement).closest(".btn-main") as HTMLElement;
+ if (!btn) return;
+ const ripple = document.createElement("span");
+ ripple.className = "ripple";
+ const rect = btn.getBoundingClientRect();
+ const size = Math.max(rect.width, rect.height);
+ ripple.style.width = ripple.style.height = `${size}px`;
+ ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+ ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+ btn.appendChild(ripple);
+ ripple.addEventListener("animationend", () => ripple.remove());
+ };
+ document.addEventListener("click", handler);
+ return () => document.removeEventListener("click", handler);
+ }, []);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+   ══════════════════════════════════════════════════════════════ */
+export default function AuthPage() {
+ const router = useRouter();
+ const { user, login, register } = useAuth();
+ const meshRef = useRef<HTMLCanvasElement>(null);
+ const particlesRef = useRef<HTMLCanvasElement>(null);
+
+ useMeshGradient(meshRef);
+ useParticles(particlesRef);
+ useRipple();
+
+ const [history, setHistory] = useState<Screen[]>(["welcome"]);
+ const [transition, setTransition] = useState("");
+ const current = history[history.length - 1];
+
+ // Form state
+ const [regName, setRegName] = useState("");
+ const [regEmail, setRegEmail] = useState("");
+ const [regPassword, setRegPassword] = useState("");
+ const [regShowPw, setRegShowPw] = useState(false);
+
+ const [loginEmail, setLoginEmail] = useState("");
+ const [loginPassword, setLoginPassword] = useState("");
+ const [loginShowPw, setLoginShowPw] = useState(false);
+
+ const [resetEmail, setResetEmail] = useState("");
+ const [loading, setLoading] = useState(false);
+ const [error, setError] = useState("");
+ const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+
+ // ─── Redirect if already logged in ───
+ useEffect(() => {
+ if (user) {
+ if (user.is_admin) router.push("/admin");
+ else router.push("/dashboard");
+ }
+ }, [user, router]);
+
+ // ─── Navigation ───
+ const push = useCallback((screen: Screen) => {
+ const last = history[history.length - 1];
+ if (last === screen) return;
+ setTransition("push");
+ setHistory(prev => [...prev, screen]);
+ }, [history]);
+
+ const pop = useCallback(() => {
+ if (history.length <= 1) return;
+ setTransition("pop");
+ setHistory(prev => prev.slice(0, -1));
+ }, [history]);
+
+ const replace = useCallback((screen: Screen) => {
+ setTransition("");
+ setHistory(prev => [...prev.slice(0, -1), screen]);
+ }, []);
+
+ const popTo = useCallback((screen: Screen) => {
+ setTransition("pop");
+ setHistory(prev => {
+ const idx = prev.lastIndexOf(screen);
+ return idx >= 0 ? prev.slice(0, idx + 1) : prev.slice(0, 1);
+ });
+ }, []);
+
+ // ─── Screen class ───
+ function screenClass(s: Screen) {
+ const idx = history.indexOf(s);
+ if (idx === -1) return "screen screen-hidden";
+ if (idx === history.length - 1 && transition === "pop") return "screen screen-active";
+ if (s === current) return "screen screen-active";
+ if (idx < history.length - 1) return "screen screen-left";
+ return "screen screen-right";
+ }
+
+ // ─── Handlers ───
+ async function handleLogin(e: React.FormEvent) {
+ e.preventDefault();
+ setError("");
+ if (!loginEmail || !loginPassword) { setError("Completa todos los campos"); return; }
+ setLoading(true);
+ try {
+ const u = await login(loginEmail, loginPassword);
+ router.push(u.is_admin ? "/admin" : "/dashboard");
+ } catch (err: any) {
+ setError(err.message || "Error al iniciar sesión");
+ } finally { setLoading(false); }
+ }
+
+ async function handleRegister(e: React.FormEvent) {
+ e.preventDefault();
+ setError("");
+ if (!regName || !regEmail || !regPassword) { setError("Completa todos los campos"); return; }
+ setLoading(true);
+ try {
+ const u = await register({
+ email: regEmail,
+ phone: "+580000000000",
+ full_name: regName,
+ cedula: "V-00000000",
+ password: regPassword,
+ role: "worker",
+ });
+ router.push(u.is_admin ? "/admin" : "/dashboard");
+ } catch (err: any) {
+ setError(err.message || "Error al registrarse");
+ } finally { setLoading(false); }
+ }
+
+ function simulateReset() {
+ const btn = document.getElementById("send-link-btn");
+ if (!btn) return;
+ const label = btn.textContent || "";
+ btn.textContent = "Enviando...";
+ btn.style.opacity = "0.7";
+ setTimeout(() => {
+ btn.textContent = "¡Enviado! ✓";
+ btn.classList.add("done");
+ btn.style.opacity = "1";
+ setTimeout(() => {
+ push("email");
+ btn.textContent = label;
+ btn.classList.remove("done");
+ btn.style.opacity = "1";
+ }, 800);
+ }, 1200);
+ }
+
+ // Reset stagger animations when screen changes
+ useEffect(() => {
+ setTimeout(() => {
+ document.querySelectorAll(".stagger, .pop-in").forEach(el => {
+ (el as HTMLElement).style.animation = "none";
+ void (el as HTMLElement).offsetHeight;
+ (el as HTMLElement).style.animation = "";
+ });
+ }, 50);
+ }, [current]);
+
+ const safeTop = "env(safe-area-inset-top, 0px)";
+
+ return (
+ <>
+ {/* ═══════ INLINE STYLES ═══════ */}
+ <style>{`
+ *,*::before,*::after{box-sizing:border-box}
+ *{font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent}
+ body{margin:0;padding:0;background:#E8ECF1;overflow:hidden}
+
+ .phone-frame{position:fixed;inset:0;background:#fff;overflow:hidden;display:flex;justify-content:center}
+ @media(min-width:480px){.phone-frame{top:50%;left:50%;transform:translate(-50%,-50%);width:390px;height:844px;border-radius:44px;box-shadow:0 0 0 4px #CBD5E1,0 20px 60px rgba(0,0,0,0.15)}}
+
+ .mesh-canvas{position:absolute;inset:0;z-index:0;width:100%;height:100%}
+
+ .blob-layer{position:absolute;inset:0;z-index:1;overflow:hidden}
+ .blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.45;animation-iteration-count:infinite;animation-direction:alternate;animation-timing-function:cubic-bezier(0.4,0,0.2,1)}
+ .blob-1{width:65%;height:65%;top:-20%;left:-15%;background:radial-gradient(circle,#3B82F6,transparent 70%);animation:float1 10s infinite alternate}
+ .blob-2{width:55%;height:55%;bottom:-15%;right:-10%;background:radial-gradient(circle,#2563EB,transparent 70%);animation:float2 12s infinite alternate}
+ .blob-3{width:50%;height:50%;top:30%;left:35%;background:radial-gradient(circle,#60A5FA,transparent 70%);animation:float3 15s infinite alternate}
+ .blob-4{width:40%;height:40%;top:55%;left:-8%;background:radial-gradient(circle,#93C5FD,transparent 70%);animation:float4 14s infinite alternate}
+ .blob-5{width:45%;height:45%;top:5%;right:0;background:radial-gradient(circle,#1D4ED8,transparent 70%);animation:float5 18s infinite alternate}
+
+ @keyframes float1{0%{transform:translate(0,0) scale(1) rotate(0)}33%{transform:translate(40px,-25px) scale(1.12) rotate(4deg)}66%{transform:translate(-20px,15px) scale(.92) rotate(-2deg)}100%{transform:translate(15px,-8px) scale(1.04) rotate(1deg)}}
+ @keyframes float2{0%{transform:translate(0,0) scale(1) rotate(0)}50%{transform:translate(-35px,20px) scale(1.15) rotate(-6deg)}100%{transform:translate(20px,-15px) scale(.88) rotate(5deg)}}
+ @keyframes float3{0%{transform:translate(0,0) scale(1) rotate(0)}25%{transform:translate(25px,8px) scale(1.08) rotate(2deg)}75%{transform:translate(-40px,-20px) scale(.94) rotate(-3deg)}100%{transform:translate(8px,25px) scale(1.06) rotate(3deg)}}
+ @keyframes float4{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-30px,-35px) scale(1.2)}100%{transform:translate(35px,15px) scale(.82)}}
+ @keyframes float5{0%{transform:translate(0,0) scale(1) rotate(0)}40%{transform:translate(-45px,12px) scale(.92) rotate(-3deg)}80%{transform:translate(20px,-25px) scale(1.12) rotate(5deg)}100%{transform:translate(-8px,8px) scale(1.04) rotate(-1deg)}}
+
+ .aurora{position:absolute;inset:0;z-index:2;pointer-events:none;background:conic-gradient(from 0deg at 50% 50%,transparent 0%,rgba(37,99,235,0.06) 25%,transparent 50%,rgba(59,130,246,0.04) 75%,transparent 100%);filter:blur(80px);animation:auroraSpin 25s linear infinite;opacity:0.4}
+ @keyframes auroraSpin{to{transform:rotate(360deg)}}
+
+ .particle-canvas{position:absolute;inset:0;z-index:3;pointer-events:none}
+
+ .glass-container{position:absolute;inset:0;z-index:10;background:rgba(255,255,255,0.55);backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.5),inset 0 -1px 0 rgba(0,0,0,0.04)}
+ .glass-container::after{content:'';position:absolute;top:0;left:8px;right:8px;height:1px;background:linear-gradient(to right,transparent 5%,rgba(255,255,255,0.6) 25%,rgba(255,255,255,0.8) 50%,rgba(255,255,255,0.6) 75%,transparent 95%);z-index:99;pointer-events:none}
+
+ .screen{position:absolute;top:0;left:0;width:100%;height:100%;padding:24px;display:flex;flex-direction:column;transition:transform .6s cubic-bezier(.16,1,.3,1),opacity .35s ease,filter .45s ease;will-change:transform,opacity,filter;overflow-y:auto}
+ .screen-active{transform:translateX(0) scale(1);opacity:1;filter:blur(0);z-index:20}
+ .screen-right{transform:translateX(105%) scale(.96);opacity:0;filter:blur(4px);z-index:20;pointer-events:none}
+ .screen-left{transform:translateX(-25%) scale(.94);opacity:0;filter:blur(6px);z-index:5;pointer-events:none}
+ .screen-hidden{transform:translateX(105%);opacity:0;z-index:0;pointer-events:none}
+
+ .stagger{opacity:0;transform:translateY(25px) scale(.98);animation:enter .5s cubic-bezier(.16,1,.3,1) forwards}
+ @keyframes enter{to{opacity:1;transform:translateY(0) scale(1)}}
+ .stagger-d0{animation-delay:0ms}.stagger-d1{animation-delay:60ms}.stagger-d2{animation-delay:120ms}.stagger-d3{animation-delay:180ms}.stagger-d4{animation-delay:240ms}.stagger-d5{animation-delay:300ms}.stagger-d6{animation-delay:360ms}.stagger-d7{animation-delay:420ms}.stagger-d8{animation-delay:480ms}
+ @keyframes popIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+ .pop-in{animation:popIn .5s cubic-bezier(.16,1,.3,1) forwards;opacity:0}
+
+ .btn-main{width:100%;padding:16px;border-radius:14px;background:linear-gradient(135deg,#2563EB,#3B82F6);background-size:200% 200%;color:#fff;font-weight:600;font-size:16px;letter-spacing:-.01em;border:none;cursor:pointer;position:relative;overflow:hidden;transition:transform .35s cubic-bezier(.34,1.56,.64,1),filter .2s,box-shadow .2s;box-shadow:0 4px 15px rgba(37,99,235,0.3);animation:gradientShift 20s ease infinite,breatheGlow 4s ease-in-out infinite}
+ .btn-main::after{content:'';position:absolute;top:0;left:0;right:0;height:45%;background:linear-gradient(to bottom,rgba(255,255,255,.18),transparent);border-radius:14px 14px 0 0;pointer-events:none}
+ .btn-main:hover{filter:brightness(1.08)}
+ .btn-main:active{transform:scale(.97);transition:transform .15s cubic-bezier(.34,1.56,.64,1)}
+ .btn-main:disabled{opacity:.6;pointer-events:none}
+ .btn-main.done{background:linear-gradient(135deg,#059669,#10B981)!important;box-shadow:0 4px 15px rgba(5,150,105,0.3)!important;animation:breatheGlowGreen 4s ease-in-out infinite!important}
+ @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+ @keyframes breatheGlow{0%,100%{box-shadow:0 4px 15px rgba(37,99,235,0.3)}50%{box-shadow:0 8px 30px rgba(37,99,235,0.5),0 0 50px rgba(37,99,235,0.1)}}
+ @keyframes breatheGlowGreen{0%,100%{box-shadow:0 4px 15px rgba(5,150,105,0.3)}50%{box-shadow:0 8px 30px rgba(5,150,105,0.5)}}
+
+ .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.35);transform:scale(0);animation:rippleEffect .6s ease-out forwards;pointer-events:none}
+ @keyframes rippleEffect{to{transform:scale(4);opacity:0}}
+
+ .input-group{position:relative;margin-bottom:14px}
+ .input-field{width:100%;padding:16px 16px 16px 48px;background:#F1F5F9;border:1.5px solid #E2E8F0;border-radius:14px;color:#1E293B;font-size:14px;font-weight:500;outline:none;transition:all .3s cubic-bezier(.16,1,.3,1)}
+ .input-field:focus{border-color:#2563EB;background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.1),0 2px 8px rgba(37,99,235,.08);transform:translateY(-1px)}
+ .input-field::placeholder{color:#94A3B8;font-weight:400;transition:all .3s}
+ .input-field:focus::placeholder{opacity:0;transform:translateX(4px)}
+ .input-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:#94A3B8;transition:all .3s}
+ .input-group:focus-within .input-icon{color:#2563EB;transform:translateY(-50%) scale(1.08)}
+ .pw-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#94A3B8;border:0;background:none;cursor:pointer;transition:color .2s;padding:4px}
+ .pw-toggle:hover{color:#475569}
+
+ .pill-toggle{position:relative;display:flex;align-items:center;background:#E2E8F0;border-radius:100px;padding:2px;width:152px;height:38px}
+ .pill-slider{position:absolute;top:2px;bottom:2px;width:74px;background:#2563EB;border-radius:100px;transition:transform .35s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 8px rgba(37,99,235,.3)}
+ .pill-slider.right{transform:translateX(74px)}
+ .pill-btn{flex:1;position:relative;z-index:10;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;transition:color .35s;color:#64748B}
+ .pill-btn.active{color:#fff}
+
+ .btn-social{flex:1;padding:13px;border-radius:100px;background:#F1F5F9;border:1.5px solid #E2E8F0;color:#475569;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s,border-color .2s,transform .15s}
+ .btn-social:active{background:#E2E8F0;border-color:#CBD5E1;transform:scale(.97)}
+
+ .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+ .btn-back{width:40px;height:40px;display:flex;align-items:center;color:#334155;cursor:pointer;border:none;background:none;margin-left:-8px;transition:opacity .2s}
+ .btn-back:active{opacity:.5}
+
+ .logo-container{display:flex;align-items:center;justify-content:center;gap:10px}
+ .logo-mark{width:48px;height:48px;border-radius:14px;box-shadow:0 8px 25px rgba(37,99,235,.2);animation:heroFloat 6s ease-in-out infinite}
+ .logo-text{font-size:28px;font-weight:800;letter-spacing:-.02em;color:#1E293B;animation:heroFloat 6s ease-in-out infinite;animation-delay:.15s}
+ @keyframes heroFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+ .email-icon{width:64px;height:64px;background:rgba(5,150,105,.08);border:1.5px solid rgba(5,150,105,.15);border-radius:20px;display:flex;align-items:center;justify-content:center}
+ .email-icon svg{width:32px;height:32px;color:#059669}
+
+ .error-msg{background:#FEF2F2;border:1px solid #FECACA;color:#DC2626;padding:12px 16px;border-radius:12px;font-size:13px;font-weight:500;margin-bottom:16px;animation:shake .4s ease}
+ @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+ .legal-text{font-size:11px;color:#94A3B8;line-height:1.4}
+ .legal-text a{color:#64748B;text-decoration:underline;cursor:pointer;transition:color .2s}
+ .legal-text a:hover{color:#2563EB}
+ .ghost-btn{width:100%;padding:14px 0;color:#64748B;font-weight:500;font-size:14px;border:none;background:none;cursor:pointer;transition:color .2s}
+ .ghost-btn:hover{color:#2563EB}
+ .link-btn{display:flex;align-items:center;justify-content:center;gap:8px;color:#64748B;font-size:14px;font-weight:500;border:none;background:none;cursor:pointer;transition:color .2s}
+ .link-btn:hover{color:#2563EB}
+ `}</style>
+
+ {/* ═══════ CONTAINER ═══════ */}
+ <div className="phone-frame">
+ <canvas ref={meshRef} className="mesh-canvas" />
+ <div className="blob-layer">
+ <div className="blob blob-1" /><div className="blob blob-2" />
+ <div className="blob blob-3" /><div className="blob blob-4" /><div className="blob blob-5" />
+ </div>
+ <div className="aurora" />
+ <canvas ref={particlesRef} className="particle-canvas" />
+
+ <div className="glass-container">
+
+ {/* ═══════ 1. WELCOME ═══════ */}
+ <div className={screenClass("welcome")}>
+ <div className="flex-1 flex flex-col justify-center items-center text-center">
+ <div className="stagger stagger-d1">
+ <div className="logo-container mx-auto mb-6">
+ <div className="logo-mark">
+ <svg viewBox="0 0 48 48" fill="none" style={{width:48,height:48}}>
+ <defs><linearGradient id="logoGrad" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#2563EB"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs>
+ <circle cx="24" cy="24" r="22" fill="url(#logoGrad)"/>
+ <path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
+ <path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.6"/>
+ <circle cx="36.5" cy="19" r="1.5" fill="white" opacity="0.6"/>
+ <circle cx="24" cy="24" r="3" fill="white" opacity="0.3"/>
+ </svg>
+ </div>
+ <span className="logo-text">Turno<span style={{color:"#2563EB"}}>GO</span></span>
+ </div>
+ </div>
+ <h1 className="text-[30px] font-extrabold mb-2 tracking-tight text-gray-900 stagger stagger-d2">Bienvenido</h1>
+ <p className="text-gray-500 text-[15px] max-w-[260px] mx-auto leading-relaxed stagger stagger-d3">Encuentra trabajos, conecta y crece. Tu oportunidad empieza aquí.</p>
+ </div>
+ <div className="space-y-3 pb-2">
+ <button onClick={() => push("register")} className="btn-main stagger stagger-d4">Comenzar</button>
+ <button onClick={() => push("login")} className="ghost-btn stagger stagger-d5">Ya tengo una cuenta</button>
+ </div>
+ <p className="legal-text text-center mt-auto stagger stagger-d6">Al continuar aceptas nuestros <a href="#">Términos</a> y <a href="#">Privacidad</a>.</p>
+ </div>
+
+ {/* ═══════ 2. REGISTER ═══════ */}
+ <div className={screenClass("register")}>
+ <div className="top-bar">
+ <button onClick={pop} className="btn-back">
+ <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+ </button>
+ <div className="pill-toggle">
+ <div className={`pill-slider${current === "register" && transition !== "pop" ? " right" : ""}`}></div>
+ <button className={`pill-btn${current === "login" ? " active" : ""}`} onClick={() => replace("login")}>Iniciar</button>
+ <button className={`pill-btn${current === "register" ? " active" : ""}`} onClick={() => replace("register")}>Registro</button>
+ </div>
+ </div>
+
+ <div className="stagger stagger-d1">
+ <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Crear cuenta</h2>
+ <p className="text-gray-500 text-[14px] mb-6">Únete hoy — es gratis</p>
+ </div>
+
+ {error && <div className="error-msg">{error}</div>}
+
+ <form onSubmit={handleRegister}>
+ <div className="stagger stagger-d2"><div className="input-group">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+ <input type="text" className="input-field" placeholder="Nombre completo" value={regName} onChange={e => setRegName(e.target.value)} />
+ </div></div>
+
+ <div className="stagger stagger-d3"><div className="input-group">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+ <input type="email" className="input-field" placeholder="Correo electrónico" value={regEmail} onChange={e => setRegEmail(e.target.value)} />
+ </div></div>
+
+ <div className="stagger stagger-d4"><div className="input-group">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+ <input type={regShowPw ? "text" : "password"} className="input-field" placeholder="Contraseña" value={regPassword} onChange={e => setRegPassword(e.target.value)} />
+ <button type="button" onClick={() => setRegShowPw(!regShowPw)} className="pw-toggle">
+ {regShowPw
+ ? <svg className="w-5 h-5" fill="none" stroke="#475569" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+ : <svg className="w-5 h-5" fill="none" stroke="#475569" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>}
+ </button>
+ </div></div>
+
+ <div className="stagger stagger-d5">
+ <button type="submit" disabled={loading} className="btn-main mt-2 mb-6">{loading ? "Creando cuenta..." : "Crear Cuenta"}</button>
+ </div>
+ </form>
+
+ <div className="stagger stagger-d6">
+ <div className="flex items-center gap-4 mb-5"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-400 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
+ <div className="flex gap-3">
+ <button className="btn-social"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5 5 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/></svg>Google</button>
+ <button className="btn-social"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>Apple</button>
+ </div>
+ </div>
+ </div>
+
+ {/* ═══════ 3. LOGIN ═══════ */}
+ <div className={screenClass("login")}>
+ <div className="top-bar">
+ <button onClick={pop} className="btn-back">
+ <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+ </button>
+ <div className="pill-toggle">
+ <div className={`pill-slider${current === "login" && transition !== "pop" ? "" : " right"}`}></div>
+ <button className={`pill-btn${current === "login" ? " active" : ""}`} onClick={() => replace("login")}>Iniciar</button>
+ <button className={`pill-btn${current === "register" ? " active" : ""}`} onClick={() => replace("register")}>Registro</button>
+ </div>
+ </div>
+
+ <div className="stagger stagger-d1">
+ <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Bienvenido de nuevo</h2>
+ <p className="text-gray-500 text-[14px] mb-6">Inicia sesión para continuar</p>
+ </div>
+
+ {error && <div className="error-msg">{error}</div>}
+
+ <form onSubmit={handleLogin}>
+ <div className="stagger stagger-d2"><div className="input-group">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+ <input type="email" className="input-field" placeholder="Correo electrónico" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} />
+ </div></div>
+
+ <div className="stagger stagger-d3"><div className="input-group mb-1">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+ <input type={loginShowPw ? "text" : "password"} className="input-field" placeholder="Contraseña" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
+ <button type="button" onClick={() => setLoginShowPw(!loginShowPw)} className="pw-toggle">
+ {loginShowPw
+ ? <svg className="w-5 h-5" fill="none" stroke="#475569" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+ : <svg className="w-5 h-5" fill="none" stroke="#475569" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>}
+ </button>
+ </div></div>
+
+ <div className="stagger stagger-d4">
+ <div className="flex justify-end mb-5">
+ <button type="button" onClick={() => push("reset")} className="text-[#2563EB] text-[13px] font-semibold hover:underline">¿Olvidaste tu contraseña?</button>
+ </div>
+ <button type="submit" disabled={loading} className="btn-main mb-6">{loading ? "Iniciando sesión..." : "Iniciar Sesión"}</button>
+ </div>
+ </form>
+
+ <div className="stagger stagger-d5">
+ <div className="flex items-center gap-4 mb-5"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-400 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
+ <div className="flex gap-3">
+ <button className="btn-social"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5 5 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/></svg>Google</button>
+ <button className="btn-social"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>Apple</button>
+ </div>
+ </div>
+ </div>
+
+ {/* ═══════ 4. RESET PASSWORD ═══════ */}
+ <div className={screenClass("reset")}>
+ <div className="top-bar">
+ <button onClick={pop} className="btn-back">
+ <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+ </button>
+ </div>
+
+ <div className="stagger stagger-d1">
+ <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Restablecer contraseña</h2>
+ <p className="text-gray-500 text-[14px] leading-relaxed mb-6">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+ </div>
+
+ <div className="stagger stagger-d2"><div className="input-group mb-6">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+ <input type="email" className="input-field" placeholder="Correo electrónico" value={resetEmail} onChange={e => setResetEmail(e.target.value)} />
+ </div></div>
+
+ <div className="stagger stagger-d3">
+ <button onClick={simulateReset} className="btn-main mb-5" id="send-link-btn">Enviar Enlace</button>
+ <button onClick={() => popTo("login")} className="link-btn w-full py-2">
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+ Volver a iniciar sesión
+ </button>
+ </div>
+ </div>
+
+ {/* ═══════ 5. CHECK EMAIL ═══════ */}
+ <div className={screenClass("email")}>
+ <div className="flex-1 flex flex-col justify-center items-center text-center">
+ <div className="pop-in">
+ <div className="email-icon mx-auto mb-6">
+ <svg fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+ </div>
+ </div>
+ <div className="stagger stagger-d1">
+ <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Revisa tu correo</h2>
+ <p className="text-gray-500 text-[14px] max-w-[260px] mx-auto leading-relaxed mb-8">Te enviamos un enlace para restablecer tu contraseña.</p>
+ </div>
+ <div className="stagger stagger-d2 space-y-3">
+ <button className="btn-main">Abrir Correo</button>
+ <button className="ghost-btn">Reenviar enlace</button>
+ </div>
+ <div className="stagger stagger-d3">
+ <button onClick={() => popTo("login")} className="link-btn w-full py-2 mt-4">
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+ Volver a iniciar sesión
+ </button>
+ </div>
+ </div>
+ </div>
+
+ </div>
+ </div>
+ </>
+ );
+}
