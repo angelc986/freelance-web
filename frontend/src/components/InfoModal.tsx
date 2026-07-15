@@ -86,7 +86,7 @@ export default function InfoModal({ open, onClose }: Props) {
 
       {/* Modal */}
       <div
-        className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto bg-white rounded-3xl shadow-2xl animate-modal-enter modal-scroll"
+        className="relative w-full max-w-lg max-h-[90vh] md:max-h-[85vh] overflow-y-auto bg-white rounded-3xl shadow-2xl animate-modal-enter modal-scroll"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
@@ -102,7 +102,7 @@ export default function InfoModal({ open, onClose }: Props) {
 
         {/* Header */}
         <div className="pt-8 pb-2 px-7">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-0.5">
             <svg className="w-7 h-7 text-primary shrink-0" viewBox="0 0 28 28" fill="currentColor">
               <circle cx="14" cy="14" r="12" />
               <path d="M9 14l3.5 3.5L19 11" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
@@ -115,7 +115,7 @@ export default function InfoModal({ open, onClose }: Props) {
         </div>
 
         {/* Steps */}
-        <div className="px-7 pb-6 pt-3 space-y-0">
+        <div className="px-7 pb-6 pt-2 space-y-0">
           {steps.map((s, i) => (
             <div key={i} className="flex gap-4 py-3 group">
               {/* Icon */}
