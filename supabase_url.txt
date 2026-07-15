@@ -1,0 +1,1 @@
+postgresql://postgres:28659265An%24@db.kojuiugfdhspdblfcmvm.supabase.co:5432/postgres?sslmode=require
