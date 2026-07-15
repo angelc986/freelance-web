@@ -30,7 +30,7 @@ html{height:100%}
 .glass-container{position:absolute;inset:0;z-index:10;background:rgba(255,255,255,0.55);backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.5),inset 0 -1px 0 rgba(0,0,0,0.04)}
 .glass-container::after{content:'';position:absolute;top:0;left:8px;right:8px;height:1px;background:linear-gradient(to right,transparent 5%,rgba(255,255,255,0.6) 25%,rgba(255,255,255,0.8) 50%,rgba(255,255,255,0.6) 75%,transparent 95%);z-index:99;pointer-events:none}
 
-.screen{position:absolute;top:0;left:0;width:100%;height:100%;padding:48px 24px 12px;display:flex;flex-direction:column;transition:transform .6s cubic-bezier(.16,1,.3,1),opacity .35s ease,filter .45s ease;will-change:transform,opacity,filter;overflow-y:auto}
+.screen{position:absolute;top:0;left:0;width:100%;height:100%;padding:calc(var(--safe-top,0px) + 48px) 24px 12px;display:flex;flex-direction:column;transition:transform .6s cubic-bezier(.16,1,.3,1),opacity .35s ease,filter .45s ease;will-change:transform,opacity,filter;overflow-y:auto}
 .screen-active{transform:translateX(0) scale(1)!important;opacity:1!important;filter:blur(0)!important;z-index:20}
 .screen-right{transform:translateX(105%) scale(.96);opacity:0;filter:blur(4px);z-index:20;pointer-events:none}
 .screen-left{transform:translateX(-25%) scale(.94);opacity:0;filter:blur(6px);z-index:5;pointer-events:none}

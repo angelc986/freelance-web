@@ -393,12 +393,9 @@ function AuthPageInner() {
  <div className="aurora" />
  <canvas ref={particlesRef} className="particle-canvas" />
 
- {/* Backdrop para el safe-area: mismo efecto que el glass-container */}
- <div style={{position:"absolute",top:0,left:0,right:0,height:"env(safe-area-inset-top,0px)",background:"rgba(255,255,255,0.55)",backdropFilter:"blur(18px) saturate(1.2)",WebkitBackdropFilter:"blur(18px) saturate(1.2)",zIndex:9}} />
-
- <div className="glass-container" style={{top:"env(safe-area-inset-top,0px)"}}>
+ <div className="glass-container" style={{"--safe-top":"env(safe-area-inset-top,0px)"} as React.CSSProperties}>
  {/* ─── Logo superior en todas las pantallas ─── */}
- <div className="absolute top-3 left-4 z-30">
+ <div className="absolute left-4 z-30" style={{top:"calc(var(--safe-top) + 14px)"}}>
  <Logo size="sm" />
  </div>
 
@@ -408,7 +405,7 @@ function AuthPageInner() {
  {/* ═══════ 1. WELCOME ═══════ */}
  <div className={screenClass("welcome")}>
  {/* Volver a la página principal */}
- <div className="stagger" style={{position:"absolute",top:52,left:14,zIndex:5}}>
+ <div className="stagger" style={{position:"absolute",top:"calc(var(--safe-top) + 52px)",left:14,zIndex:5}}>
  <a href="/" className="btn-back" style={{marginLeft:0}}>
  <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
  </a>
