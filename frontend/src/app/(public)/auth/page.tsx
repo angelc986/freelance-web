@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import Logo from "@/components/Logo";
 import "./auth.css";
 
 /* ══════════════════════════════════════════════════════════════
@@ -178,6 +179,42 @@ function useRipple() {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   FLOATING PARTICLES (burbujas azules)
+   ══════════════════════════════════════════════════════════════ */
+function Particles({ count = 15 }: { count?: number }) {
+ const particles = Array.from({ length: count }, (_, i) => ({
+ id: i,
+ size: Math.random() * 4 + 2,
+ left: `${Math.random() * 100}%`,
+ top: `${Math.random() * 100}%`,
+ delay: `${Math.random() * 5}s`,
+ duration: `${6 + Math.random() * 6}s`,
+ }));
+
+ return (
+ <>
+ {particles.map((p) => (
+ <div
+ key={p.id}
+ className="particle"
+ style={{
+ width: p.size,
+ height: p.size,
+ left: p.left,
+ top: p.top,
+ animationDelay: p.delay,
+ animationDuration: p.duration,
+ animationName: "float-particle",
+ animationTimingFunction: "ease-in-out",
+ animationIterationCount: "infinite",
+ }}
+ />
+ ))}
+ </>
+ );
+}
+
+/* ══════════════════════════════════════════════════════════════
    MAIN COMPONENT
    ══════════════════════════════════════════════════════════════ */
 export default function AuthPage() {
@@ -195,8 +232,11 @@ export default function AuthPage() {
  const current = history[history.length - 1];
 
  // Form state
- const [regName, setRegName] = useState("");
+ const [regFirstName, setRegFirstName] = useState("");
+ const [regLastName, setRegLastName] = useState("");
  const [regEmail, setRegEmail] = useState("");
+ const [regPhone, setRegPhone] = useState("");
+ const [regCedula, setRegCedula] = useState("");
  const [regPassword, setRegPassword] = useState("");
  const [regShowPw, setRegShowPw] = useState(false);
 
@@ -271,14 +311,15 @@ export default function AuthPage() {
  async function handleRegister(e: React.FormEvent) {
  e.preventDefault();
  setError("");
- if (!regName || !regEmail || !regPassword) { setError("Completa todos los campos"); return; }
+ if (!regFirstName || !regLastName || !regEmail || !regPhone || !regCedula || !regPassword) { setError("Completa todos los campos"); return; }
+ if (regPassword.length < 6) { setError("La contraseña debe tener al menos 6 caracteres"); return; }
  setLoading(true);
  try {
  const u = await register({
  email: regEmail,
- phone: "+580000000000",
- full_name: regName,
- cedula: "V-00000000",
+ phone: regPhone,
+ full_name: `${regFirstName} ${regLastName}`,
+ cedula: regCedula,
  password: regPassword,
  role: "worker",
  });
@@ -319,8 +360,6 @@ export default function AuthPage() {
  return () => timers.forEach(clearTimeout);
  }, [current, transition]);
 
- const safeTop = "env(safe-area-inset-top, 0px)";
-
  return (
  <>
  {/* ═══════ CONTAINER ═══════ */}
@@ -334,6 +373,13 @@ export default function AuthPage() {
  <canvas ref={particlesRef} className="particle-canvas" />
 
  <div className="glass-container">
+ {/* ─── Logo superior en todas las pantallas ─── */}
+ <div className="absolute top-3 left-0 right-0 flex justify-center z-30 pointer-events-none opacity-60">
+ <Logo size="sm" />
+ </div>
+
+ {/* ─── Partículas flotantes ─── */}
+ <Particles />
 
  {/* ═══════ 1. WELCOME ═══════ */}
  <div className={screenClass("welcome")}>
@@ -386,13 +432,30 @@ export default function AuthPage() {
  <form onSubmit={handleRegister}>
  <div className="stagger"><div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
- <input type="text" className="input-field" placeholder="Nombre completo" value={regName} onChange={e => setRegName(e.target.value)} />
+ <input type="text" className="input-field" placeholder="Nombre" value={regFirstName} onChange={e => setRegFirstName(e.target.value)} />
+ </div>
+ <div className="input-group">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+ <input type="text" className="input-field" placeholder="Apellido" value={regLastName} onChange={e => setRegLastName(e.target.value)} />
  </div></div>
 
  <div className="stagger"><div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
  <input type="email" className="input-field" placeholder="Correo electrónico" value={regEmail} onChange={e => setRegEmail(e.target.value)} />
  </div></div>
+
+ <div className="stagger">
+ <div className="grid grid-cols-2 gap-3">
+ <div className="input-group">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
+ <input type="tel" className="input-field" placeholder="Teléfono" value={regPhone} onChange={e => setRegPhone(e.target.value)} />
+ </div>
+ <div className="input-group">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V7.5A2.25 2.25 0 0019.5 5.25h-15a2.25 2.25 0 00-2.25 2.25v9.75A2.25 2.25 0 004.5 19.5zm6.75-10.5a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z"/></svg>
+ <input type="text" className="input-field" placeholder="Cédula" value={regCedula} onChange={e => setRegCedula(e.target.value)} />
+ </div>
+ </div>
+ </div>
 
  <div className="stagger"><div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
