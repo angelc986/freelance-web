@@ -195,83 +195,77 @@ export default function Home() {
             </a>
           </div>
 
-          {/* Mobile hamburger */}
-          <button
-            className="md:hidden p-2 text-dark rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Menú"
-          >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              {menuOpen ? (
-                <path strokeLinecap="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
+          {/* Mobile: botón Comenzar + hamburguer */}
+          <div className="md:hidden flex items-center gap-1.5">
+            <a
+              href="/auth"
+              className="px-4 py-2 text-sm font-semibold text-white bg-primary rounded-full hover:bg-primary-dark active:bg-primary-darker transition-all shadow-sm shadow-primary/20"
+            >
+              Comenzar
+            </a>
+            <button
+              className="p-2 text-dark rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Menú"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {menuOpen ? (
+                  <path strokeLinecap="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
         </nav>
 
         {/* Mobile menu */}
         {menuOpen && (
           <div className="md:hidden bg-white border-b border-gray-200 px-4 py-4 space-y-3 animate-fade-in">
-            {navLinks.map((link) => {
-              if (link.href === "#como-funciona") {
+            {/* Mobile: solo nav links (sin login/register) */}
+            <div className="pt-3 border-t border-gray-100 space-y-1">
+              {navLinks.map((link) => {
+                if (link.href === "#como-funciona") {
+                  return (
+                    <button
+                      key={link.href}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        document.getElementById("como-funciona")?.scrollIntoView({ behavior: "smooth" });
+                        setInfoOpen(true);
+                      }}
+                      className="block w-full text-left text-gray hover:text-dark transition-colors text-sm font-medium py-2"
+                    >
+                      {link.label}
+                    </button>
+                  );
+                }
+                if (link.href === "#categorias") {
+                  return (
+                    <button
+                      key={link.href}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        document.getElementById("categorias")?.scrollIntoView({ behavior: "smooth" });
+                        setCatOpen(true);
+                      }}
+                      className="block w-full text-left text-gray hover:text-dark transition-colors text-sm font-medium py-2"
+                    >
+                      {link.label}
+                    </button>
+                  );
+                }
                 return (
-                  <button
+                  <a
                     key={link.href}
-                    onClick={() => {
-                      setMenuOpen(false);
-                      document.getElementById("como-funciona")?.scrollIntoView({ behavior: "smooth" });
-                      setInfoOpen(true);
-                    }}
-                    className="block w-full text-left text-gray hover:text-dark transition-colors text-sm font-medium py-2"
+                    href={link.href}
+                    className="block text-gray hover:text-dark transition-colors text-sm font-medium py-2"
+                    onClick={() => setMenuOpen(false)}
                   >
                     {link.label}
-                  </button>
+                  </a>
                 );
-              }
-              if (link.href === "#categorias") {
-                return (
-                  <button
-                    key={link.href}
-                    onClick={() => {
-                      setMenuOpen(false);
-                      document.getElementById("categorias")?.scrollIntoView({ behavior: "smooth" });
-                      setCatOpen(true);
-                    }}
-                    className="block w-full text-left text-gray hover:text-dark transition-colors text-sm font-medium py-2"
-                  >
-                    {link.label}
-                  </button>
-                );
-              }
-              return (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className="block text-gray hover:text-dark transition-colors text-sm font-medium py-2"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {link.label}
-                </a>
-              );
-            })}
-            {/* Mobile CTA buttons */}
-            <div className="pt-3 border-t border-gray-100 space-y-2">
-              <a
-                href="/auth?screen=login"
-                className="block w-full text-center px-5 py-3 text-sm font-semibold text-dark border border-gray-light rounded-full hover:border-primary hover:text-primary active:bg-primary/5 transition-all"
-                onClick={() => setMenuOpen(false)}
-              >
-                Iniciar sesión
-              </a>
-              <a
-                href="/auth?screen=register"
-                className="block w-full text-center px-5 py-3 text-sm font-semibold text-white bg-primary rounded-full hover:bg-primary-dark active:bg-primary-darker transition-all shadow-sm"
-                onClick={() => setMenuOpen(false)}
-              >
-                Registrarse
-              </a>
+              })}
             </div>
           </div>
         )}
