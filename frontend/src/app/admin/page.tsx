@@ -20,7 +20,7 @@ interface AdminUser {
 }
 
 interface Paginated<T> { total: number; page: number; per_page: number; users?: T[]; jobs?: T[]; transactions?: T[]; }
-interface Job { id: number; title: string; status: string; budget: number; client_id: number; worker_id: number | null; category?: string; location?: string; created_at: string | null; }
+interface Job { id: number; title: string; status: string; budget: number; client_id: number; worker_id: number | null; category?: string; location?: string; dispute_reason?: string; created_at: string | null; }
 interface Tx { id: number; user_id: number; job_id: number | null; type: string; amount: number; status: string; created_at: string | null; }
 interface Wallet { system_wallet: string; balance: number; total_deposits: number; total_withdrawals: number; pending_confirmation: number; }
 
