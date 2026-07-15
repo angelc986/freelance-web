@@ -374,7 +374,7 @@ export default function AuthPage() {
 
  <div className="glass-container">
  {/* ─── Logo superior en todas las pantallas ─── */}
- <div className="absolute top-3 left-0 right-0 flex justify-center z-30 pointer-events-none opacity-60">
+ <div className="absolute top-4 left-4 z-30">
  <Logo size="sm" />
  </div>
 
