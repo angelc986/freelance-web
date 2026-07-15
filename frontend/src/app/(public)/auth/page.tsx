@@ -381,23 +381,6 @@ function AuthPageInner() {
  return () => timers.forEach(clearTimeout);
  }, [current, transition]);
 
- // ─── Fix PWA viewport: usa la altura REAL del WebView en iOS standalone ───
- useEffect(() => {
- const setAppHeight = () => {
- const h = window.visualViewport
- ? window.visualViewport.height
- : window.innerHeight;
- document.documentElement.style.setProperty("--app-height", `${h}px`);
- };
- setAppHeight();
- window.visualViewport?.addEventListener("resize", setAppHeight);
- window.addEventListener("resize", setAppHeight);
- return () => {
- window.visualViewport?.removeEventListener("resize", setAppHeight);
- window.removeEventListener("resize", setAppHeight);
- };
- }, []);
-
  return (
  <>
  {/* ═══════ CONTAINER ═══════ */}
