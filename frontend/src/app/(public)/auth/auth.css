@@ -104,3 +104,42 @@ button {
  background-image: none !important;
  border-width: 0 !important;
 }
+
+/* ==========================================================================
+   PWA iOS STANDALONE — degradado de fusión (sin mascara, sin invadir contenido)
+   Solo se activa con la app instalada
+   ========================================================================== */
+
+@media (display-mode: standalone) and (max-width: 480px) {
+  .phone-frame {
+    bottom: -80px !important;
+    height: calc(100% + 80px) !important;
+  }
+
+  .glass-container::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 180px;
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(239,246,255,0) 0%,
+        rgba(191,219,254,0.15) 20%,
+        rgba(219,234,254,0.35) 45%,
+        rgba(239,246,255,0.60) 70%,
+        rgba(255,255,255,0.85) 90%,
+        #fff 100%
+      );
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    pointer-events: none;
+    z-index: 11;
+  }
+
+  .screen {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 24px) + 16px) !important;
+  }
+}
