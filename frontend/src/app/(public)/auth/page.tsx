@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import "./auth.css";
 
 /* ══════════════════════════════════════════════════════════════
    SCREENS: welcome | register | login | reset | email
@@ -322,105 +323,6 @@ export default function AuthPage() {
 
  return (
  <>
- {/* ═══════ INLINE STYLES ═══════ */}
- <style>{`
- *,*::before,*::after{box-sizing:border-box}
- *{font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent}
- body{margin:0;padding:0;overflow:hidden}html{height:100%}
- .phone-frame{position:relative;width:100%;min-height:100dvh;background:#fff;overflow:hidden}
- @media(min-width:480px){.phone-frame{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:390px;height:844px;border-radius:44px;box-shadow:0 0 0 4px #CBD5E1,0 20px 60px rgba(0,0,0,0.15)}}
-
- .mesh-canvas{position:absolute;inset:0;z-index:0;width:100%;height:100%}
-
- .blob-layer{position:absolute;inset:0;z-index:1;overflow:hidden}
- .blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.45;animation-iteration-count:infinite;animation-direction:alternate;animation-timing-function:cubic-bezier(0.4,0,0.2,1)}
- .blob-1{width:65%;height:65%;top:-20%;left:-15%;background:radial-gradient(circle,#3B82F6,transparent 70%);animation:float1 10s infinite alternate}
- .blob-2{width:55%;height:55%;bottom:-15%;right:-10%;background:radial-gradient(circle,#2563EB,transparent 70%);animation:float2 12s infinite alternate}
- .blob-3{width:50%;height:50%;top:30%;left:35%;background:radial-gradient(circle,#60A5FA,transparent 70%);animation:float3 15s infinite alternate}
- .blob-4{width:40%;height:40%;top:55%;left:-8%;background:radial-gradient(circle,#93C5FD,transparent 70%);animation:float4 14s infinite alternate}
- .blob-5{width:45%;height:45%;top:5%;right:0;background:radial-gradient(circle,#1D4ED8,transparent 70%);animation:float5 18s infinite alternate}
-
- @keyframes float1{0%{transform:translate(0,0) scale(1) rotate(0)}33%{transform:translate(40px,-25px) scale(1.12) rotate(4deg)}66%{transform:translate(-20px,15px) scale(.92) rotate(-2deg)}100%{transform:translate(15px,-8px) scale(1.04) rotate(1deg)}}
- @keyframes float2{0%{transform:translate(0,0) scale(1) rotate(0)}50%{transform:translate(-35px,20px) scale(1.15) rotate(-6deg)}100%{transform:translate(20px,-15px) scale(.88) rotate(5deg)}}
- @keyframes float3{0%{transform:translate(0,0) scale(1) rotate(0)}25%{transform:translate(25px,8px) scale(1.08) rotate(2deg)}75%{transform:translate(-40px,-20px) scale(.94) rotate(-3deg)}100%{transform:translate(8px,25px) scale(1.06) rotate(3deg)}}
- @keyframes float4{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-30px,-35px) scale(1.2)}100%{transform:translate(35px,15px) scale(.82)}}
- @keyframes float5{0%{transform:translate(0,0) scale(1) rotate(0)}40%{transform:translate(-45px,12px) scale(.92) rotate(-3deg)}80%{transform:translate(20px,-25px) scale(1.12) rotate(5deg)}100%{transform:translate(-8px,8px) scale(1.04) rotate(-1deg)}}
-
- .aurora{position:absolute;inset:0;z-index:2;pointer-events:none;background:conic-gradient(from 0deg at 50% 50%,transparent 0%,rgba(37,99,235,0.06) 25%,transparent 50%,rgba(59,130,246,0.04) 75%,transparent 100%);filter:blur(80px);animation:auroraSpin 25s linear infinite;opacity:0.4}
- @keyframes auroraSpin{to{transform:rotate(360deg)}}
-
- .particle-canvas{position:absolute;inset:0;z-index:3;pointer-events:none}
-
- .glass-container{position:absolute;inset:0;z-index:10;background:rgba(255,255,255,0.55);backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,0.5),inset 0 -1px 0 rgba(0,0,0,0.04)}
- .glass-container::after{content:'';position:absolute;top:0;left:8px;right:8px;height:1px;background:linear-gradient(to right,transparent 5%,rgba(255,255,255,0.6) 25%,rgba(255,255,255,0.8) 50%,rgba(255,255,255,0.6) 75%,transparent 95%);z-index:99;pointer-events:none}
-
- .screen{position:absolute;top:0;left:0;width:100%;height:100%;padding:24px;display:flex;flex-direction:column;transition:transform .6s cubic-bezier(.16,1,.3,1),opacity .35s ease,filter .45s ease;will-change:transform,opacity,filter;overflow-y:auto}
- .screen-active{transform:translateX(0) scale(1);opacity:1;filter:blur(0);z-index:20}
- .screen-right{transform:translateX(105%) scale(.96);opacity:0;filter:blur(4px);z-index:20;pointer-events:none}
- .screen-left{transform:translateX(-25%) scale(.94);opacity:0;filter:blur(6px);z-index:5;pointer-events:none}
- .screen-hidden{transform:translateX(105%);opacity:0;z-index:0;pointer-events:none}
-
- .stagger{opacity:0;transform:translateY(25px) scale(.98);transition:opacity .5s cubic-bezier(.16,1,.3,1),transform .5s cubic-bezier(.16,1,.3,1)}
- .stagger.in{opacity:1;transform:translateY(0) scale(1)}
- @keyframes popIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
- .pop-in{animation:popIn .5s cubic-bezier(.16,1,.3,1) forwards;opacity:0}
-
- .btn-main{width:100%;padding:16px;border-radius:14px;background:linear-gradient(135deg,#2563EB,#3B82F6);background-size:200% 200%;color:#fff;font-weight:600;font-size:16px;letter-spacing:-.01em;border:none;cursor:pointer;position:relative;overflow:hidden;transition:transform .35s cubic-bezier(.34,1.56,.64,1),filter .2s,box-shadow .2s;box-shadow:0 4px 15px rgba(37,99,235,0.3);animation:gradientShift 20s ease infinite,breatheGlow 4s ease-in-out infinite}
- .btn-main::after{content:'';position:absolute;top:0;left:0;right:0;height:45%;background:linear-gradient(to bottom,rgba(255,255,255,.18),transparent);border-radius:14px 14px 0 0;pointer-events:none}
- .btn-main:hover{filter:brightness(1.08)}
- .btn-main:active{transform:scale(.97);transition:transform .15s cubic-bezier(.34,1.56,.64,1)}
- .btn-main:disabled{opacity:.6;pointer-events:none}
- .btn-main.done{background:linear-gradient(135deg,#059669,#10B981)!important;box-shadow:0 4px 15px rgba(5,150,105,0.3)!important;animation:breatheGlowGreen 4s ease-in-out infinite!important}
- @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
- @keyframes breatheGlow{0%,100%{box-shadow:0 4px 15px rgba(37,99,235,0.3)}50%{box-shadow:0 8px 30px rgba(37,99,235,0.5),0 0 50px rgba(37,99,235,0.1)}}
- @keyframes breatheGlowGreen{0%,100%{box-shadow:0 4px 15px rgba(5,150,105,0.3)}50%{box-shadow:0 8px 30px rgba(5,150,105,0.5)}}
-
- .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.35);transform:scale(0);animation:rippleEffect .6s ease-out forwards;pointer-events:none}
- @keyframes rippleEffect{to{transform:scale(4);opacity:0}}
-
- .input-group{position:relative;margin-bottom:14px}
- .input-field{width:100%;padding:16px 16px 16px 48px;background:#F1F5F9;border:1.5px solid #E2E8F0;border-radius:14px;color:#1E293B;font-size:14px;font-weight:500;outline:none;transition:all .3s cubic-bezier(.16,1,.3,1)}
- .input-field:focus{border-color:#2563EB;background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.1),0 2px 8px rgba(37,99,235,.08);transform:translateY(-1px)}
- .input-field::placeholder{color:#94A3B8;font-weight:400;transition:all .3s}
- .input-field:focus::placeholder{opacity:0;transform:translateX(4px)}
- .input-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:#94A3B8;transition:all .3s}
- .input-group:focus-within .input-icon{color:#2563EB;transform:translateY(-50%) scale(1.08)}
- .pw-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#94A3B8;border:0;background:none;cursor:pointer;transition:color .2s;padding:4px}
- .pw-toggle:hover{color:#475569}
-
- .pill-toggle{position:relative;display:flex;align-items:center;background:#E2E8F0;border-radius:100px;padding:2px;width:152px;height:38px}
- .pill-slider{position:absolute;top:2px;bottom:2px;width:74px;background:#2563EB;border-radius:100px;transition:transform .35s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 8px rgba(37,99,235,.3)}
- .pill-slider.right{transform:translateX(74px)}
- .pill-btn{flex:1;position:relative;z-index:10;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;transition:color .35s;color:#64748B}
- .pill-btn.active{color:#fff}
-
- .btn-social{flex:1;padding:13px;border-radius:100px;background:#F1F5F9;border:1.5px solid #E2E8F0;color:#475569;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s,border-color .2s,transform .15s}
- .btn-social:active{background:#E2E8F0;border-color:#CBD5E1;transform:scale(.97)}
-
- .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
- .btn-back{width:40px;height:40px;display:flex;align-items:center;color:#334155;cursor:pointer;border:none;background:none;margin-left:-8px;transition:opacity .2s}
- .btn-back:active{opacity:.5}
-
- .logo-container{display:flex;align-items:center;justify-content:center;gap:10px}
- .logo-mark{width:48px;height:48px;border-radius:14px;box-shadow:0 8px 25px rgba(37,99,235,.2);animation:heroFloat 6s ease-in-out infinite}
- .logo-text{font-size:28px;font-weight:800;letter-spacing:-.02em;color:#1E293B;animation:heroFloat 6s ease-in-out infinite;animation-delay:.15s}
- @keyframes heroFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-
- .email-icon{width:64px;height:64px;background:rgba(5,150,105,.08);border:1.5px solid rgba(5,150,105,.15);border-radius:20px;display:flex;align-items:center;justify-content:center}
- .email-icon svg{width:32px;height:32px;color:#059669}
-
- .error-msg{background:#FEF2F2;border:1px solid #FECACA;color:#DC2626;padding:12px 16px;border-radius:12px;font-size:13px;font-weight:500;margin-bottom:16px;animation:shake .4s ease}
- @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
-
- .legal-text{font-size:11px;color:#94A3B8;line-height:1.4}
- .legal-text a{color:#64748B;text-decoration:underline;cursor:pointer;transition:color .2s}
- .legal-text a:hover{color:#2563EB}
- .ghost-btn{width:100%;padding:14px 0;color:#64748B;font-weight:500;font-size:14px;border:none;background:none;cursor:pointer;transition:color .2s}
- .ghost-btn:hover{color:#2563EB}
- .link-btn{display:flex;align-items:center;justify-content:center;gap:8px;color:#64748B;font-size:14px;font-weight:500;border:none;background:none;cursor:pointer;transition:color .2s}
- .link-btn:hover{color:#2563EB}
- `}</style>
-
  {/* ═══════ CONTAINER ═══════ */}
  <div className="phone-frame">
  <canvas ref={meshRef} className="mesh-canvas" />
