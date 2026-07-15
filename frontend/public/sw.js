@@ -1,13 +1,14 @@
-const CACHE_NAME = "turnogo-v2";
-const STATIC_CACHE = "turnogo-static-v2";
-const API_CACHE = "turnogo-api-v2";
+const CACHE_NAME = "turnogo-v3";
+const STATIC_CACHE = "turnogo-static-v3";
+const API_CACHE = "turnogo-api-v3";
 
 // Rutas que queremos disponibles offline
 const PRECACHE_URLS = [
   "/",
-  "/jobs",
+  "/auth",
   "/auth/login",
   "/auth/register",
+  "/jobs",
   "/dashboard",
   "/offline",
   "/offline.html",
@@ -39,16 +40,12 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// Activar — limpiar caches viejas
+// Activar — limpiar TODAS las caches viejas para forzar refresh
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(
-        keys
-          .filter((k) => k !== CACHE_NAME && k !== STATIC_CACHE && k !== API_CACHE)
-          .map((k) => caches.delete(k))
-      );
+      await Promise.all(keys.map((k) => caches.delete(k)));
     })()
   );
   self.clients.claim();
