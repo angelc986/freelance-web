@@ -3,16 +3,16 @@
 *,*::before,*::after{box-sizing:border-box}
 *{font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent}
 
-html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#F1F5F9}
+html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#EFF6FF}
 
-.phone-frame{position:fixed;top:0;right:0;bottom:0;left:0;background:#F1F5F9;overflow:hidden}
+.phone-frame{position:fixed;top:0;right:0;bottom:0;left:0;background:transparent;overflow:hidden}
 @media(min-width:480px){.phone-frame{position:fixed;top:50%;right:auto;bottom:auto;left:50%;transform:translate(-50%,-50%);width:390px;height:844px;border-radius:44px;background:#fff;box-shadow:0 0 0 4px #CBD5E1,0 20px 60px rgba(0,0,0,0.15)}}
 
 .mesh-canvas{position:absolute;top:0;right:0;bottom:0;left:0;z-index:0;width:100%;height:100%}
-.blob-layer{position:absolute;top:0;right:0;bottom:0;left:0;z-index:1;overflow:hidden}
+.blob-layer{position:absolute;top:0;right:0;bottom:0;left:0;z-index:1;overflow:visible}
 .blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.45;animation-iteration-count:infinite;animation-direction:alternate;animation-timing-function:cubic-bezier(0.4,0,0.2,1)}
 .blob-1{width:65%;height:65%;top:-20%;left:-15%;background:radial-gradient(circle,#3B82F6,transparent 70%);animation:float1 10s infinite alternate}
-.blob-2{width:55%;height:55%;bottom:-15%;right:-10%;background:radial-gradient(circle,#2563EB,transparent 70%);animation:float2 12s infinite alternate}
+.blob-2{width:55%;height:55%;bottom:-25%;right:-10%;background:radial-gradient(circle,#2563EB,transparent 70%);animation:float2 12s infinite alternate}
 .blob-3{width:50%;height:50%;top:30%;left:35%;background:radial-gradient(circle,#60A5FA,transparent 70%);animation:float3 15s infinite alternate}
 .blob-4{width:40%;height:40%;top:55%;left:-8%;background:radial-gradient(circle,#93C5FD,transparent 70%);animation:float4 14s infinite alternate}
 .blob-5{width:45%;height:45%;top:5%;right:0;background:radial-gradient(circle,#1D4ED8,transparent 70%);animation:float5 18s infinite alternate}
