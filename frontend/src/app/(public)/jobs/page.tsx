@@ -91,9 +91,9 @@ export default function JobsPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Navbar */}
+      {/* Navbar — safe-area aware */}
       <header className="border-b border-gray-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between" style={{ minHeight: 'calc(4rem + env(safe-area-inset-top, 0px))', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
           <Link href={user ? "/dashboard" : "/"}>
             <Logo size="sm" />
           </Link>

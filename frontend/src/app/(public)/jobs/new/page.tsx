@@ -172,10 +172,13 @@ export default function NewJobPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-light">
-      {/* Minimal nav */}
+      {/* Minimal nav — safe-area aware */}
       <header className="border-b border-gray-200 bg-white/60 backdrop-blur-md">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-          <a href="/dashboard">
+        <div className="max-w-5xl mx-auto px-4 flex items-center justify-between" style={{ minHeight: 'calc(4rem + env(safe-area-inset-top, 0px))', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <a href="/dashboard" className="inline-flex items-center gap-2 text-sm text-gray hover:text-dark transition-colors">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
             <Logo size="sm" />
           </a>
           <span className="text-sm text-gray">Publicar trabajo</span>
