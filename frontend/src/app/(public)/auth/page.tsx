@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Logo from "@/components/Logo";
 import "./auth.css";
@@ -218,7 +218,20 @@ function Particles({ count = 15 }: { count?: number }) {
    MAIN COMPONENT
    ══════════════════════════════════════════════════════════════ */
 export default function AuthPage() {
+ return (
+ <Suspense fallback={
+ <div className="flex-1 flex items-center justify-center min-h-screen">
+ <div className="animate-pulse text-gray-400 text-sm">Cargando...</div>
+ </div>
+ }>
+ <AuthPageInner />
+ </Suspense>
+ );
+}
+
+function AuthPageInner() {
  const router = useRouter();
+ const searchParams = useSearchParams();
  const { user, login, register } = useAuth();
  const meshRef = useRef<HTMLCanvasElement>(null);
  const particlesRef = useRef<HTMLCanvasElement>(null);
@@ -256,6 +269,14 @@ export default function AuthPage() {
  else router.push("/dashboard");
  }
  }, [user, router]);
+
+ // ─── Auto-navigate from ?screen= param ───
+ useEffect(() => {
+ const screen = searchParams.get("screen");
+ if (screen === "login" || screen === "register" || screen === "reset") {
+ setHistory(["welcome", screen]);
+ }
+ }, [searchParams]);
 
  // ─── Navigation ───
  const push = useCallback((screen: Screen) => {

@@ -182,13 +182,13 @@ export default function Home() {
           {/* Desktop CTA buttons */}
           <div className="hidden md:flex items-center gap-3">
             <a
-              href="/auth/login"
+              href="/auth?screen=login"
               className="px-5 py-2.5 text-sm font-medium text-dark border border-gray-light rounded-full hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
             >
               Iniciar sesión
             </a>
             <a
-              href="/auth/register"
+              href="/auth?screen=register"
               className="px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30"
             >
               Registrarse
@@ -259,14 +259,14 @@ export default function Home() {
             {/* Mobile CTA buttons */}
             <div className="pt-3 border-t border-gray-100 space-y-2">
               <a
-                href="/auth/login"
+                href="/auth?screen=login"
                 className="block w-full text-center px-5 py-3 text-sm font-semibold text-dark border border-gray-light rounded-full hover:border-primary hover:text-primary active:bg-primary/5 transition-all"
                 onClick={() => setMenuOpen(false)}
               >
                 Iniciar sesión
               </a>
               <a
-                href="/auth/register"
+                href="/auth?screen=register"
                 className="block w-full text-center px-5 py-3 text-sm font-semibold text-white bg-primary rounded-full hover:bg-primary-dark active:bg-primary-darker transition-all shadow-sm"
                 onClick={() => setMenuOpen(false)}
               >
@@ -325,7 +325,7 @@ export default function Home() {
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up animate-delay-300">
               <a
-                href="/auth/register?role=worker"
+                href="/auth?screen=register"
                 className="btn-ripple group w-full sm:w-auto px-8 py-3.5 text-white font-semibold rounded-full hover:opacity-90 transition-all shadow-lg hover:shadow-xl"
                 style={{ backgroundColor: '#2563EB' }}
               >
@@ -333,7 +333,7 @@ export default function Home() {
                 <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform text-white/80">→</span>
               </a>
               <a
-                href="/auth/register?role=contractor"
+                href="/auth?screen=register"
                 className="btn-ripple group w-full sm:w-auto px-8 py-3.5 bg-white text-dark font-semibold border-2 border-primary/30 rounded-full hover:border-primary hover:text-primary hover:bg-primary/[0.03] transition-all hover:shadow-md"
               >
                 Quiero contratar
@@ -452,7 +452,7 @@ export default function Home() {
                         </svg>
                         Más información
                       </span>
-                      <a href="/auth/register" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary-dark transition-colors">
+                      <a href="/auth?screen=register" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary-dark transition-colors">
                         Empezar ahora
                         <span className="inline-block group-hover:translate-x-1 transition-transform">→</span>
                       </a>
@@ -702,14 +702,14 @@ export default function Home() {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
-                href="/auth/register?role=worker"
+                href="/auth?screen=register"
                 className="btn-ripple group w-full sm:w-auto px-8 py-3.5 text-white font-semibold border-2 border-white/30 rounded-full hover:bg-white/15 transition-all hover:border-white/60"
               >
                 Crear cuenta gratis
                 <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
               </a>
               <a
-                href="/auth/login"
+                href="/auth?screen=login"
                 className="group w-full sm:w-auto px-8 py-3.5 text-white font-semibold border-2 border-white/30 rounded-full hover:bg-white/15 hover:border-white/60 transition-all"
               >
                 Ya tengo cuenta
