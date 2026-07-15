@@ -7,6 +7,9 @@ import Logo from "@/components/Logo";
 import NotificationBell from "@/components/NotificationBell";
 import Link from "next/link";
 
+const safeTop = "env(safe-area-inset-top, 0px)";
+const safeBottom = "env(safe-area-inset-bottom, 0px)";
+
 // ─── SVG ICONS ───
 function IconHome({ className = "w-5 h-5" }: { className?: string }) {
   return (
@@ -211,9 +214,12 @@ export default function DashboardLayout({
       </aside>
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        {/* Top bar */}
-        <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+        {/* Top bar — safe-area aware for iPhone notch/dynamic island */}
+        <header
+          className="border-b border-gray-200 bg-white flex items-center justify-between px-4 sm:px-6 lg:px-8"
+          style={{ minHeight: `calc(3.5rem + ${safeTop})`, paddingTop: safeTop }}
+        >
           <div className="flex items-center gap-3 md:hidden">
             <Link href="/dashboard">
               <Logo size="sm" />

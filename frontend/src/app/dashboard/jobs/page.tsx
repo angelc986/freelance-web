@@ -181,9 +181,9 @@ export default function DashboardJobsPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto w-full overflow-hidden">
       {/* HEADER */}
-      <div className="flex items-center justify-between mb-6 animate-fade-in">
+      <div className="flex items-center justify-between mb-6 animate-fade-in flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gray-100 text-gray flex items-center justify-center hover:bg-gray-200 transition-colors">
             <IconArrowLeft className="w-4 h-4" />
@@ -263,39 +263,41 @@ export default function DashboardJobsPage() {
                   <Link
                     key={job.id}
                     href={`/jobs/${job.id}`}
-                    className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-200 hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-between gap-3 sm:gap-4 animate-stagger-pop"
+                    className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-200 hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all block w-full animate-stagger-pop"
                     style={{ animationDelay: `${idx * 0.05}s` }}
                   >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-dark group-hover:text-primary transition-colors truncate">
-                          {job.title}
-                        </h3>
-                        {getAppBadge(job)}
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 text-xs text-gray">
-                        <span className="inline-flex items-center gap-1">
-                          <IconLocation className="w-3.5 h-3.5" />
-                          {job.location}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <IconClock className="w-3.5 h-3.5" />
-                          {job.duration}
-                        </span>
-                        {isWorker && applications.get(job.id)?.message && (
-                          <span className="inline-flex items-center gap-1 text-gray truncate max-w-[150px]">
-                            <IconChat className="w-3.5 h-3.5" />
-                            {applications.get(job.id)?.message}
+                    <div className="flex items-start justify-between gap-3 sm:gap-4">
+                      <div className="min-w-0 flex-1 overflow-hidden">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-dark group-hover:text-primary transition-colors truncate">
+                            {job.title}
+                          </h3>
+                          {getAppBadge(job)}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 text-xs text-gray">
+                          <span className="inline-flex items-center gap-1 min-w-0">
+                            <IconLocation className="w-3.5 h-3.5 flex-shrink-0" />
+                            <span className="truncate">{job.location}</span>
                           </span>
-                        )}
+                          <span className="inline-flex items-center gap-1 min-w-0">
+                            <IconClock className="w-3.5 h-3.5 flex-shrink-0" />
+                            <span className="truncate">{job.duration}</span>
+                          </span>
+                          {isWorker && applications.get(job.id)?.message && (
+                            <span className="inline-flex items-center gap-1 text-gray truncate max-w-[120px] sm:max-w-[180px]">
+                              <IconChat className="w-3.5 h-3.5 flex-shrink-0" />
+                              <span className="truncate">{applications.get(job.id)?.message}</span>
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
-                      <p className="text-base sm:text-lg font-bold text-primary">${job.budget}</p>
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-medium rounded-full border ${st.color}`}>
-                        <span>{st.icon}</span>
-                        {st.label}
-                      </span>
+                      <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
+                        <p className="text-base sm:text-lg font-bold text-primary whitespace-nowrap">${job.budget}</p>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-medium rounded-full border whitespace-nowrap ${st.color}`}>
+                          <span>{st.icon}</span>
+                          {st.label}
+                        </span>
+                      </div>
                     </div>
                   </Link>
                 );

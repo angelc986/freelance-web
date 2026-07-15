@@ -133,7 +133,7 @@ export default function SettingsPage() {
   const walletChanged = wallet !== (user.wallet_address || "");
 
   return (
-    <div className="max-w-3xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+    <div className="max-w-3xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 w-full overflow-hidden">
       {/* HEADER */}
       <div className="flex items-center gap-3">
         <Link href="/dashboard" className="w-8 h-8 rounded-lg bg-gray-100 text-gray flex items-center justify-center hover:bg-gray-200 transition-colors">

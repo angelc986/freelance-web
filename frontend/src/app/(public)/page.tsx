@@ -124,15 +124,19 @@ export default function Home() {
 
   return (
     <>
-      {/* ========== NAVBAR ========== */}
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-white/95 backdrop-blur-xl shadow-sm border-b border-gray-200" : "bg-white/80 backdrop-blur-xl border-b border-gray-200/50"
-      }`}>
+      {/* ========== NAVBAR — safe-area aware ========== */}
+      <header
+        className={`fixed left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled ? "bg-white/95 backdrop-blur-xl shadow-sm border-b border-gray-200" : "bg-white/80 backdrop-blur-xl border-b border-gray-200/50"
+        }`}
+        style={{ top: "env(safe-area-inset-top, 0px)" }}
+      >
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-3">
             <Logo size="md" />
           </a>
 
+          {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => {
               if (link.href === "#como-funciona") {
@@ -175,6 +179,7 @@ export default function Home() {
             })}
           </div>
 
+          {/* Desktop CTA buttons */}
           <div className="hidden md:flex items-center gap-3">
             <a
               href="/auth/login"
@@ -190,8 +195,9 @@ export default function Home() {
             </a>
           </div>
 
+          {/* Mobile hamburger */}
           <button
-            className="md:hidden p-2 text-dark"
+            className="md:hidden p-2 text-dark rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Menú"
           >
@@ -205,8 +211,9 @@ export default function Home() {
           </button>
         </nav>
 
+        {/* Mobile menu */}
         {menuOpen && (
-          <div className="md:hidden bg-white border-b border-gray-200 px-4 py-4 space-y-3">
+          <div className="md:hidden bg-white border-b border-gray-200 px-4 py-4 space-y-3 animate-fade-in">
             {navLinks.map((link) => {
               if (link.href === "#como-funciona") {
                 return (
@@ -249,17 +256,18 @@ export default function Home() {
                 </a>
               );
             })}
+            {/* Mobile CTA buttons */}
             <div className="pt-3 border-t border-gray-100 space-y-2">
               <a
                 href="/auth/login"
-                className="block w-full text-center px-5 py-2 text-sm font-medium text-dark border border-gray-light rounded-full"
+                className="block w-full text-center px-5 py-3 text-sm font-semibold text-dark border border-gray-light rounded-full hover:border-primary hover:text-primary active:bg-primary/5 transition-all"
                 onClick={() => setMenuOpen(false)}
               >
                 Iniciar sesión
               </a>
               <a
                 href="/auth/register"
-                className="block w-full text-center px-5 py-2 text-sm font-medium text-white bg-primary rounded-full"
+                className="block w-full text-center px-5 py-3 text-sm font-semibold text-white bg-primary rounded-full hover:bg-primary-dark active:bg-primary-darker transition-all shadow-sm"
                 onClick={() => setMenuOpen(false)}
               >
                 Registrarse
@@ -270,7 +278,7 @@ export default function Home() {
       </header>
 
       {/* ========== HERO ========== */}
-      <section className="relative pt-24 pb-16 sm:pt-32 sm:pb-24 overflow-hidden">
+      <section className="relative pt-[calc(6rem+env(safe-area-inset-top,0px))] sm:pt-[calc(8rem+env(safe-area-inset-top,0px))] pb-16 sm:pb-24 overflow-hidden">
         {/* Animated gradient background */}
         <div className="absolute inset-0 -z-20 bg-gradient-to-br from-primary-lighter via-white to-secondary-light/20 animate-gradient" />
 
