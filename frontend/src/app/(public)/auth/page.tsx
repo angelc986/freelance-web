@@ -393,6 +393,9 @@ function AuthPageInner() {
  <div className="aurora" />
  <canvas ref={particlesRef} className="particle-canvas" />
 
+ {/* ─── Parche visual para safe-area de abajo (mismo tono que glass-container) ─── */}
+ <div style={{position:"absolute",bottom:0,left:0,right:0,height:"env(safe-area-inset-bottom,34px)",background:"rgba(255,255,255,0.55)",backdropFilter:"blur(18px) saturate(1.2)",WebkitBackdropFilter:"blur(18px) saturate(1.2)",zIndex:11}} />
+
  <div className="glass-container">
  {/* ─── Logo superior en todas las pantallas ─── */}
  <div className="absolute left-4 z-30" style={{top:"calc(env(safe-area-inset-top,0px) + 14px)"}}>
