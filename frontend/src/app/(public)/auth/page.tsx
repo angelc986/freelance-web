@@ -325,10 +325,9 @@ export default function AuthPage() {
  <style>{`
  *,*::before,*::after{box-sizing:border-box}
  *{font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent}
- body{margin:0;padding:0;background:#E8ECF1;overflow:hidden}
-
- .phone-frame{position:fixed;inset:0;background:#fff;overflow:hidden;display:flex;justify-content:center}
- @media(min-width:480px){.phone-frame{top:50%;left:50%;transform:translate(-50%,-50%);width:390px;height:844px;border-radius:44px;box-shadow:0 0 0 4px #CBD5E1,0 20px 60px rgba(0,0,0,0.15)}}
+ body{margin:0;padding:0;overflow:hidden}html{height:100%}
+ .phone-frame{position:relative;width:100%;min-height:100dvh;background:#fff;overflow:hidden}
+ @media(min-width:480px){.phone-frame{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:390px;height:844px;border-radius:44px;box-shadow:0 0 0 4px #CBD5E1,0 20px 60px rgba(0,0,0,0.15)}}
 
  .mesh-canvas{position:absolute;inset:0;z-index:0;width:100%;height:100%}
 
