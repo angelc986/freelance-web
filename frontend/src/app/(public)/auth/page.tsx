@@ -432,6 +432,10 @@ function AuthPageInner() {
 
  {/* ═══════ 1. WELCOME ═══════ */}
  <div className={screenClass("welcome")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
+            {/* Logo desktop — solo Welcome */}
+            <div className="hidden md:block absolute left-4 z-30" style={{top:"calc(env(safe-area-inset-top,0px) + 14px)"}}>
+              <Logo size="sm" />
+            </div>
  {/* Volver a la página principal */}
  <div className="stagger" style={{position:"absolute",top:"calc(env(safe-area-inset-top,0px) + 52px)",left:14,zIndex:5}}>
  <a href="/" className="btn-back" style={{marginLeft:0}}>
@@ -446,9 +450,9 @@ function AuthPageInner() {
  <defs><linearGradient id="logoGrad" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#2563EB"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs>
  <circle cx="24" cy="24" r="22" fill="url(#logoGrad)"/>
  <path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
- <path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.6"/>
- <circle cx="36.5" cy="19" r="1.5" fill="white" opacity="0.6"/>
- <circle cx="24" cy="24" r="3" fill="white" opacity="0.3"/>
+ <path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.9"/>
+ <circle cx="36.5" cy="19" r="1.5" fill="white" opacity="0.9"/>
+ <circle cx="24" cy="24" r="3" fill="white" opacity="0.5"/>
  </svg>
  </div>
  <span className="logo-text">Turno<span style={{color:"#2563EB"}}>GO</span></span>
