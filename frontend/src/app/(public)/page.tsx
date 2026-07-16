@@ -747,7 +747,8 @@ export default function Home() {
         </svg>
       </button>
 
-      {/* ========== FOOTER ========== */}
+      {/* ========== FOOTER (md:hidden en desktop) ========== */}
+      <div className="md:hidden">
       <footer className="bg-dark text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -799,6 +800,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      </div>
     </>
   );
 }
@@ -907,32 +909,20 @@ function CategoryCard({
   return (
     <a
       href="/jobs"
-      className="group relative overflow-hidden flex items-center gap-5 p-6 rounded-xl border border-gray-200 bg-white hover:border-primary/40 hover:shadow-xl hover:shadow-primary/15 hover:-translate-y-1.5 transition-all duration-300"
+      className="flex items-center gap-5 p-6 rounded-xl border border-gray-200 bg-white"
     >
-      {/* Blue left accent on hover */}
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary scale-y-0 group-hover:scale-y-100 transition-transform origin-left duration-300" />
-
       {/* Icon container with gradient background */}
-      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0 group-hover:bg-primary group-hover:text-white group-hover:scale-110 transition-all duration-300">
+      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
         {svgIcon}
       </div>
 
       <div>
-        <h4 className="font-semibold text-dark group-hover:text-primary transition-colors">
+        <h4 className="font-semibold text-dark">
           {title}
         </h4>
         <p className="text-sm text-gray mt-0.5">{desc}</p>
       </div>
 
-      {/* Arrow on hover */}
-      <svg
-        className="w-5 h-5 text-primary ml-auto flex-shrink-0 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path strokeLinecap="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-      </svg>
     </a>
   );
 }
@@ -970,23 +960,13 @@ function FeatureCard({
   desc: string;
 }) {
   return (
-    <div className="group relative p-6 rounded-xl bg-white border border-gray-200 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/15 hover:-translate-y-1.5 transition-all duration-300">
-      {/* Blue gradient top bar */}
-      <div className="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-primary to-primary-dark scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300" />
-
-      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white group-hover:scale-110 transition-all duration-300">
+    <div className="p-6 rounded-xl bg-white border border-gray-200">
+      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
         {icon}
       </div>
       <h4 className="font-semibold text-dark text-lg">{title}</h4>
       <p className="text-sm text-gray mt-1.5 leading-relaxed">{desc}</p>
 
-      {/* Bottom indicator */}
-      <div className="mt-4 flex items-center gap-1.5 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <span>Saber más</span>
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </div>
     </div>
   );
 }

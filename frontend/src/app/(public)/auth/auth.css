@@ -40,7 +40,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:linear-gradi
   }
   .input-field{
     font-size:15px;
-    padding:14px 16px 14px 16px;
+    padding:14px 16px 14px 44px;
     border-radius:10px;
   }
   .input-icon{
@@ -91,18 +91,18 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:linear-gradi
 .mesh-canvas{position:absolute;top:0;right:0;bottom:0;left:0;z-index:0;width:100%;height:100%}
 .blob-layer{position:absolute;top:0;right:0;bottom:0;left:0;z-index:1;overflow:hidden}
 .blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.45;animation-iteration-count:infinite;animation-direction:alternate;animation-timing-function:cubic-bezier(0.4,0,0.2,1)}
-.blob-1{width:65%;height:65%;top:-20%;left:-15%;background:radial-gradient(circle,#3B82F6,transparent 70%);animation:float1 10s infinite alternate}
-.blob-2{width:55%;height:55%;bottom:-25%;right:-10%;background:radial-gradient(circle,#2563EB,transparent 70%);animation:float2 12s infinite alternate}
-.blob-3{width:50%;height:50%;top:30%;left:35%;background:radial-gradient(circle,#60A5FA,transparent 70%);animation:float3 15s infinite alternate}
-.blob-4{width:40%;height:40%;top:55%;left:-8%;background:radial-gradient(circle,#93C5FD,transparent 70%);animation:float4 14s infinite alternate}
-.blob-5{width:45%;height:45%;top:5%;right:0;background:radial-gradient(circle,#1D4ED8,transparent 70%);animation:float5 18s infinite alternate}
+.blob-1{width:65%;height:65%;top:-20%;left:-15%;background:radial-gradient(circle,#3B82F6,transparent 70%);animation:float1 20s infinite alternate}
+.blob-2{width:55%;height:55%;bottom:-25%;right:-10%;background:radial-gradient(circle,#2563EB,transparent 70%);animation:float2 24s infinite alternate}
+.blob-3{width:50%;height:50%;top:30%;left:35%;background:radial-gradient(circle,#60A5FA,transparent 70%);animation:float3 30s infinite alternate}
+.blob-4{width:40%;height:40%;top:55%;left:-8%;background:radial-gradient(circle,#93C5FD,transparent 70%);animation:float4 28s infinite alternate}
+.blob-5{width:45%;height:45%;top:5%;right:0;background:radial-gradient(circle,#1D4ED8,transparent 70%);animation:float5 36s infinite alternate}
 @keyframes float1{0%{transform:translate(0,0) scale(1) rotate(0)}33%{transform:translate(40px,-25px) scale(1.12) rotate(4deg)}66%{transform:translate(-20px,15px) scale(.92) rotate(-2deg)}100%{transform:translate(15px,-8px) scale(1.04) rotate(1deg)}}
 @keyframes float2{0%{transform:translate(0,0) scale(1) rotate(0)}50%{transform:translate(-35px,20px) scale(1.15) rotate(-6deg)}100%{transform:translate(20px,-15px) scale(.88) rotate(5deg)}}
 @keyframes float3{0%{transform:translate(0,0) scale(1) rotate(0)}25%{transform:translate(25px,8px) scale(1.08) rotate(2deg)}75%{transform:translate(-40px,-20px) scale(.94) rotate(-3deg)}100%{transform:translate(8px,25px) scale(1.06) rotate(3deg)}}
 @keyframes float4{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-30px,-35px) scale(1.2)}100%{transform:translate(35px,15px) scale(.82)}}
 @keyframes float5{0%{transform:translate(0,0) scale(1) rotate(0)}40%{transform:translate(-45px,12px) scale(.92) rotate(-3deg)}80%{transform:translate(20px,-25px) scale(1.12) rotate(5deg)}100%{transform:translate(-8px,8px) scale(1.04) rotate(-1deg)}}
 
-.aurora{position:absolute;top:0;right:0;bottom:0;left:0;z-index:2;pointer-events:none;background:conic-gradient(from 0deg at 50% 50%,transparent 0%,rgba(37,99,235,0.06) 25%,transparent 50%,rgba(59,130,246,0.04) 75%,transparent 100%);filter:blur(80px);animation:auroraSpin 25s linear infinite;opacity:0.4}
+.aurora{position:absolute;top:0;right:0;bottom:0;left:0;z-index:2;pointer-events:none;background:conic-gradient(from 0deg at 50% 50%,transparent 0%,rgba(37,99,235,0.06) 25%,transparent 50%,rgba(59,130,246,0.04) 75%,transparent 100%);filter:blur(80px);animation:auroraSpin 45s linear infinite;opacity:0.4}
 @keyframes auroraSpin{to{transform:rotate(360deg)}}
 .particle-canvas{position:absolute;top:0;right:0;bottom:0;left:0;z-index:3;pointer-events:none}
 
@@ -119,7 +119,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:linear-gradi
 .stagger.in{opacity:1!important;transform:translateY(0) scale(1)!important}
 
 @keyframes float-particle{0%,100%{transform:translateY(0) translateX(0);opacity:0.3}25%{transform:translateY(-30px) translateX(15px);opacity:0.5}50%{transform:translateY(-15px) translateX(-10px);opacity:0.4}75%{transform:translateY(-40px) translateX(5px);opacity:0.6}}
-.particle{position:absolute;border-radius:50%;background:#2563EB;opacity:0.12;pointer-events:none;z-index:11}
+.particle{position:absolute;border-radius:50%;background:#2563EB;opacity:0.18;pointer-events:none;z-index:11}
 
 @keyframes popIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
 .pop-in{animation:popIn .5s cubic-bezier(.16,1,.3,1) forwards;opacity:0}
@@ -161,7 +161,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:linear-gradi
 .btn-back:active{opacity:.5}
 
 .logo-container{display:flex;align-items:center;justify-content:center;gap:10px}
-.logo-mark{width:48px;height:48px;border-radius:14px;box-shadow:0 8px 25px rgba(37,99,235,.2);animation:heroFloat 6s ease-in-out infinite}
+.logo-mark{width:64px;height:64px;border-radius:14px;box-shadow:0 8px 25px rgba(37,99,235,.2);animation:heroFloat 6s ease-in-out infinite}
 .logo-text{font-size:28px;font-weight:800;letter-spacing:-.02em;color:#1E293B;animation:heroFloat 6s ease-in-out infinite;animation-delay:.15s}
 @keyframes heroFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 
