@@ -15,9 +15,76 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:linear-gradi
     border-radius:0;box-shadow:none;transform:none;
   }
   .glass-container{
-    max-width:440px;
-    left:50% !important;
-    transform:translateZ(0) translateX(-50%);
+    max-width:100%;
+    left:0 !important;
+    right:0 !important;
+    transform:none;
+  }
+  .screen{
+    padding:48px 24px 12px;
+  }
+  /* Formulario centrado con max-width */
+  .screen .form-area{
+    align-self:center;
+    overflow-y:auto;
+    justify-content:flex-start;
+    max-width:520px;
+    width:100%;
+    margin-left:auto;
+    margin-right:auto;
+  }
+  /* Top-row pegado al borde */
+  .screen > div:first-child,
+  .screen > .top-row{
+    align-self:stretch;
+  }
+  .input-field{
+    font-size:15px;
+    padding:14px 16px 14px 16px;
+    border-radius:10px;
+  }
+  .input-icon{
+    display:none;
+  }
+  .btn-main{
+    font-size:15px !important;
+    padding:14px !important;
+    max-width:440px !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+  }
+  .btn-social{
+    font-size:14px;
+    padding:12px;
+    max-width:200px;
+  }
+  .legal-text{
+    font-size:12px;
+  }
+  h1,h2{
+    font-size:clamp(1.5rem,2.5vw,2rem) !important;
+  }
+  .email-icon{
+    width:80px;
+    height:80px;
+    border-radius:24px;
+  }
+  .email-icon svg{
+    width:40px;
+    height:40px;
+  }
+  .pw-toggle{
+    padding:8px;
+  }
+  .top-row .logo-text{font-size:22px;}
+  .top-row svg{width:32px;height:32px;}
+  .pill-toggle{width:180px;height:44px;}
+  .pill-slider{width:86px;}
+  .pill-btn{font-size:14px;}
+  .pill-slider.right{transform:translateX(90px)}
+  .btn-back{
+    width:44px;
+    height:44px;
   }
 }
 

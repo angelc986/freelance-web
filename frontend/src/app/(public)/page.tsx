@@ -313,7 +313,7 @@ export default function Home() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="flex justify-center mb-8 animate-fade-up">
+            <div className="flex justify-center mb-8 animate-fade-up md:hidden">
               <Logo size="lg" />
             </div>
 
@@ -356,7 +356,7 @@ export default function Home() {
               <span>+50 trabajadores ya se registraron esta semana</span>
             </div>
 
-            <div className="mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto animate-fade-in animate-delay-500">
+            <div className="mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto animate-fade-in animate-delay-500 md:hidden">
               <div>
                 <p className="text-3xl sm:text-4xl font-bold text-dark">
                   <Counter target={50} suffix="+" />
@@ -384,9 +384,9 @@ export default function Home() {
       {/* Wave transition */}
       <WaveDivider color="#F8FAFC" />
 
-      {/* ========== TRUSTED BY ========== */}
+      {/* ========== TRUSTED BY (md:hidden en desktop) ========== */}
       <RevealSection delay={100}>
-        <section className="py-12 bg-light">
+        <section className="py-12 bg-light md:hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <p className="text-center text-sm text-gray font-medium mb-8 uppercase tracking-widest">
               Confiado por negocios en todo Venezuela
@@ -428,14 +428,7 @@ export default function Home() {
 
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {/* TurnoGO column — PROFESSIONAL BLUE CARD */}
-              <button
-                onClick={() => setInfoOpen(true)}
-                className="relative group rounded-2xl p-[1px] bg-gradient-to-br from-primary via-primary-dark to-secondary overflow-hidden hover:shadow-xl hover:shadow-primary/20 transition-shadow text-left cursor-pointer w-full"
-              >
-                <div className="relative rounded-2xl p-5 h-full bg-gradient-to-br from-primary-dark/5 via-white to-primary-light/20 backdrop-blur-sm">
-                  {/* Glow effect on hover */}
-                  <div className="absolute -inset-20 bg-primary/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
+              <div className="rounded-2xl p-5" style={{background:"linear-gradient(135deg,rgba(37,99,235,0.03),white,rgba(5,150,105,0.08))",border:"1px solid rgba(37,99,235,0.15)"}}>
                   <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-4">
                       <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
@@ -468,8 +461,7 @@ export default function Home() {
                       </a>
                     </div>
                   </div>
-                </div>
-              </button>
+              </div>
 
               {/* Traditional column */}
               <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200/60 hover:shadow-md transition-all">
@@ -539,7 +531,8 @@ export default function Home() {
         </section>
       </RevealSection>
 
-      {/* ========== ESTADÍSTICAS ========== */}
+      {/* ========== ESTADÍSTICAS (md:hidden) ========== */}
+      <div className="md:hidden">
       <RevealSection>
         <section className="relative py-20 sm:py-28 bg-primary overflow-hidden">
           {/* Animated grid */}
@@ -590,6 +583,7 @@ export default function Home() {
           </div>
         </section>
       </RevealSection>
+      </div>
 
       {/* ========== PARA EMPRESAS ========== */}
       <RevealSection delay={100}>
@@ -638,7 +632,8 @@ export default function Home() {
         </section>
       </RevealSection>
 
-      {/* ========== TESTIMONIOS ========== */}
+      {/* ========== TESTIMONIOS (md:hidden) ========== */}
+      <div className="md:hidden">
       <RevealSection delay={100}>
         <section className="py-16 sm:py-24 bg-light relative overflow-hidden">
           <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
@@ -659,8 +654,10 @@ export default function Home() {
           </div>
         </section>
       </RevealSection>
+      </div>
 
-      {/* ========== FAQ ========== */}
+      {/* ========== FAQ (md:hidden) ========== */}
+      <div className="md:hidden">
       <RevealSection delay={100}>
         <section className="py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -679,8 +676,10 @@ export default function Home() {
           </div>
         </section>
       </RevealSection>
+      </div>
 
-      {/* ========== CTA FINAL ========== */}
+      {/* ========== CTA FINAL (md:hidden) ========== */}
+      <div className="md:hidden">
       <RevealSection>
         <section className="relative py-20 sm:py-28 bg-gradient-to-br from-primary via-primary-dark to-primary-darker overflow-hidden">
           {/* Animated particles */}
@@ -731,6 +730,7 @@ export default function Home() {
           </div>
         </section>
       </RevealSection>
+      </div>
 
       {/* ========== INFO MODAL ========== */}
       <InfoModal open={infoOpen} onClose={() => setInfoOpen(false)} />
