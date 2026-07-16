@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -417,10 +417,6 @@ function AuthPageInner() {
  <canvas ref={particlesRef} className="particle-canvas" />
 
  <div className="glass-container">
- {/* ─── Logo superior en todas las pantallas ─── */}
- <div className="absolute left-4 z-30" style={{top:"calc(env(safe-area-inset-top,0px) + 14px)"}}>
- <Logo size="sm" />
- </div>
 
  {/* ─── Partículas flotantes ─── */}
  <Particles />
@@ -461,7 +457,7 @@ function AuthPageInner() {
 
  {/* ═══════ 2. REGISTER ═══════ */}
  <div className={screenClass("register")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
- <div className="top-bar">
+ <div className="top-row top-bar">
  <TopRowLogo onBack={pop} />
  <div className="pill-toggle">
  <div className={`pill-slider${current === "register" && transition !== "pop" ? " right" : ""}`}></div>
@@ -531,7 +527,7 @@ function AuthPageInner() {
 
  {/* ═══════ 3. LOGIN ═══════ */}
  <div className={screenClass("login")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
- <div className="top-bar">
+ <div className="top-row top-bar">
  <TopRowLogo onBack={pop} />
  <div className="pill-toggle">
  <div className={`pill-slider${current === "login" && transition !== "pop" ? "" : " right"}`}></div>
@@ -582,7 +578,7 @@ function AuthPageInner() {
 
  {/* ═══════ 4. RESET PASSWORD ═══════ */}
  <div className={screenClass("reset")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
- <div className="top-bar">
+ <div className="top-row top-bar">
  <TopRowLogo onBack={pop} />
  </div>
 
@@ -607,7 +603,7 @@ function AuthPageInner() {
 
  {/* ═══════ 5. CHECK EMAIL ═══════ */}
  <div className={screenClass("email")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
- <div className="top-bar">
+ <div className="top-row top-bar">
  <TopRowLogo onBack={() => popTo("reset")} />
  <div></div>
  </div>
