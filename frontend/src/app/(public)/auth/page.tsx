@@ -463,7 +463,7 @@ function AuthPageInner() {
  <p className="text-gray-500 text-[15px] max-w-[260px] mx-auto leading-relaxed stagger">Encuentra trabajos, conecta y crece. Tu oportunidad empieza aquí.</p>
  </div>
  <div className="space-y-3 pb-2">
- <div className="stagger"><button onClick={() => push("register")} className="btn-main welcome-cta">Comenzar</button></div>
+ <div className="stagger"><button onClick={() => push("register")} className="btn-main" style={{fontSize:17,padding:"18px 28px",marginTop:-16}}>Comenzar</button></div>
  <div className="stagger"><button onClick={() => push("login")} className="ghost-btn">Ya tengo una cuenta</button></div>
  </div>
  <div className="stagger"><p className="legal-text text-center mt-auto">Al continuar aceptas nuestros <a href="#">Términos</a> y <a href="#">Privacidad</a>.</p></div>
