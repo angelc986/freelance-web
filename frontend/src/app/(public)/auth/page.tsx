@@ -437,7 +437,7 @@ function AuthPageInner() {
               <Logo size="lg" />
             </div>
  {/* Volver a la página principal */}
- <div className="stagger" style={{position:"absolute",top:"calc(env(safe-area-inset-top,0px) + 48px)",left:24,zIndex:5}}>
+ <div className="stagger" style={{position:"absolute",top:"calc(env(safe-area-inset-top,0px) + 48px)",left:28,zIndex:5}}>
  <a href="/" className="btn-back" style={{marginLeft:0}}>
  <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
  </a>
@@ -447,8 +447,8 @@ function AuthPageInner() {
  <div className="logo-container mx-auto mb-6">
  <div className="logo-mark">
  <svg viewBox="0 0 48 48" fill="none" style={{width:"100%",height:"100%"}}>
- <defs><linearGradient id="logoGrad" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#2563EB"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs>
- <circle cx="24" cy="24" r="22" fill="url(#logoGrad)"/>
+ <defs><linearGradient id="logoGradWelcome" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#2563EB"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs>
+ <circle cx="24" cy="24" r="22" fill="url(#logoGradWelcome)"/>
  <path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
  <path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round"/>
  <circle cx="36.5" cy="19" r="1.5" fill="white"/>

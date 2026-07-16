@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 *,*::before,*::after{box-sizing:border-box}
 *{font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent}
@@ -174,7 +174,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:linear-gradi
 .btn-back:active{opacity:.5}
 
 .logo-container{display:flex;align-items:center;justify-content:center;gap:10px}
-.logo-mark{width:64px;height:64px;border-radius:14px;box-shadow:0 8px 25px rgba(37,99,235,.2);animation:heroFloat 6s ease-in-out infinite}
+.logo-mark{width:64px;height:64px;border-radius:14px;animation:heroFloat 6s ease-in-out infinite}
 .logo-text{font-size:28px;font-weight:800;letter-spacing:-.02em;color:#1E293B;animation:heroFloat 6s ease-in-out infinite;animation-delay:.15s}
 @keyframes heroFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 
