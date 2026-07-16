@@ -101,8 +101,8 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:linear-gradi
   }
   /* Welcome: logo central más grande */
   .screen-active .logo-mark{
-    width:80px;
-    height:80px;
+    width:100px;
+    height:100px;
   }
   /* Welcome: botón Comenzar más grande y subido */
   .welcome-cta{
