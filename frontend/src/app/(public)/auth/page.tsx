@@ -216,20 +216,25 @@ function Particles({ count = 15 }: { count?: number }) {
 
 /* ══════════════════════════════════════════════════════════════
    TOP ROW (logo + separator + back button)
+   Desktop: logo SVG + TurnoGO + | + ←
+   Mobile: solo ←
    ══════════════════════════════════════════════════════════════ */
 function TopRowLogo({ onBack }: { onBack: () => void }) {
   return (
     <div className="flex items-center gap-2">
-      <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs><linearGradient id="tlg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#2563EB"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs>
-        <circle cx="24" cy="24" r="22" fill="url(#tlg)"/>
-        <path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round"/>
-        <path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.8"/>
-        <circle cx="36.5" cy="19" r="1.5" fill="white" opacity="0.8"/>
-        <circle cx="24" cy="24" r="3" fill="white" opacity="0.6"/>
-      </svg>
-      <span className="logo-text font-bold tracking-tight">Turno<span style={{color:"#2563EB"}}>GO</span></span>
-      <div className="w-px h-4 bg-gray-300 mx-1"></div>
+      {/* Logo + texto: solo visible en desktop (md+) */}
+      <div className="hidden md:flex items-center gap-2">
+        <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="tlg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#2563EB"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs>
+          <circle cx="24" cy="24" r="22" fill="url(#tlg)"/>
+          <path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round"/>
+          <path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.8"/>
+          <circle cx="36.5" cy="19" r="1.5" fill="white" opacity="0.8"/>
+          <circle cx="24" cy="24" r="3" fill="white" opacity="0.6"/>
+        </svg>
+        <span className="logo-text font-bold tracking-tight">Turno<span style={{color:"#2563EB"}}>GO</span></span>
+        <div className="w-px h-4 bg-gray-300 mx-1"></div>
+      </div>
       <button onClick={onBack} className="btn-back" style={{marginLeft:0,width:32,height:32,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",color:"#475569",border:"none",background:"none",cursor:"pointer"}}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
@@ -417,10 +422,12 @@ function AuthPageInner() {
  <canvas ref={particlesRef} className="particle-canvas" />
 
  <div className="glass-container">
-            {/* ─── Logo superior flotante ─── */}
+            {/* ─── Logo flotante: SOLO en Welcome (las demás pantallas tienen TopRowLogo) ─── */}
+            {current === "welcome" && (
             <div className="absolute left-4 z-30" style={{top:"calc(env(safe-area-inset-top,0px) + 14px)"}}>
               <Logo size="sm" />
             </div>
+            )}
 
  {/* ─── Partículas flotantes ─── */}
  <Particles />
@@ -437,7 +444,7 @@ function AuthPageInner() {
  <div className="stagger">
  <div className="logo-container mx-auto mb-6">
  <div className="logo-mark">
- <svg viewBox="0 0 48 48" fill="none" style={{width:48,height:48}}>
+ <svg viewBox="0 0 48 48" fill="none" style={{width:"100%",height:"100%"}}>
  <defs><linearGradient id="logoGrad" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#2563EB"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs>
  <circle cx="24" cy="24" r="22" fill="url(#logoGrad)"/>
  <path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
