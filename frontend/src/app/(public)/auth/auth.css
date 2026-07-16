@@ -22,21 +22,30 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:linear-gradi
   }
   .screen{
     padding:48px 24px 12px;
+    align-items:center;
+  }
+  /* Top-row pegado al borde (full width) */
+  .screen > .top-bar,
+  .screen > .top-row{
+    align-self:stretch;
+    max-width:440px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+  /* Todos los hijos de screen que NO son top-bar: centrados y con max-width */
+  .screen > *:not(.top-bar):not(.top-row){
+    width:100%;
+    max-width:440px;
   }
   /* Formulario centrado con max-width */
   .screen .form-area{
     align-self:center;
     overflow-y:auto;
     justify-content:flex-start;
-    max-width:520px;
+    max-width:440px;
     width:100%;
     margin-left:auto;
     margin-right:auto;
-  }
-  /* Top-row pegado al borde */
-  .screen > div:first-child,
-  .screen > .top-row{
-    align-self:stretch;
   }
   .input-field{
     font-size:15px;
@@ -49,14 +58,21 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:linear-gradi
   .btn-main{
     font-size:15px !important;
     padding:14px !important;
-    max-width:440px !important;
-    margin-left:auto !important;
-    margin-right:auto !important;
+    max-width:100% !important;
   }
+  /* Botones sociales centrados */
   .btn-social{
     font-size:14px;
     padding:12px;
     max-width:200px;
+  }
+  .flex.gap-3{
+    justify-content:center;
+  }
+  /* Welcome screen: logo + título centrados */
+  .logo-container{
+    margin-left:auto;
+    margin-right:auto;
   }
   .legal-text{
     font-size:12px;
