@@ -433,8 +433,9 @@ function AuthPageInner() {
  {/* ═══════ 1. WELCOME ═══════ */}
  <div className={screenClass("welcome")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
             {/* Logo desktop — solo Welcome */}
-            <div className="hidden md:block absolute left-4 z-30" style={{top:"calc(env(safe-area-inset-top,0px) + 14px)"}}>
-              <Logo size="lg" />
+            <div className="hidden md:flex absolute left-4 z-30 items-center gap-2" style={{top:"calc(env(safe-area-inset-top,0px) + 14px)"}}>
+              <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="url(#tlg)"/><path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round"/><path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round"/><circle cx="36.5" cy="19" r="1.5" fill="white"/><circle cx="24" cy="24" r="3" fill="white"/></svg>
+              <span className="text-lg font-bold tracking-tight text-gray-900">Turno<span style={{color:"#2563EB"}}>GO</span></span>
             </div>
  {/* Volver a la página principal */}
  <div className="stagger" style={{position:"absolute",top:"calc(env(safe-area-inset-top,0px) + 48px)",left:28,zIndex:5}}>
