@@ -6,7 +6,20 @@
 html,body{margin:0;padding:0;height:100%;overflow:hidden;background:linear-gradient(to bottom,#EFF6FF 0%,#EFF6FF 92%,#DBEAFE 96%,#BFDBFE 98%,#fff 100%)}
 
 .phone-frame{position:absolute;top:0;right:0;left:0;height:100vh;height:-webkit-fill-available;height:100dvh;background:transparent;overflow:hidden}
-@media(min-width:480px){.phone-frame{position:fixed;top:50%;right:auto;bottom:auto;left:50%;transform:translate(-50%,-50%);width:390px;height:844px;border-radius:44px;background:#fff;box-shadow:0 0 0 4px #CBD5E1,0 20px 60px rgba(0,0,0,0.15)}}
+/* ===== DESKTOP (≥480px): auth full-screen, sin frame de teléfono ===== */
+@media(min-width:480px){
+  .phone-frame{
+    position:absolute;top:0;right:0;bottom:0;left:0;
+    width:auto;height:100vh;height:-webkit-fill-available;height:100dvh;
+    background:transparent;overflow:hidden;
+    border-radius:0;box-shadow:none;transform:none;
+  }
+  .glass-container{
+    max-width:440px;
+    left:50% !important;
+    transform:translateZ(0) translateX(-50%);
+  }
+}
 
 .mesh-canvas{position:absolute;top:0;right:0;bottom:0;left:0;z-index:0;width:100%;height:100%}
 .blob-layer{position:absolute;top:0;right:0;bottom:0;left:0;z-index:1;overflow:hidden}

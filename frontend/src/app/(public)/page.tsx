@@ -241,7 +241,8 @@ export default function Home() {
       </header>
 
       {/* Barra de navegación visible: Cómo funciona, Categorías, Para empresas */}
-      <div className="fixed left-0 right-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-200/70"
+      {/* Hidden on md+ porque el header ya los tiene en desktop */}
+      <div className="fixed left-0 right-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-200/70 md:hidden"
         style={{ top: "calc(4rem + env(safe-area-inset-top, 0px))" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-10 flex items-center justify-center gap-6 sm:gap-8 overflow-x-auto">
           {navLinks.map((link) => {
@@ -287,7 +288,7 @@ export default function Home() {
       </div>
 
       {/* ========== HERO ========== */}
-      <section className="relative pt-[calc(8.5rem+env(safe-area-inset-top,0px))] sm:pt-[calc(10rem+env(safe-area-inset-top,0px))] pb-16 sm:pb-24 overflow-hidden">
+      <section className="relative pt-[calc(8.5rem+env(safe-area-inset-top,0px))] sm:pt-[calc(10rem+env(safe-area-inset-top,0px))] md:pt-[calc(7rem+env(safe-area-inset-top,0px))] pb-16 sm:pb-24 overflow-hidden">
         {/* Animated gradient background */}
         <div className="absolute inset-0 -z-20 bg-gradient-to-br from-primary-lighter via-white to-secondary-light/20 animate-gradient" />
 
