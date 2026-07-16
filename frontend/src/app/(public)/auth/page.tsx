@@ -417,6 +417,10 @@ function AuthPageInner() {
  <canvas ref={particlesRef} className="particle-canvas" />
 
  <div className="glass-container">
+            {/* ─── Logo superior flotante ─── */}
+            <div className="absolute left-4 z-30" style={{top:"calc(env(safe-area-inset-top,0px) + 14px)"}}>
+              <Logo size="sm" />
+            </div>
 
  {/* ─── Partículas flotantes ─── */}
  <Particles />
