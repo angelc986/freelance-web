@@ -434,8 +434,8 @@ function AuthPageInner() {
  <div className={screenClass("welcome")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
             {/* Logo desktop — solo Welcome */}
             <div className="hidden md:flex absolute left-4 z-30 items-center gap-2" style={{top:"calc(env(safe-area-inset-top,0px) + 14px)"}}>
-              <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="url(#tlg)"/><path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round"/><path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round"/><circle cx="36.5" cy="19" r="1.5" fill="white"/><circle cx="24" cy="24" r="3" fill="white"/></svg>
-              <span className="text-lg font-bold tracking-tight text-gray-900">Turno<span style={{color:"#2563EB"}}>GO</span></span>
+              <svg className="w-10 h-10" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="url(#tlg)"/><path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round"/><path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round"/><circle cx="36.5" cy="19" r="1.5" fill="white"/><circle cx="24" cy="24" r="3" fill="white"/></svg>
+              <span className="text-xl font-bold tracking-tight text-gray-900">Turno<span style={{color:"#2563EB"}}>GO</span></span>
             </div>
  {/* Volver a la página principal */}
  <div className="stagger" style={{position:"absolute",top:"calc(env(safe-area-inset-top,0px) + 48px)",left:28,zIndex:5}}>
@@ -463,7 +463,7 @@ function AuthPageInner() {
  <p className="text-gray-500 text-[15px] max-w-[260px] mx-auto leading-relaxed stagger">Encuentra trabajos, conecta y crece. Tu oportunidad empieza aquí.</p>
  </div>
  <div className="space-y-3 pb-2">
- <div className="stagger"><button onClick={() => push("register")} className="btn-main">Comenzar</button></div>
+ <div className="stagger"><button onClick={() => push("register")} className="btn-main welcome-cta">Comenzar</button></div>
  <div className="stagger"><button onClick={() => push("login")} className="ghost-btn">Ya tengo una cuenta</button></div>
  </div>
  <div className="stagger"><p className="legal-text text-center mt-auto">Al continuar aceptas nuestros <a href="#">Términos</a> y <a href="#">Privacidad</a>.</p></div>
