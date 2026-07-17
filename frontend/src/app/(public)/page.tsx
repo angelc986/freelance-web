@@ -426,7 +426,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
               {/* TurnoGO column — PROFESSIONAL BLUE CARD */}
               <div className="rounded-2xl p-5" style={{background:"linear-gradient(135deg,rgba(37,99,235,0.03),white,rgba(5,150,105,0.08))",border:"1px solid rgba(37,99,235,0.15)"}}>
                   <div className="relative z-10">
@@ -519,7 +519,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto stagger-children">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-7xl mx-auto stagger-children">
               <CategoryCard icon="construction" title="Construcción" desc="Peones, albañiles, ayudantes de obra" />
               <CategoryCard icon="tools" title="Electricidad y Mantenimiento" desc="Electricistas, técnicos de aires, plomeros" />
               <CategoryCard icon="paint" title="Pintura y Acabados" desc="Pintores, drywall, cerámica" />
@@ -592,7 +592,7 @@ export default function Home() {
           <div className="absolute top-1/2 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl translate-x-1/3 -translate-y-1/2" />
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-6xl mx-auto">
               <div className="text-center mb-16">
                 <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-semibold px-4 py-1.5 rounded-full mb-4 border border-primary/20">
                   Características
