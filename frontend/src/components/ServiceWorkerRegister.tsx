@@ -94,7 +94,7 @@ export default function ServiceWorkerRegister() {
   // Banner de instalación para Android/Desktop (beforeinstallprompt)
   if (installPrompt) {
     return (
-      <div className="fixed bottom-4 left-4 right-4 z-50 max-w-md mx-auto">
+      <div className="fixed bottom-4 left-4 right-4 z-50 max-w-md mx-auto md:hidden">
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
             T
@@ -125,7 +125,7 @@ export default function ServiceWorkerRegister() {
   // Guía para iOS (cuando no hay beforeinstallprompt)
   if (showGuide) {
     return (
-      <div className="fixed bottom-4 left-4 right-4 z-50 max-w-md mx-auto">
+      <div className="fixed bottom-4 left-4 right-4 z-50 max-w-md mx-auto md:hidden">
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-5">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
