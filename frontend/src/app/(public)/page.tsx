@@ -188,7 +188,7 @@ export default function Home() {
               Iniciar sesión
             </a>
             <a
-              href="/auth?screen=register"
+              href="/auth"
               className="px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30"
             >
               Registrarse
@@ -230,7 +230,7 @@ export default function Home() {
               Iniciar sesión
             </a>
             <a
-              href="/auth?screen=register"
+              href="/auth"
               className="block w-full text-center px-5 py-3 text-sm font-semibold text-white bg-primary rounded-full hover:bg-primary-dark active:bg-primary-darker transition-all shadow-sm"
               onClick={() => setMenuOpen(false)}
             >
@@ -335,7 +335,7 @@ export default function Home() {
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up animate-delay-300">
               <a
-                href="/auth?screen=register"
+                href="/auth"
                 className="btn-ripple group w-full sm:w-auto px-8 py-3.5 text-white font-semibold rounded-full hover:opacity-90 transition-all shadow-lg hover:shadow-xl"
                 style={{ backgroundColor: '#2563EB' }}
               >
@@ -343,7 +343,7 @@ export default function Home() {
                 <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform text-white/80">→</span>
               </a>
               <a
-                href="/auth?screen=register"
+                href="/auth"
                 className="btn-ripple group w-full sm:w-auto px-8 py-3.5 bg-white text-dark font-semibold border-2 border-primary/30 rounded-full hover:border-primary hover:text-primary hover:bg-primary/[0.03] transition-all hover:shadow-md"
               >
                 Quiero contratar
