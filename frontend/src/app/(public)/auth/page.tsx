@@ -432,17 +432,10 @@ function AuthPageInner() {
 
  {/* ═══════ 1. WELCOME ═══════ */}
  <div className={screenClass("welcome")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
-            {/* Logo desktop — solo Welcome */}
-            <div className="hidden md:flex absolute left-4 z-30 items-center gap-2" style={{top:"calc(env(safe-area-inset-top,0px) + 14px)"}}>
-              <svg className="w-11 h-11" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="url(#tlg)"/><path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round"/><path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round"/><circle cx="36.5" cy="19" r="1.5" fill="white"/><circle cx="24" cy="24" r="3" fill="white"/></svg>
-              <span className="text-2xl font-bold tracking-tight text-gray-900">Turno<span style={{color:"#2563EB"}}>GO</span></span>
+            {/* Top row: logo + back — uniforme en las 5 pantallas (desktop) */}
+            <div className="top-row top-bar">
+              <TopRowLogo onBack={() => router.push('/')} />
             </div>
- {/* Volver a la página principal */}
- <div className="stagger" style={{position:"absolute",top:"calc(env(safe-area-inset-top,0px) + 66px)",left:28,zIndex:5}}>
- <a href="/" className="btn-back" style={{marginLeft:0}}>
- <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
- </a>
- </div>
  <div className="flex-1 flex flex-col justify-center items-center text-center">
  <div className="stagger">
  <div className="logo-container mx-auto mb-6">
