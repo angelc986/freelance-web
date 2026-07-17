@@ -137,7 +137,7 @@ export default function Home() {
           </a>
 
           {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center justify-center flex-1 gap-12">
             {navLinks.map((link) => {
               if (link.href === "#como-funciona") {
                 return (
@@ -147,7 +147,7 @@ export default function Home() {
                       document.getElementById("como-funciona")?.scrollIntoView({ behavior: "smooth" });
                       setInfoOpen(true);
                     }}
-                    className="text-gray hover:text-dark transition-colors text-sm font-medium"
+                    className="text-gray hover:text-dark transition-colors text-base font-semibold"
                   >
                     {link.label}
                   </button>
@@ -161,7 +161,7 @@ export default function Home() {
                       document.getElementById("categorias")?.scrollIntoView({ behavior: "smooth" });
                       setCatOpen(true);
                     }}
-                    className="text-gray hover:text-dark transition-colors text-sm font-medium"
+                    className="text-gray hover:text-dark transition-colors text-base font-semibold"
                   >
                     {link.label}
                   </button>
@@ -171,7 +171,7 @@ export default function Home() {
                 <a
                   key={link.href}
                   href={link.href}
-                  className="text-gray hover:text-dark transition-colors text-sm font-medium"
+                  className="text-gray hover:text-dark transition-colors text-base font-semibold"
                 >
                   {link.label}
                 </a>
@@ -180,16 +180,16 @@ export default function Home() {
           </div>
 
           {/* Desktop CTA buttons */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-4">
             <a
               href="/auth?screen=login"
-              className="px-5 py-2.5 text-sm font-medium text-dark border border-gray-light rounded-full hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
+              className="px-6 py-3 text-base font-semibold text-dark border border-gray-light rounded-full hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
             >
               Iniciar sesión
             </a>
             <a
               href="/auth"
-              className="px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30"
+              className="px-6 py-3 text-base font-semibold text-white bg-primary rounded-full hover:bg-primary-dark transition-all shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30"
             >
               Registrarse
             </a>
