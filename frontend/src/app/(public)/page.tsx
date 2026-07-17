@@ -356,7 +356,7 @@ export default function Home() {
               <span>+50 trabajadores ya se registraron esta semana</span>
             </div>
 
-            <div className="mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto animate-fade-in animate-delay-500 md:hidden">
+            <div className="mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto animate-fade-in animate-delay-500">
               <div>
                 <p className="text-3xl sm:text-4xl font-bold text-dark">
                   <Counter target={50} suffix="+" />
@@ -386,7 +386,7 @@ export default function Home() {
 
       {/* ========== TRUSTED BY (md:hidden en desktop) ========== */}
       <RevealSection delay={100}>
-        <section className="py-12 bg-light md:hidden">
+        <section className="py-12 bg-light">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <p className="text-center text-sm text-gray font-medium mb-8 uppercase tracking-widest">
               Confiado por negocios en todo Venezuela
@@ -531,8 +531,7 @@ export default function Home() {
         </section>
       </RevealSection>
 
-      {/* ========== ESTADÍSTICAS (md:hidden) ========== */}
-      <div className="md:hidden">
+      {/* ========== ESTADÍSTICAS ========== */}
       <RevealSection>
         <section className="relative py-20 sm:py-28 bg-primary overflow-hidden">
           {/* Animated grid */}
@@ -583,7 +582,6 @@ export default function Home() {
           </div>
         </section>
       </RevealSection>
-      </div>
 
       {/* ========== PARA EMPRESAS ========== */}
       <RevealSection delay={100}>
@@ -632,8 +630,7 @@ export default function Home() {
         </section>
       </RevealSection>
 
-      {/* ========== TESTIMONIOS (md:hidden) ========== */}
-      <div className="md:hidden">
+      {/* ========== TESTIMONIOS ========== */}
       <RevealSection delay={100}>
         <section className="py-16 sm:py-24 bg-light relative overflow-hidden">
           <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
@@ -654,10 +651,8 @@ export default function Home() {
           </div>
         </section>
       </RevealSection>
-      </div>
 
-      {/* ========== FAQ (md:hidden) ========== */}
-      <div className="md:hidden">
+      {/* ========== FAQ ========== */}
       <RevealSection delay={100}>
         <section className="py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -676,10 +671,8 @@ export default function Home() {
           </div>
         </section>
       </RevealSection>
-      </div>
 
-      {/* ========== CTA FINAL (md:hidden) ========== */}
-      <div className="md:hidden">
+      {/* ========== CTA FINAL ========== */}
       <RevealSection>
         <section className="relative py-20 sm:py-28 bg-gradient-to-br from-primary via-primary-dark to-primary-darker overflow-hidden">
           {/* Animated particles */}
@@ -730,7 +723,6 @@ export default function Home() {
           </div>
         </section>
       </RevealSection>
-      </div>
 
       {/* ========== INFO MODAL ========== */}
       <InfoModal open={infoOpen} onClose={() => setInfoOpen(false)} />
@@ -747,8 +739,7 @@ export default function Home() {
         </svg>
       </button>
 
-      {/* ========== FOOTER (md:hidden en desktop) ========== */}
-      <div className="md:hidden">
+      {/* ========== FOOTER ========== */}
       <footer className="bg-dark text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -800,7 +791,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-      </div>
     </>
   );
 }
