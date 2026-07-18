@@ -112,24 +112,9 @@ async def create_verification(
             "message": "Tu identidad ya está verificada",
         }
 
-    # If there's an unfinished session, reuse it
-    if current_user.didit_session_id:
-        try:
-            async with httpx.AsyncClient() as client:
-                resp = await client.get(
-                    f"https://verification.didit.me/v3/session/{current_user.didit_session_id}/decision/",
-                    headers={"x-api-key": settings.DIDIT_API_KEY},
-                )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    if data.get("status") in ("Not Started", "In Progress", "Resubmitted", "Awaiting User"):
-                        return {
-                            "status": "existing_session",
-                            "verification_url": f"https://verify.didit.me/session/{current_user.didit_session_id}",
-                            "session_id": current_user.didit_session_id,
-                        }
-        except Exception:
-            pass  # If fails, create a new one
+    # Clear any stale session and always create a fresh one
+    current_user.didit_session_id = None
+    db.commit()
 
     # Create new Didit session
     callback_url = f"{os.getenv('APP_URL', 'https://freelance-web-beta.vercel.app')}/verification-complete"
