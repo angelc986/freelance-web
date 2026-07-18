@@ -164,6 +164,7 @@ export default function VerificationCompletePage() {
       {/* Force body/background identical to auth.css */}
       <style>{`
         html, body { margin: 0 !important; padding: 0 !important; height: 100% !important; overflow: hidden !important; background: linear-gradient(to bottom, #EFF6FF 0%, #EFF6FF 92%, #DBEAFE 96%, #BFDBFE 98%, #fff 100%) !important; }
+        .blob { opacity: 0.65 !important; }
       `}</style>
 
       <div className="phone-frame">
