@@ -305,6 +305,7 @@ async def didit_webhook(request: Request):
                     cloud_url = _upload_avatar_from_url(portrait_url, user.id)
                     if cloud_url:
                         user.avatar_url = cloud_url
+                        user.avatar_verified = True
             elif status_val in ("Declined", "Expired", "Abandoned"):
                 user.is_verified = False
                 user.didit_session_id = None  # Allow re-verification

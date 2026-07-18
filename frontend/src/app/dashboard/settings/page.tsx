@@ -196,21 +196,45 @@ export default function SettingsPage() {
                   user.full_name.charAt(0).toUpperCase()
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={avatarUploading}
-                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all disabled:opacity-50"
-              >
-                <svg className="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
-                </svg>
-              </button>
+              {/* Locked: avatar came from identity verification */}
+              {user.avatar_verified && user.avatar_url ? (
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center" title="Foto verificada">
+                  <svg className="w-3.5 h-3.5 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+                    <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              ) : (
+                /* Upload button: only when avatar NOT from verification */
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={avatarUploading}
+                  className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all disabled:opacity-50"
+                >
+                  <svg className="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                  </svg>
+                </button>
+              )}
             </div>
             <div>
-              <p className="text-sm font-medium text-dark">Foto de perfil</p>
-              <p className="text-xs text-gray mt-0.5">JPG, PNG o WebP. Max 5MB.</p>
+              {user.avatar_verified && user.avatar_url ? (
+                <>
+                  <p className="text-sm font-medium text-dark flex items-center gap-1.5">Foto de perfil <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600 border border-blue-200">Verificada</span></p>
+                  <p className="text-xs text-gray mt-0.5">Esta foto fue tomada durante tu verificación de identidad. Para cambiarla, contacta a soporte.</p>
+                </>
+              ) : user.avatar_url ? (
+                <>
+                  <p className="text-sm font-medium text-dark">Foto de perfil</p>
+                  <p className="text-xs text-gray mt-0.5">JPG, PNG o WebP. Max 5MB.</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-medium text-dark">Foto de perfil</p>
+                  <p className="text-xs text-gray mt-0.5">JPG, PNG o WebP. Max 5MB.</p>
+                </>
+              )}
               {avatarUploading && (
                 <p className="text-xs text-primary mt-1 flex items-center gap-1.5">
                   <span className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />

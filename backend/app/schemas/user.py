@@ -35,6 +35,7 @@ class UserResponse(BaseModel):
     balance: float = 0.0
     rating_avg: float
     avatar_url: str | None = None
+    avatar_verified: bool = False
     is_verified: bool = False
 
     class Config:

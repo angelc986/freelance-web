@@ -13,6 +13,7 @@ export interface User {
   balance: number;
   rating_avg: number;
   avatar_url: string | null;
+  avatar_verified: boolean;
   is_verified: boolean;
 }
 
