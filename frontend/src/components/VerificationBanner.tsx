@@ -31,8 +31,12 @@ export default function VerificationBanner({ onComplete }: Props) {
       }
       if (res.verification_url) {
         setVerificationUrl(res.verification_url);
-        // Navigate to Didit verification page (same window)
-        window.location.href = res.verification_url;
+        // Open in new window (triggered by direct user click)
+        const win = window.open(res.verification_url, "_blank");
+        if (!win) {
+          // Popup blocked — fallback to direct navigation
+          window.location.href = res.verification_url;
+        }
       }
     } catch (err: any) {
       setError(err.message || "Error al crear la verificación");
