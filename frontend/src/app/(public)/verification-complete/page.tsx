@@ -85,8 +85,8 @@ function useFloatingDots(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
     let dots: { x: number; y: number; size: number; vx: number; vy: number; opacity: number }[] = [];
 
     function init() {
-      const w = canvas!.clientWidth || window.innerWidth;
-      const h = canvas!.clientHeight || window.innerHeight;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
       canvas!.width = w; canvas!.height = h;
       dots = Array.from({ length: 18 }, () => ({
         x: Math.random() * w,
