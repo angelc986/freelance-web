@@ -108,7 +108,7 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 flex">
       {/* SIDEBAR */}
-      <aside className="hidden md:flex md:flex-col w-72 bg-white/95 backdrop-blur-xl border-r border-gray-200/70 shadow-lg shadow-gray-200/30">
+      <aside className="hidden md:flex md:flex-col w-72 bg-white/95 backdrop-blur-xl border-r border-gray-200/70 shadow-lg shadow-gray-200/30 sticky top-0 h-screen">
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-gray-100/80">
           <Link href="/dashboard">
@@ -175,7 +175,7 @@ export default function DashboardLayout({
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1.5 dashboard-scroll overflow-y-auto">
+        <nav className="flex-1 px-3 py-4 space-y-1.5">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -219,7 +219,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Top bar — safe-area aware for iPhone notch/dynamic island */}
         <header
           className="border-b border-gray-200/80 bg-white/95 backdrop-blur-xl shadow-sm shadow-gray-200/20 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-40"
@@ -259,7 +259,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Content with page transition */}
-        <main key={pathname} className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 sm:pb-6 lg:pb-8 animate-page-enter dashboard-scroll overflow-y-auto">{children}</main>
+        <main key={pathname} className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 sm:pb-6 lg:pb-8 animate-page-enter min-h-screen overflow-y-auto">{children}</main>
       </div>
 
       {/* MOBILE BOTTOM NAV */}
