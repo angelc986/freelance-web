@@ -82,25 +82,25 @@ function useFloatingDots(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
     if (!ctx) return;
     let animId = 0;
 
-    function reset() {
-      const w = canvas!.clientWidth; const h = canvas!.clientHeight;
+    let dots: { x: number; y: number; size: number; vx: number; vy: number; opacity: number }[] = [];
+
+    function init() {
+      const w = canvas!.clientWidth || window.innerWidth;
+      const h = canvas!.clientHeight || window.innerHeight;
       canvas!.width = w; canvas!.height = h;
+      dots = Array.from({ length: 18 }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        size: Math.random() * 2 + 1,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        opacity: Math.random() * 0.2 + 0.1,
+      }));
     }
 
-    const dots = Array.from({ length: 15 }, () => ({
-      x: 0, y: 0,
-      size: Math.random() * 4 + 2,
-      vx: (Math.random() - 0.5) * 0.3,
-      vy: (Math.random() - 0.5) * 0.3,
-      opacity: Math.random() * 0.3 + 0.2,
-      delay: Math.random() * 5000,
-    }));
-
-    function draw(time: number) {
+    function draw() {
       ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
       for (const d of dots) {
-        if (time < d.delay) continue;
-        if (d.x === 0 && d.y === 0) { d.x = Math.random() * canvas!.width; d.y = Math.random() * canvas!.height; }
         d.x += d.vx;
         d.y += d.vy;
         if (d.x < -20) d.x = canvas!.width + 20;
@@ -115,9 +115,9 @@ function useFloatingDots(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
       animId = requestAnimationFrame(draw);
     }
 
-    reset();
+    init();
     animId = requestAnimationFrame(draw);
-    const handleResize = () => reset();
+    const handleResize = () => init();
     window.addEventListener("resize", handleResize);
     return () => {
       window.removeEventListener("resize", handleResize);
