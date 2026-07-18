@@ -9,17 +9,17 @@ import EmptyState from "@/components/EmptyState";
 import AnimatedCounter from "@/components/AnimatedCounter";
 
 const typeMeta: Record<string, { label: string; color: string; sign: string }> = {
-  deposit: { label: "Depósito", color: "text-emerald-600", sign: "+" },
-  release: { label: "Pago recibido", color: "text-emerald-600", sign: "+" },
-  refund: { label: "Reembolso", color: "text-emerald-600", sign: "+" },
-  withdraw: { label: "Retiro", color: "text-red-500", sign: "-" },
+  deposit: { label: "Depósito", color: "text-blue-600", sign: "+" },
+  release: { label: "Pago recibido", color: "text-blue-600", sign: "+" },
+  refund: { label: "Reembolso", color: "text-blue-600", sign: "+" },
+  withdraw: { label: "Retiro", color: "text-gray-600", sign: "-" },
 };
 
 const statusStyle: Record<string, string> = {
-  confirmed: "bg-emerald-50 text-emerald-600 border-emerald-200",
-  pending: "bg-amber-50 text-amber-600 border-amber-200",
+  confirmed: "bg-blue-50 text-blue-700 border-blue-200",
+  pending: "bg-blue-50 text-blue-700 border-blue-200",
   pending_confirmation: "bg-blue-50 text-blue-600 border-blue-200",
-  pending_blockchain: "bg-purple-50 text-purple-600 border-purple-200",
+  pending_blockchain: "bg-blue-50 text-blue-700 border-blue-200",
   failed: "bg-red-50 text-red-600 border-red-200",
 };
 
@@ -89,6 +89,7 @@ export default function WalletPage() {
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawSuccess, setWithdrawSuccess] = useState(false);
+  const [showStatement, setShowStatement] = useState(false);
   const [error, setError] = useState("");
   const [copiedAddr, setCopiedAddr] = useState(false);
   const [copiedDeposit, setCopiedDeposit] = useState(false);
@@ -111,6 +112,7 @@ export default function WalletPage() {
   const totalDeposits = history.filter((t) => t.type === "deposit" && t.status === "confirmed").reduce((s, t) => s + t.amount, 0);
   const totalWithdrawals = history.filter((t) => t.type === "withdraw" && t.status === "confirmed").reduce((s, t) => s + t.amount, 0);
   const totalEarned = history.filter((t) => t.type === "release" && t.status === "confirmed").reduce((s, t) => s + t.amount, 0);
+  const displayHistory = isContractor ? history : history.filter((t) => t.type !== "deposit");
 
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(""); setDepositSuccess(false);
@@ -148,7 +150,7 @@ export default function WalletPage() {
       </div>
 
       {/* ─── BALANCE CARD ─── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-4 sm:p-5 text-white shadow-lg">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 p-4 sm:p-5 text-white shadow-lg">
         <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/5" />
         <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/5" />
         <div className="relative z-10">
@@ -166,18 +168,17 @@ export default function WalletPage() {
 
             {/* Stats — hidden on small mobile, visible sm+ */}
             <div className="hidden sm:flex items-center gap-4 text-xs text-white/80">
-              <div className="text-right"><p className="text-white/50">Depositado</p><p className="font-semibold">${totalDeposits.toFixed(2)}</p></div>
-              <div className="w-px h-8 bg-white/15" />
+              {isContractor && <><div className="text-right"><p className="text-white/50">Depositado</p><p className="font-semibold">${totalDeposits.toFixed(2)}</p></div><div className="w-px h-8 bg-white/15" /></>}
               <div className="text-right"><p className="text-white/50">{isContractor ? "Retirado" : "Ganado"}</p><p className="font-semibold">${isContractor ? totalWithdrawals.toFixed(2) : totalEarned.toFixed(2)}</p></div>
             </div>
           </div>
 
           {/* Mobile stats — below balance */}
           <div className="sm:hidden flex items-center gap-4 mt-3 pt-3 border-t border-white/10">
-            <div className="flex-1">
+            {isContractor && <div className="flex-1">
               <p className="text-[10px] text-white/50">Depositado</p>
               <p className="text-xs font-semibold mt-0.5">${totalDeposits.toFixed(2)}</p>
-            </div>
+            </div>}
             <div className="flex-1">
               <p className="text-[10px] text-white/50">{isContractor ? "Retirado" : "Ganado"}</p>
               <p className="text-xs font-semibold mt-0.5">${isContractor ? totalWithdrawals.toFixed(2) : totalEarned.toFixed(2)}</p>
@@ -188,8 +189,8 @@ export default function WalletPage() {
 
       {/* ─── ALERTS ─── */}
       {error && (<div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 flex items-start gap-2"><IconInfo />{error}</div>)}
-      {depositSuccess && (<div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-600 flex items-start gap-2"><IconCheck />Depósito registrado. Se acreditará tras verificación.</div>)}
-      {withdrawSuccess && (<div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-600 flex items-start gap-2"><IconCheck />Retiro procesado. &gt;$100 requiere confirmación por email.</div>)}
+      {depositSuccess && (<div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700 flex items-start gap-2"><IconCheck />Depósito registrado. Se acreditará tras verificación.</div>)}
+      {withdrawSuccess && (<div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700 flex items-start gap-2"><IconCheck />Retiro procesado. &gt;$100 requiere confirmación por email.</div>)}
 
       {/* ─── TRANSACTIONS TABBED PANEL ─── */}
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
@@ -240,12 +241,12 @@ export default function WalletPage() {
                       className="flex-shrink-0 w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 active:bg-gray-100 transition-colors"
                       title="Copiar dirección"
                     >
-                      {copiedDeposit ? <IconCheck className="w-4 h-4 text-emerald-600" /> : <IconCopy className="w-4 h-4" />}
+                      {copiedDeposit ? <IconCheck className="w-4 h-4 text-primary" /> : <IconCopy className="w-4 h-4" />}
                     </button>
                   </div>
 
                   {/* Network warning */}
-                  <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-[10px] sm:text-[11px] text-amber-700 font-medium">
+                  <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-[10px] sm:text-[11px] text-blue-700 font-medium">
                     <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
                     Solo red Polygon (MATIC). No envíes desde otras redes.
                   </div>
@@ -259,11 +260,11 @@ export default function WalletPage() {
                   { step: "2", title: "Ingresa hash", desc: "y el monto exacto" },
                   { step: "3", title: "Confirma", desc: "se acredita en minutos" },
                 ].map((s, i) => (
-                  <div key={i} className="flex-1 flex items-center gap-2 p-2.5 rounded-xl bg-blue-50/60 border border-blue-100">
-                    <span className="w-5 h-5 rounded-md bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">{s.step}</span>
+                  <div key={i} className="flex-1 flex items-center gap-2 p-2.5 rounded-xl bg-blue-50/50 border border-blue-100">
+                    <span className="w-5 h-5 rounded-md bg-primary text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">{s.step}</span>
                     <div className="min-w-0">
                       <p className="text-[11px] font-semibold text-blue-800 leading-tight">{s.title}</p>
-                      <p className="text-[10px] text-blue-600/80 leading-tight">{s.desc}</p>
+                      <p className="text-[10px] text-blue-600/70 leading-tight">{s.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -294,7 +295,7 @@ export default function WalletPage() {
             </div>
           ) : (
             /* ===== WITHDRAW TAB ===== */
-            <form onSubmit={handleWithdraw} className="max-w-xl mx-auto space-y-4">
+            <form onSubmit={handleWithdraw} className="max-w-md mx-auto space-y-4">
               {/* Amount input */}
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <div className="flex items-center justify-between mb-3">
@@ -317,9 +318,9 @@ export default function WalletPage() {
               </div>
 
               {/* Destination wallet */}
-              <div className={"rounded-xl border p-3 sm:p-4 " + (hasWallet ? "bg-white border-gray-200" : "bg-red-50 border-red-200")}>
+              <div className={"rounded-xl border p-3 sm:p-4 " + (hasWallet ? "bg-white border-gray-200" : "bg-gray-50 border-gray-200")}>
                 <div className="flex items-start gap-3">
-                  <div className={"w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0 " + (hasWallet ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-500")}>
+                  <div className={"w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0 " + (hasWallet ? "bg-blue-100 text-primary" : "bg-gray-100 text-gray-400")}>
                     {hasWallet ? <IconCheck className="w-4 h-4" /> : <IconWallet />}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -333,7 +334,7 @@ export default function WalletPage() {
                       </>
                     ) : (
                       <>
-                        <p className="text-sm font-medium text-red-600">No tienes wallet registrada</p>
+                        <p className="text-sm font-medium text-gray-500">No tienes wallet registrada</p>
                         <Link href="/dashboard/settings" className="inline-flex items-center gap-1 mt-1.5 text-xs font-medium text-primary hover:underline">
                           Agregar wallet en Configuración
                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
@@ -347,10 +348,10 @@ export default function WalletPage() {
               {/* Withdraw info pills */}
               <div className="flex flex-wrap gap-1.5">
                 {[
-                  { label: "Mín $1", color: "bg-amber-50 text-amber-700 border-amber-200" },
-                  { label: "Máx 3/día", color: "bg-amber-50 text-amber-700 border-amber-200" },
-                  { label: ">$100 requiere email", color: "bg-amber-50 text-amber-700 border-amber-200" },
-                  { label: "Polygon USDT", color: "bg-amber-50 text-amber-700 border-amber-200" },
+                  { label: "Mín $1", color: "bg-blue-50 text-blue-700 border-blue-200" },
+                  { label: "Máx 3/día", color: "bg-blue-50 text-blue-700 border-blue-200" },
+                  { label: ">$100 requiere email", color: "bg-blue-50 text-blue-700 border-blue-200" },
+                  { label: "Polygon USDT", color: "bg-blue-50 text-blue-700 border-blue-200" },
                 ].map((pill, i) => (
                   <span key={i} className={"inline-flex items-center px-2 py-1 text-[10px] font-medium rounded-full border " + pill.color}>
                     {pill.label}
@@ -373,8 +374,18 @@ export default function WalletPage() {
       <PullToRefresh onRefresh={loadData}>
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="px-4 sm:px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-dark">Historial</h3>
-            {history.length > 0 && <span className="text-xs text-gray-400">{history.length} transacciones</span>}
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-dark">Historial</h3>
+              {displayHistory.length > 0 && <span className="text-xs text-gray-400">{displayHistory.length} transacciones</span>}
+            </div>
+            {displayHistory.length > 0 && (
+              <button onClick={() => setShowStatement(true)} className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-primary bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all flex-shrink-0">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                </svg>
+                Estado de cuenta
+              </button>
+            )}
           </div>
 
           {loading ? (
@@ -395,8 +406,8 @@ export default function WalletPage() {
                 return (
                   <div key={tx.id} className="px-4 sm:px-5 py-3 flex items-center justify-between hover:bg-gray-50/50 transition-colors gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0">
-                        {tx.type === "deposit" ? <IconArrowUpRight /> : tx.type === "withdraw" ? <IconArrowDownLeft /> : <IconWallet />}
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
+                        {tx.type === "deposit" || tx.type === "release" || tx.type === "refund" ? <IconArrowUpRight /> : <IconArrowDownLeft />}
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-dark truncate">{meta.label}</p>
@@ -414,6 +425,101 @@ export default function WalletPage() {
           )}
         </div>
       </PullToRefresh>
+
+      {/* --- BANK STATEMENT MODAL --- */}
+      {showStatement && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-start justify-center pt-10 sm:pt-16 pb-10 px-4 overflow-y-auto" onClick={() => setShowStatement(false)}>
+          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50/50 to-white">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 flex items-center justify-center shadow-sm">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-dark">Estado de cuenta</h3>
+                  <p className="text-[11px] text-gray-400">Agrupado por mes</p>
+                </div>
+              </div>
+              <button onClick={() => setShowStatement(false)} className="w-8 h-8 rounded-lg bg-gray-100 text-gray hover:bg-gray-200 transition-all flex items-center justify-center">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="divide-y divide-gray-100 max-h-[70vh] overflow-y-auto dashboard-scroll">
+              {(() => {
+                const months = displayHistory.reduce((acc, tx) => {
+                  const d = new Date(tx.created_at);
+                  const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+                  if (!acc[key]) acc[key] = [];
+                  acc[key].push(tx);
+                  return acc;
+                }, {} as Record<string, any[]>);
+                const sortedKeys = Object.keys(months).sort((a, b) => b.localeCompare(a));
+                if (sortedKeys.length === 0) return <div className="p-8 text-center text-sm text-gray-400">No hay transacciones</div>;
+                return sortedKeys.map((monthKey) => {
+                  const txs = months[monthKey];
+                  const [y, m] = monthKey.split("-");
+                  const monthName = new Date(parseInt(y), parseInt(m) - 1, 1).toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+                  const credits = txs.reduce((s, t) => s + (t.type === "deposit" || t.type === "release" || t.type === "refund" ? t.amount : 0), 0);
+                  const debits = txs.reduce((s, t) => s + (t.type === "payment" || t.type === "withdraw" || t.type === "escrow" ? t.amount : 0), 0);
+                  const net = credits - debits;
+                  const cap = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+                  return (
+                    <div key={monthKey}>
+                      <div className="sticky top-0 bg-gradient-to-r from-blue-50/90 to-white/90 backdrop-blur-sm px-5 py-3 border-b border-blue-100/50">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-blue-800 uppercase tracking-widest">{cap}</span>
+                          <span className={"text-sm font-bold " + (net >= 0 ? "text-emerald-600" : "text-red-600")}>
+                            {net >= 0 ? "+" : ""}{net.toFixed(2)} USDT
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 text-[11px]">
+                          <span className="text-blue-600">+{credits.toFixed(2)}</span>
+                          <span className="text-gray-300">|</span>
+                          <span className="text-red-500">-{debits.toFixed(2)}</span>
+                          <span className="text-gray-400">{txs.length} {txs.length === 1 ? "op" : "ops"}</span>
+                        </div>
+                      </div>
+                      <div className="divide-y divide-gray-50">
+                        {txs.map((tx) => {
+                          const meta = typeMeta[tx.type] || { label: tx.type, color: "text-dark", sign: "" };
+                          const stStyle = statusStyle[tx.status] || "bg-gray-50 text-gray-500 border-gray-200";
+                          const isCredit = tx.type === "deposit" || tx.type === "release" || tx.type === "refund";
+                          return (
+                            <div key={tx.id} className="px-5 py-2.5 flex items-center justify-between hover:bg-blue-50/20 transition-colors">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className={"w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 " + (isCredit ? "bg-blue-50 text-blue-500" : "bg-gray-50 text-gray-400")}>
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    {isCredit ? <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /> : <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 4.5l-15 15m0 0h11.25m-11.25 0V8.25" />}
+                                  </svg>
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-dark">{meta.label}</p>
+                                  <p className="text-[10px] text-gray-400">{new Date(tx.created_at).toLocaleDateString("es-ES", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+                                </div>
+                              </div>
+                              <div className="text-right flex items-center gap-2 flex-shrink-0">
+                                <p className={"text-sm font-semibold whitespace-nowrap " + (isCredit ? "text-blue-600" : "text-gray-600")}>
+                                  {isCredit ? "+" : "-"}${tx.amount.toFixed(2)}
+                                </p>
+                                <span className={"px-2 py-0.5 text-[10px] font-medium rounded-full border whitespace-nowrap " + stStyle}>{tx.status.replace(/_/g, " ")}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

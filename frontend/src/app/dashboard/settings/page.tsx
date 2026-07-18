@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -14,7 +14,6 @@ function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
     </svg>
   );
 }
-
 function IconUser({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -22,7 +21,6 @@ function IconUser({ className = "w-5 h-5" }: { className?: string }) {
     </svg>
   );
 }
-
 function IconWallet({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -30,7 +28,6 @@ function IconWallet({ className = "w-5 h-5" }: { className?: string }) {
     </svg>
   );
 }
-
 function IconLogout({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -38,7 +35,6 @@ function IconLogout({ className = "w-5 h-5" }: { className?: string }) {
     </svg>
   );
 }
-
 function IconInfo({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -46,7 +42,6 @@ function IconInfo({ className = "w-5 h-5" }: { className?: string }) {
     </svg>
   );
 }
-
 function IconCopy({ className = "w-4 h-4" }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -54,11 +49,34 @@ function IconCopy({ className = "w-4 h-4" }: { className?: string }) {
     </svg>
   );
 }
-
 function IconStar({ className = "w-4 h-4" }: { className?: string }) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 20 20">
       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+    </svg>
+  );
+}
+
+function IconHeadset({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
+    </svg>
+  );
+}
+
+function IconSocial({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+    </svg>
+  );
+}
+
+function IconChat({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
     </svg>
   );
 }
@@ -69,6 +87,7 @@ export default function SettingsPage() {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileMsg, setProfileMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -81,7 +100,6 @@ export default function SettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // Si avatar_url ya es absoluta (Cloudinary), usarla directo
   const resolveAvatarUrl = (url: string | null) => {
     if (!url) return null;
     if (url.startsWith("http")) return url;
@@ -92,6 +110,7 @@ export default function SettingsPage() {
     if (user) {
       setName(user.full_name);
       setPhone(user.phone);
+      setEmail(user.email);
       setWallet(user.wallet_address || "");
       if (user.avatar_url) setAvatarUrl(resolveAvatarUrl(user.avatar_url));
     }
@@ -104,9 +123,9 @@ export default function SettingsPage() {
     setProfileMsg(null);
     setSavingProfile(true);
     try {
-      await updateProfile({ full_name: name, phone });
+      await updateProfile({ full_name: name, phone, email });
       await refreshUser?.();
-      setProfileMsg({ ok: true, text: "Perfil actualizado *." });
+      setProfileMsg({ ok: true, text: "Perfil actualizado correctamente." });
     } catch (err: any) {
       setProfileMsg({ ok: false, text: err.message });
     } finally {
@@ -121,7 +140,7 @@ export default function SettingsPage() {
     try {
       await updateWallet(wallet);
       await refreshUser?.();
-      setWalletMsg({ ok: true, text: "Wallet registrada *." });
+      setWalletMsg({ ok: true, text: "Wallet registrada correctamente." });
     } catch (err: any) {
       setWalletMsg({ ok: false, text: err.message });
     } finally {
@@ -132,38 +151,45 @@ export default function SettingsPage() {
   const walletValid = /^0x[a-fA-F0-9]{40}$/.test(wallet);
   const walletChanged = wallet !== (user.wallet_address || "");
 
+  // ─── CARD REUSABLE COMPONENT ───
+  function Card({ icon, title, desc, children }: { icon: React.ReactNode; title: string; desc?: string; children: React.ReactNode }) {
+    return (
+      <section className="bg-white rounded-2xl border border-gray-200/70 overflow-hidden shadow-sm shadow-gray-200/20">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100/80 bg-gradient-to-r from-blue-50/50 to-white">
+          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+            {icon}
+          </div>
+          <div>
+            <h2 className="font-semibold text-dark text-sm">{title}</h2>
+            {desc && <p className="text-xs text-gray mt-0.5">{desc}</p>}
+          </div>
+        </div>
+        {children}
+      </section>
+    );
+  }
+
   return (
-    <div className="max-w-3xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 w-full overflow-hidden">
-      {/* HEADER */}
+    <div className="max-w-3xl mx-auto p-4 sm:p-6 space-y-5 sm:space-y-6 w-full overflow-hidden">
+
+      {/* ═══ HEADER ═══ */}
       <div className="flex items-center gap-3">
-        <Link href="/dashboard" className="w-8 h-8 rounded-lg bg-gray-100 text-gray flex items-center justify-center hover:bg-gray-200 transition-colors">
+        <Link href="/dashboard" className="w-8 h-8 rounded-xl bg-gray-100 text-gray flex items-center justify-center hover:bg-gray-200 hover:text-primary transition-all">
           <IconArrowLeft className="w-4 h-4" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-dark">Configuración</h1>
-          <p className="text-gray text-sm mt-0.5">Administra tu perfil y wallet</p>
+          <h1 className="text-xl font-bold text-dark">Configuración</h1>
+          <p className="text-sm text-gray">Administra tu perfil y wallet</p>
         </div>
       </div>
 
-      {/* PROFILE */}
-      <section className="bg-white rounded-2xl border border-gray-100 sm:border-gray-200 overflow-hidden shadow-sm sm:shadow-none">
-        <div className="hidden sm:flex bg-gradient-to-r from-blue-50 to-white px-6 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
-              <IconUser className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-dark">Información personal</h2>
-              <p className="text-xs text-gray">Nombre y teléfono</p>
-            </div>
-          </div>
-        </div>
-
-        <form onSubmit={handleSaveProfile} className="p-4 sm:p-6 space-y-4">
+      {/* ═══ INFORMACIÓN PERSONAL ═══ */}
+      <Card icon={<IconUser className="w-5 h-5 text-primary" />} title="Información personal" desc="Nombre, teléfono y foto de perfil">
+        <form onSubmit={handleSaveProfile} className="p-5 space-y-5">
           {/* Avatar */}
-          <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+          <div className="flex items-center gap-4 pb-5 border-b border-gray-100">
             <div className="relative">
-              <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-base sm:text-2xl font-bold overflow-hidden ring-2 ring-gray-200">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-primary to-blue-700 flex items-center justify-center text-white text-xl sm:text-2xl font-bold overflow-hidden ring-2 ring-gray-200/50 shadow-sm">
                 {avatarPreview || avatarUrl ? (
                   <img src={avatarPreview || avatarUrl || ""} alt="" className="w-full h-full object-cover" />
                 ) : (
@@ -174,9 +200,9 @@ export default function SettingsPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={avatarUploading}
-                className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all disabled:opacity-50"
+                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center hover:bg-gray-50 transition-all disabled:opacity-50"
               >
-                <svg className="w-4 h-4 text-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
                 </svg>
@@ -191,9 +217,7 @@ export default function SettingsPage() {
                   Subiendo...
                 </p>
               )}
-              {avatarError && (
-                <p className="text-xs text-red-500 mt-1">{avatarError}</p>
-              )}
+              {avatarError && <p className="text-xs text-red-500 mt-1">{avatarError}</p>}
             </div>
             <input
               ref={fileInputRef}
@@ -219,106 +243,60 @@ export default function SettingsPage() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-dark mb-1.5">Email</label>
-            <input
-              type="email"
-              value={user.email}
-              disabled
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray text-sm"
-            />
-            <p className="text-xs text-gray mt-1">El email no se puede cambiar</p>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Nombre completo</label>
+              <input type="text" value={user.full_name} disabled className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Cédula</label>
+              <input type="text" value={user.cedula} disabled className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray text-sm" />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-dark mb-1.5">
-              Nombre completo <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-base sm:text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-              placeholder="Tu nombre completo"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-dark mb-1.5">
-              Teléfono <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-base sm:text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-              placeholder="+1 234 567 8900"
-            />
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Email</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="correo@ejemplo.com" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Teléfono</label>
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="+1 234 567 8900" />
+            </div>
           </div>
 
           {profileMsg && (
-            <div className={"text-sm px-4 py-3 rounded-xl border " + (profileMsg.ok ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-red-50 text-red-600 border-red-200")}>
+            <div className={"text-sm px-4 py-3 rounded-xl border " + (profileMsg.ok ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-red-50 text-red-600 border-red-200")}>
               {profileMsg.text}
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={savingProfile}
-            className="inline-flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-          >
+          <button type="submit" disabled={savingProfile} className="inline-flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
             {savingProfile ? (
               <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Guardando...</>
             ) : "Guardar cambios"}
           </button>
         </form>
-      </section>
+      </Card>
 
-      {/* WALLET */}
-      <section className="bg-white rounded-2xl border border-gray-100 sm:border-gray-200 overflow-hidden shadow-sm sm:shadow-none">
-        <div className="hidden sm:flex bg-gradient-to-r from-emerald-50 to-white px-6 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
-              <IconWallet className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-dark">Wallet USDT</h2>
-              <p className="text-xs text-gray">Dirección donde recibirás tus pagos en Polygon</p>
-            </div>
-          </div>
-        </div>
-
-        <form onSubmit={handleSaveWallet} className="p-4 sm:p-6 space-y-4">
+      {/* ═══ WALLET ═══ */}
+      <Card icon={<IconWallet className="w-5 h-5 text-primary" />} title="Wallet USDT" desc="Dirección Polygon para recibir pagos">
+        <form onSubmit={handleSaveWallet} className="p-5 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-dark mb-1.5">
-              Dirección de wallet <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={wallet}
-              onChange={(e) => setWallet(e.target.value)}
-              placeholder="0x..."
-              className={"w-full px-3.5 py-2.5 border rounded-xl text-base sm:text-sm font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all " + (wallet && !walletValid ? "border-red-300 bg-red-50" : "border-gray-200")}
-            />
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Dirección de wallet</label>
+            <input type="text" value={wallet} onChange={(e) => setWallet(e.target.value)} placeholder="0x..."
+              className={"w-full px-3.5 py-2.5 border rounded-xl text-sm font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all " + (wallet && !walletValid ? "border-red-300 bg-red-50" : "border-gray-200")} />
             {wallet && !walletValid && (
               <p className="text-xs text-red-500 mt-1.5">Dirección inválida. Debe empezar con 0x y tener 42 caracteres.</p>
             )}
-            <p className="text-xs text-gray mt-1.5">
-              Solo direcciones de Polygon (red principal). Asegúrate de que sea correcta &mdash; los fondos no se pueden recuperar si envías a una dirección incorrecta.
-            </p>
+            <p className="text-xs text-gray mt-1.5">Solo direcciones Polygon. Verifica que sea correcta — los fondos no se pueden recuperar si envías a una dirección incorrecta.</p>
           </div>
 
           {user.wallet_address && (
             <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-xs text-gray font-medium">Wallet actual:</p>
-                <button
-                  type="button"
-                  onClick={() => navigator.clipboard.writeText(user.wallet_address || '')}
-                  className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                >
+                <button type="button" onClick={() => navigator.clipboard.writeText(user.wallet_address || '')} className="text-xs text-primary hover:underline inline-flex items-center gap-1">
                   <IconCopy className="w-3.5 h-3.5" /> Copiar
                 </button>
               </div>
@@ -327,95 +305,130 @@ export default function SettingsPage() {
           )}
 
           {walletMsg && (
-            <div className={"text-sm px-4 py-3 rounded-xl border " + (walletMsg.ok ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-red-50 text-red-600 border-red-200")}>
+            <div className={"text-sm px-4 py-3 rounded-xl border " + (walletMsg.ok ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-red-50 text-red-600 border-red-200")}>
               {walletMsg.text}
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={savingWallet || !walletValid || !walletChanged}
-            className="inline-flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-          >
+          <button type="submit" disabled={savingWallet || !walletValid || !walletChanged} className="inline-flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
             {savingWallet ? (
               <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Guardando...</>
             ) : user.wallet_address ? "Actualizar wallet" : "Registrar wallet"}
           </button>
         </form>
-      </section>
+      </Card>
 
-      {/* CERRAR SESION */}
-      <section className="bg-transparent sm:bg-white sm:rounded-2xl sm:border sm:border-gray-200 overflow-hidden">
-        <div className="hidden sm:flex bg-gradient-to-r from-red-50 to-white px-6 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-red-100 text-red-500 flex items-center justify-center">
-              <IconLogout className="w-5 h-5" />
+      {/* ═══ INFORMACIÓN DE LA CUENTA ═══ */}
+      <Card icon={<IconInfo className="w-5 h-5 text-primary" />} title="Detalles de la cuenta">
+        <div className="p-5 space-y-1">
+          {[
+            { label: "Rol", value: user.role === "worker" ? "Trabajador" : "Contratista" },
+            { label: "Email", value: user.email },
+            { label: "Cédula", value: user.cedula },
+            { label: "Calificación", value: <span className="flex items-center gap-1"><IconStar className="w-4 h-4 text-blue-400" /> {user.rating_avg.toFixed(1)}</span> },
+          ].map((item, i) => (
+            <div key={i} className="flex justify-between py-3 px-3 border-b border-gray-50 rounded-lg hover:bg-blue-50/30 transition-colors">
+              <span className="text-gray text-sm">{item.label}</span>
+              <span className="text-dark font-medium text-sm">{item.value}</span>
             </div>
-            <div>
-              <h2 className="font-semibold text-dark">Cerrar sesión</h2>
-              <p className="text-xs text-gray">Salir de tu cuenta</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="sm:p-6">
-          <p className="hidden sm:block text-sm text-gray mb-4">
-            Al cerrar sesión tendrás que volver a iniciar sesión para acceder al dashboard.
-          </p>
-          <button
-            onClick={() => {
-              localStorage.removeItem("access_token");
-              localStorage.removeItem("refresh_token");
-              router.push("/");
-            }}
-            className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-white sm:bg-gray-100 text-red-500 sm:text-gray px-6 py-3 sm:py-2.5 rounded-xl text-base sm:text-sm font-medium border border-red-100 sm:border-transparent hover:bg-red-50 hover:text-red-600 transition-all shadow-sm sm:shadow-none"
-          >
-            <IconLogout className="w-5 h-5 sm:w-4 sm:h-4" />
-            Cerrar sesión
-          </button>
-        </div>
-      </section>
-
-      {/* ACCOUNT INFO */}
-      <section className="bg-white rounded-2xl border border-gray-100 sm:border-gray-200 overflow-hidden shadow-sm sm:shadow-none">
-        <div className="hidden sm:flex bg-gradient-to-r from-violet-50 to-white px-6 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center">
-              <IconInfo className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-dark">Información de la cuenta</h2>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4 sm:p-6 space-y-0.5 text-sm">
-          <div className="flex justify-between py-3 px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-gray">Rol</span>
-            <span className="text-dark font-medium">
-              {user.role === "worker" ? "Trabajador" : "Contratista"}
-            </span>
-          </div>
-          <div className="flex justify-between py-3 px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-gray">Cédula</span>
-            <span className="text-dark font-medium">{user.cedula}</span>
-          </div>
-          <div className="flex justify-between py-3 px-3 border-b border-gray-50 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-gray">Calificación</span>
-            <span className="text-dark font-medium flex items-center gap-1">
-              <IconStar className="w-4 h-4 text-amber-400" />
-              {user.rating_avg.toFixed(1)}
-            </span>
-          </div>
-          <div className="flex justify-between py-3 px-3 rounded-lg hover:bg-gray-50/50 transition-colors">
-            <span className="text-gray">Estado</span>
-            <span className={"font-medium flex items-center gap-1.5 " + (user.is_active ? "text-emerald-600" : "text-red-500")}>
-              <span className={"w-2 h-2 rounded-full " + (user.is_active ? "bg-emerald-500" : "bg-red-500")} />
+          ))}
+          <div className="flex justify-between py-3 px-3 rounded-lg hover:bg-blue-50/30 transition-colors">
+            <span className="text-gray text-sm">Estado</span>
+            <span className={"font-medium text-sm flex items-center gap-1.5 " + (user.is_active ? "text-blue-600" : "text-red-500")}>
+              <span className={"w-2 h-2 rounded-full " + (user.is_active ? "bg-blue-500" : "bg-red-500")} />
               {user.is_active ? "Activa" : "Inactiva"}
             </span>
           </div>
         </div>
-      </section>
+      </Card>
+
+      {/* ═══ SOPORTE ═══ */}
+      <Card icon={<IconHeadset className="w-5 h-5 text-primary" />} title="Soporte" desc="Estamos aquí para ayudarte">
+        <div className="p-5 space-y-5">
+          {/* Contact methods */}
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-50/40 border border-blue-100/60">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 text-primary flex items-center justify-center flex-shrink-0 shadow-sm">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-600">Email</p>
+                <a href="mailto:soporte@turnogo.com" className="text-sm font-semibold text-primary hover:underline">soporte@turnogo.com</a>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-50/40 border border-blue-100/60">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 text-primary flex items-center justify-center flex-shrink-0 shadow-sm">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-600">Teléfono</p>
+                <a href="tel:+1234567890" className="text-sm font-semibold text-primary hover:underline">+1 (234) 567-890</a>
+              </div>
+            </div>
+          </div>
+
+          {/* Social media */}
+          <div>
+            <p className="text-xs font-medium text-gray-600 mb-2.5">Redes sociales</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { name: "Instagram", icon: "M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z", color: "bg-gradient-to-br from-pink-400 to-purple-500" },
+                { name: "Twitter / X", icon: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z", color: "bg-gradient-to-br from-gray-800 to-gray-600" },
+                { name: "WhatsApp", icon: "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z", color: "bg-gradient-to-br from-emerald-500 to-emerald-600" },
+                { name: "Telegram", icon: "M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z", color: "bg-gradient-to-br from-blue-400 to-blue-500" },
+              ].map((social, i) => (
+                <button
+                  key={i}
+                  onClick={() => window.open("#", "_blank")}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 hover:shadow-md hover:-translate-y-0.5 transition-all group"
+                  title={social.name}
+                >
+                  <span className={"w-6 h-6 rounded-lg flex items-center justify-center text-white text-[10px] " + social.color}>
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d={social.icon} />
+                    </svg>
+                  </span>
+                  <span className="group-hover:text-dark transition-colors">{social.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Live chat */}
+          <div className="pt-2">
+            <button
+              onClick={() => window.open("#", "_blank")}
+              className="w-full inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-primary-dark hover:-translate-y-0.5 transition-all shadow-sm shadow-primary/20"
+            >
+              <IconChat className="w-5 h-5" />
+              Abrir chat en vivo
+            </button>
+            <p className="text-xs text-gray text-center mt-2">Respuesta promedio en menos de 5 minutos</p>
+          </div>
+        </div>
+      </Card>
+
+      {/* ═══ CERRAR SESIÓN ═══ */}
+      <Card icon={<IconLogout className="w-5 h-5 text-gray-400" />} title="Cerrar sesión">
+        <div className="p-5">
+          <button
+            onClick={() => {
+              localStorage.removeItem("access_token");
+              localStorage.removeItem("refresh_token");
+              localStorage.removeItem("mock_email");
+              router.push("/");
+            }}
+            className="inline-flex items-center gap-2 bg-white text-gray-600 px-6 py-2.5 rounded-xl text-sm font-medium border border-gray-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all"
+          >
+            <IconLogout className="w-4 h-4" /> Cerrar sesión
+          </button>
+        </div>
+      </Card>
+
     </div>
   );
 }

@@ -81,6 +81,7 @@ function formatNotifDate(dateStr: string) {
 export default function NotificationBell() {
   const { notifications, unreadCount, markRead, markAllRead, clear, connected } = useNotifications();
   const [open, setOpen] = useState(false);
+  const [animIn, setAnimIn] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -93,7 +94,6 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // Cerrar con Escape
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -102,58 +102,91 @@ export default function NotificationBell() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [open]);
 
+  const toggleOpen = () => {
+    if (!open) {
+      setOpen(true);
+      requestAnimationFrame(() => setAnimIn(true));
+    } else {
+      setAnimIn(false);
+      setTimeout(() => setOpen(false), 200);
+    }
+  };
+
   return (
     <div ref={ref} className="relative">
       {/* Bell button */}
       <button
-        onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-xl text-gray hover:text-dark hover:bg-gray-100 transition-all"
+        onClick={toggleOpen}
+        className="relative p-2 rounded-xl text-gray hover:text-dark hover:bg-gray-100 transition-all group"
         aria-label="Notificaciones"
       >
-        <IconBell className="w-5 h-5" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-1 shadow-sm">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
+        <div className="relative">
+          <IconBell className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center bg-gradient-to-br from-red-500 to-rose-500 text-white text-[10px] font-bold rounded-full px-1 shadow-sm shadow-red-200 animate-bounce-in">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </div>
       </button>
 
-      {/* Connection dot */}
-      <span className={`absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full border border-white ${connected ? "bg-emerald-400" : "bg-gray-300"}`} />
+      {/* Connection indicator */}
+      <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2">
+        <span className={`block w-1.5 h-1.5 rounded-full ring-2 ring-white transition-colors duration-300 ${connected ? "bg-emerald-400" : "bg-gray-300"}`} />
+      </div>
 
-      {/* Mobile backdrop */}
-      {open && <div className="fixed inset-0 z-[9998] md:hidden" onClick={() => setOpen(false)} />}
+      {/* Backdrop */}
+      {open && (
+        <div
+          className={`fixed inset-0 z-[60] md:hidden transition-opacity duration-200 ${animIn ? "opacity-100" : "opacity-0"}`}
+          onClick={() => { setAnimIn(false); setTimeout(() => setOpen(false), 200); }}
+        >
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" />
+        </div>
+      )}
 
       {/* Dropdown */}
       {open && (
-        <div className="
-          fixed md:absolute
-          left-4 right-4 md:left-auto md:right-0
-          top-20 md:top-full md:mt-2
-          z-[9999]
-          bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden
-          animate-page-enter
-          max-h-[75vh] flex flex-col
-        ">
+        <div
+          className={`
+            fixed md:fixed
+            inset-x-4 top-20 md:inset-x-auto md:right-4 md:top-16
+            z-[70]
+            bg-white/90 backdrop-blur-2xl
+            rounded-2xl shadow-2xl shadow-black/10 border border-white/50
+            overflow-hidden
+            max-h-[75vh] flex flex-col
+            transition-all duration-200 ease-out
+            ${animIn ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-2 scale-95 pointer-events-none"}
+            w-full md:w-[400px]
+`}
+        >
+          {/* Glass top gradient */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-200/60 to-transparent" />
+
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <IconBell className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-semibold text-dark">Notificaciones</h3>
-              {unreadCount > 0 && (
-                <span className="text-[11px] font-medium text-gray bg-gray-100 px-2 py-0.5 rounded-full">
-                  {unreadCount} nueva{unreadCount !== 1 ? "s" : ""}
-                </span>
-              )}
+          <div className="relative flex items-center justify-between px-5 py-4 border-b border-gray-100/80">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 text-primary flex items-center justify-center shadow-sm">
+                <IconBell className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-dark leading-tight">Notificaciones</h3>
+                {unreadCount > 0 && (
+                  <span className="text-[11px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                    {unreadCount} nueva{unreadCount !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {notifications.length > 0 && (
                 <>
-                  <button onClick={markAllRead} className="text-xs font-medium text-primary hover:text-primary-dark transition-colors">
+                  <button onClick={markAllRead} className="text-xs font-medium text-primary hover:text-primary-dark px-2.5 py-1.5 rounded-lg hover:bg-blue-50 transition-all">
                     Leer todo
                   </button>
-                  <span className="text-gray-200">|</span>
-                  <button onClick={clear} className="text-xs text-gray hover:text-dark transition-colors">
+                  <span className="text-gray-200/80">|</span>
+                  <button onClick={clear} className="text-xs text-gray hover:text-dark px-2.5 py-1.5 rounded-lg hover:bg-gray-100 transition-all">
                     Limpiar
                   </button>
                 </>
@@ -162,14 +195,16 @@ export default function NotificationBell() {
           </div>
 
           {/* List */}
-          <div className="max-h-80 overflow-y-auto modal-scroll">
+          <div className="relative max-h-80 overflow-y-auto modal-scroll">
             {notifications.length === 0 ? (
-              <div className="text-center py-10 px-5">
-                <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-3">
-                  <IconBell className="w-6 h-6 text-gray" />
+              <div className="text-center py-14 px-6">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center mx-auto mb-4 shadow-inner">
+                  <svg className="w-7 h-7 text-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                  </svg>
                 </div>
-                <p className="text-sm font-medium text-dark">Sin notificaciones</p>
-                <p className="text-xs text-gray mt-1">Te avisaremos cuando pase algo</p>
+                <p className="text-sm font-semibold text-dark">Todo al día</p>
+                <p className="text-xs text-gray mt-1.5 max-w-[200px] mx-auto leading-relaxed">No hay notificaciones nuevas. Te avisaremos cuando algo requiera tu atención.</p>
               </div>
             ) : (
               notifications.map((n, i) => {
@@ -179,26 +214,32 @@ export default function NotificationBell() {
                   <div
                     key={n.id}
                     onClick={() => markRead(n.id)}
-                    className={`flex items-start gap-3 px-5 py-3.5 cursor-pointer transition-colors ${isLast ? "" : "border-b border-gray-50"} ${n.read ? "bg-white" : "bg-blue-50/40"}`}
+                    className={`relative flex items-start gap-3.5 px-5 py-4 cursor-pointer transition-all duration-150 ${isLast ? "" : "border-b border-gray-50/80"} ${n.read ? "bg-transparent hover:bg-gray-50/50" : "bg-blue-50/30 hover:bg-blue-50/60"}`}
                   >
+                    {/* Read indicator line */}
+                    {!n.read && <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary to-blue-400" />}
+
                     {/* Icon */}
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${evStyle.color}`}>
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${evStyle.color} ${n.read ? "opacity-70" : ""}`}>
                       {evStyle.icon}
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm leading-snug ${n.read ? "text-gray" : "text-dark font-medium"}`}>
+                    <div className="flex-1 min-w-0 pt-0.5">
+                      <p className={`text-sm leading-snug ${n.read ? "text-gray " : "text-dark font-medium"}`}>
                         {n.message}
                       </p>
-                      <p className="text-[11px] text-gray mt-1">
+                      <p className="text-[11px] text-gray mt-1.5 flex items-center gap-1.5">
+                        <span className={`w-1.5 h-1.5 rounded-full ${n.read ? "bg-gray-200" : "bg-primary"}`} />
                         {formatNotifDate(n.created_at)}
                       </p>
                     </div>
 
-                    {/* Unread dot */}
+                    {/* Unread badge */}
                     {!n.read && (
-                      <span className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                      <div className="flex items-center pt-1">
+                        <span className="w-2 h-2 rounded-full bg-gradient-to-br from-primary to-blue-400 shadow-sm shadow-blue-200" />
+                      </div>
                     )}
                   </div>
                 );
@@ -206,18 +247,18 @@ export default function NotificationBell() {
             )}
           </div>
 
+          {/* Footer */}
           {notifications.length > 0 && (
-            <div className="px-5 py-3 border-t border-gray-100 text-center bg-gray-50/50">
-              <Link
-                href="/dashboard"
-                className="text-xs font-medium text-primary hover:text-primary-dark transition-colors inline-flex items-center gap-1"
+            <div className="relative px-5 py-3.5 border-t border-gray-100/80 bg-gradient-to-b from-gray-50/50 to-transparent text-center">
+              <button
                 onClick={() => setOpen(false)}
+                className="text-xs font-medium text-primary hover:text-primary-dark transition-colors inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-blue-50"
               >
-                Ir al dashboard
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
-              </Link>
+                Ver en el dashboard
+              </button>
             </div>
           )}
         </div>

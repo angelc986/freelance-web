@@ -22,11 +22,26 @@ export interface AuthTokens {
   user: User;
 }
 
+import { mockJobs, mockApplications, mockTransactions, mockNotifications, mockApplicants, mockRatingSummary, mockWorkerRatingSummary } from "./mock-data";
+
+function isDevMock(): boolean {
+  if (typeof window === "undefined" || typeof window.location === "undefined") return false;
+  return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+}
+
 /* ===== FETCH WRAPPER ===== */
 async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
+  const useMock = isDevMock();
+  
+  // In dev mode without backend, return mock data directly
+  if (useMock) {
+    const mock = getMockResponse<T>(path, options);
+    if (mock !== undefined) return mock;
+  }
+
   const url = `${API_BASE}${path}`;
   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
 
@@ -40,11 +55,82 @@ async function request<T>(
   });
 
   if (!res.ok) {
+    // Dev mode fallback: try mock data even after failed real request
+    if (useMock) {
+      const mock = getMockResponse<T>(path, options);
+      if (mock !== undefined) return mock;
+    }
     const body = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(body.detail || `Error ${res.status}`);
   }
 
   return res.json();
+}
+
+/* ===== MOCK RESOLVER ===== */
+function getMockResponse<T>(path: string, options: RequestInit): T | undefined {
+  const method = options.method || "GET";
+
+  // ── AUTH ──
+  if (path === "/auth/me" && method === "GET") {
+    const email = localStorage.getItem("mock_email");
+    if (email === "empleado@test.com") {
+      return { id: 2, email: "empleado@test.com", full_name: "María Rodríguez", phone: "+584149876543", cedula: "V-87654321", role: "worker", avatar_url: null, rating_avg: 4.2, is_admin: false, is_active: true, wallet_address: null, balance: 580 } as unknown as T;
+    }
+    return { id: 1, email: "contratista@test.com", full_name: "Carlos Méndez", phone: "+584141234567", cedula: "V-12345678", role: "contractor", avatar_url: null, rating_avg: 4.8, is_admin: false, is_active: true, wallet_address: null, balance: 1500 } as unknown as T;
+  }
+
+  // ── JOBS ──
+  if (path === "/jobs/mine" && method === "GET") {
+    return mockJobs as unknown as T;
+  }
+  if (path.startsWith("/jobs/") && path.endsWith("/applications") && method === "GET") {
+    return mockApplications as unknown as T;
+  }
+  if (path === "/jobs/my-applications" && method === "GET") {
+    return mockApplications as unknown as T;
+  }
+  if (path === "/jobs/my-applicants" && method === "GET") {
+    return mockApplicants as unknown as T;
+  }
+  if (path.match(/^\/jobs\/\d+$/) && method === "GET") {
+    const id = parseInt(path.split("/")[2]);
+    const job = mockJobs.find((j: Job) => j.id === id);
+    return (job || mockJobs[0]) as unknown as T;
+  }
+  if (path.match(/^\/jobs$/) && method === "GET") {
+    return mockJobs as unknown as T;
+  }
+
+  // ── PAYMENTS ──
+  if (path === "/payments/balance" && method === "GET") {
+    const email = localStorage.getItem("mock_email");
+    return { balance: email === "empleado@test.com" ? 580 : 1500 } as unknown as T;
+  }
+  if (path === "/payments/history" && method === "GET") {
+    return mockTransactions as unknown as T;
+  }
+
+  // ── NOTIFICATIONS ──
+  if (path.startsWith("/notifications") && path.includes("unread-count") && method === "GET") {
+    return { count: mockNotifications.filter((n: NotificationItem) => !n.read).length } as unknown as T;
+  }
+  if (path.startsWith("/notifications") && method === "GET") {
+    return mockNotifications as unknown as T;
+  }
+
+  // ── RATINGS ──
+  if (path.match(/^\/users\/\d+\/ratings$/) && method === "GET") {
+    const email = localStorage.getItem("mock_email");
+    return (email === "empleado@test.com" ? mockWorkerRatingSummary : mockRatingSummary) as unknown as T;
+  }
+
+  // ── USERS ──
+  if (path.match(/^\/users\/\d+$/) && method === "GET") {
+    return { id: 2, full_name: "María Rodríguez", role: "worker", rating_avg: 4.2, is_active: true, created_at: "2026-01-15T00:00:00Z", avatar_url: null } as unknown as T;
+  }
+
+  return undefined;
 }
 
 /* ===== AUTH ENDPOINTS ===== */
@@ -80,6 +166,7 @@ export function getMe(): Promise<User> {
 export function updateProfile(data: {
   full_name?: string;
   phone?: string;
+  email?: string;
 }): Promise<User> {
   return request("/auth/me", {
     method: "PATCH",

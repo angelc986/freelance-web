@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { myJobs, getMyApplications, type Job, type Application } from "@/lib/api";
 import PullToRefresh from "@/components/PullToRefresh";
@@ -66,19 +67,19 @@ function IconChat({ className = "w-4 h-4" }: { className?: string }) {
 }
 
 // ─── STATUS CONFIG ───
-const statusConfig: Record<string, { label: string; color: string; icon: string }> = {
-  open:          { label: "Abierto",        color: "bg-emerald-50 text-emerald-600 border-emerald-200",         icon: "🟢" },
-  in_progress:   { label: "En progreso",    color: "bg-blue-50 text-blue-600 border-blue-200",                 icon: "🔵" },
-  checked_in:    { label: "Check-in",       color: "bg-amber-50 text-amber-600 border-amber-200",              icon: "🟡" },
-  review_pending:{ label: "Revisión",       color: "bg-violet-50 text-violet-600 border-violet-200",           icon: "🟣" },
-  completed:     { label: "Completado",     color: "bg-gray-100 text-gray-500 border-gray-200",                icon: "✅" },
-  cancelled:     { label: "Cancelado",      color: "bg-red-50 text-red-500 border-red-200",                    icon: "❌" },
+const statusConfig: Record<string, { label: string; color: string; dot: string }> = {
+  open:          { label: "Abierto",        color: "bg-blue-50 text-blue-700 border-blue-200",             dot: "bg-blue-500" },
+  in_progress:   { label: "En progreso",    color: "bg-blue-50 text-blue-700 border-blue-200",             dot: "bg-blue-500" },
+  checked_in:    { label: "Check-in",       color: "bg-blue-50 text-blue-700 border-blue-200",             dot: "bg-blue-500" },
+  review_pending:{ label: "Revisión",       color: "bg-yellow-50 text-yellow-700 border-yellow-200",         dot: "bg-yellow-500" },
+  completed:     { label: "Completado",     color: "bg-gray-50 text-gray-500 border-gray-200",              dot: "bg-gray-400" },
+  cancelled:     { label: "Cancelado",      color: "bg-gray-50 text-gray-500 border-gray-200",              dot: "bg-gray-400" },
 };
 
 const appBadgeConfig: Record<string, { label: string; color: string }> = {
-  pending:  { label: "Postulado",  color: "bg-amber-50 text-amber-600 border-amber-200" },
+  pending:  { label: "Postulado",  color: "bg-blue-50 text-blue-700 border-blue-200" },
   rejected: { label: "Rechazado",  color: "bg-red-50 text-red-500 border-red-200" },
-  accepted: { label: "Aceptado",   color: "bg-emerald-50 text-emerald-600 border-emerald-200" },
+  accepted: { label: "Aceptado",   color: "bg-blue-50 text-blue-700 border-blue-200" },
 };
 
 const statusSvgs: Record<string, string> = {
@@ -120,7 +121,8 @@ export default function DashboardJobsPage() {
   const { user } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [applications, setApplications] = useState<Map<number, Application>>(new Map());
-  const [filter, setFilter] = useState("active");
+  const searchParams = useSearchParams();
+  const [filter, setFilter] = useState(searchParams.get("filter") || "active");
   const [loading, setLoading] = useState(true);
 
   const loadJobs = useCallback(async () => {
@@ -156,9 +158,9 @@ export default function DashboardJobsPage() {
     : jobs.filter((j) => j.status === filter);
 
   const tabs = [
-    { key: "active",    label: "Activos",     icon: <IconBriefcase className="w-4 h-4" /> },
-    { key: "completed", label: "Completados", icon: <IconCheckCircle className="w-4 h-4" /> },
-    { key: "cancelled", label: "Cancelados",  icon: <IconXCircle className="w-4 h-4" /> },
+    { key: "active",    label: "Activos" },
+    { key: "completed", label: "Completados" },
+    { key: "cancelled", label: "Cancelados" },
   ];
 
   const counts = {
@@ -189,9 +191,7 @@ export default function DashboardJobsPage() {
             <IconArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-lg sm:text-xl font-bold text-dark">
-              {isWorker ? "Mis postulaciones" : "Mis trabajos"}
-            </h1>
+            <h1 className="text-lg sm:text-xl font-bold text-dark">Postulaciones</h1>
             <p className="text-sm text-gray mt-0.5">{jobs.length} en total</p>
           </div>
         </div>
@@ -216,18 +216,15 @@ export default function DashboardJobsPage() {
             <button
               key={t.key}
               onClick={() => setFilter(t.key)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-sm font-medium transition-all ${
+              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 filter === t.key
-                  ? "bg-primary text-white shadow-sm"
-                  : "bg-white border border-gray-200 text-gray hover:border-primary/40 hover:text-primary"
+                  ? "bg-primary/10 text-primary shadow-sm"
+                  : "text-gray hover:text-primary hover:bg-gray-50"
               }`}
             >
-              {t.icon}
               {t.label}
               {count > 0 && (
-                <span className={`ml-0.5 text-[10px] sm:text-[11px] font-semibold px-1.5 py-0.5 rounded-full ${
-                  filter === t.key ? "bg-white/20" : "bg-gray-100 text-gray"
-                }`}>
+                <span className={`ml-1 text-[11px] font-semibold ${filter === t.key ? "text-primary" : "text-gray"}`}>
                   {count}
                 </span>
               )}
@@ -258,12 +255,12 @@ export default function DashboardJobsPage() {
           ) : (
             <div className="space-y-3">
               {filtered.map((job, idx) => {
-                const st = statusConfig[job.status] || { label: job.status, color: "bg-gray-100 text-gray border-gray-200", icon: "📌" };
+                const st = statusConfig[job.status] || { label: job.status, color: "bg-gray-100 text-gray border-gray-200", dot: "bg-gray-400" };
                 return (
                   <Link
                     key={job.id}
                     href={`/jobs/${job.id}`}
-                    className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-200 hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all block w-full animate-stagger-pop"
+                    className="group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-200/80 hover:border-blue-200 hover:shadow-sm hover:shadow-blue-100/50 hover:-translate-y-0.5 transition-all block w-full animate-stagger-pop"
                     style={{ animationDelay: `${idx * 0.05}s` }}
                   >
                     <div className="flex items-start justify-between gap-3 sm:gap-4">
@@ -292,9 +289,9 @@ export default function DashboardJobsPage() {
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
-                        <p className="text-base sm:text-lg font-bold text-primary whitespace-nowrap">${job.budget}</p>
+                        <p className="text-base sm:text-lg font-bold text-dark whitespace-nowrap">${job.budget}</p>
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-medium rounded-full border whitespace-nowrap ${st.color}`}>
-                          <span>{st.icon}</span>
+                          <span className={"w-1.5 h-1.5 rounded-full " + st.dot} />
                           {st.label}
                         </span>
                       </div>

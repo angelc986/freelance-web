@@ -58,7 +58,7 @@ const navItems = [
     icon: <IconHome />,
   },
   {
-    label: "Mis trabajos",
+    label: "Postulaciones",
     href: "/dashboard/jobs",
     icon: <IconBriefcase />,
   },
@@ -106,18 +106,18 @@ export default function DashboardLayout({
   const isWorker = user.role === "worker";
 
   return (
-    <div className="min-h-screen bg-light flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 flex">
       {/* SIDEBAR */}
-      <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-gray-200">
+      <aside className="hidden md:flex md:flex-col w-72 bg-white/95 backdrop-blur-xl border-r border-gray-200/70 shadow-lg shadow-gray-200/30">
         {/* Logo */}
-        <div className="h-16 flex items-center px-6 border-b border-gray-100">
+        <div className="h-16 flex items-center px-6 border-b border-gray-100/80">
           <Link href="/dashboard">
             <Logo size="sm" />
           </Link>
         </div>
 
         {/* User info */}
-        <div className="px-5 py-5 border-b border-gray-100">
+        <div className="px-5 py-5 border-b border-gray-100/80">
           <div className="flex items-center gap-3">
             {/* Avatar */}
               <div className={"w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden " + (isWorker ? "bg-gradient-to-br from-emerald-400 to-emerald-600" : "bg-gradient-to-br from-blue-400 to-blue-600")}>
@@ -167,18 +167,15 @@ export default function DashboardLayout({
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-1.5 dashboard-scroll overflow-y-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={"relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all overflow-hidden " + (isActive ? "bg-primary/10 text-primary" : "text-gray hover:text-dark hover:bg-gray-100")}
+                className={"relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all overflow-hidden border-l-[3px] " + (isActive ? "bg-gradient-to-r from-primary/10 via-primary/5 to-white text-primary border-primary shadow-sm" : "text-gray-500 hover:text-dark hover:bg-gray-100/80 border-transparent")}
               >
-                {isActive && (
-                  <div className="absolute left-0 top-2 bottom-2 w-0.5 bg-primary rounded-full animate-fade-in" />
-                )}
                 {item.icon}
                 {item.label}
               </Link>
@@ -205,9 +202,9 @@ export default function DashboardLayout({
               localStorage.removeItem("refresh_token");
               window.location.href = "/";
             }}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray hover:text-red-500 hover:bg-red-50 transition-all w-full"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:text-red-500 hover:bg-red-50/80 transition-all w-full group"
           >
-            <IconLogout className="w-5 h-5" />
+            <IconLogout className="w-5 h-5 group-hover:scale-105 transition-transform" />
             Cerrar sesión
           </button>
         </div>
@@ -217,7 +214,7 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
         {/* Top bar — safe-area aware for iPhone notch/dynamic island */}
         <header
-          className="border-b border-gray-200 bg-white flex items-center justify-between px-4 sm:px-6 lg:px-8"
+          className="border-b border-gray-200/80 bg-white/95 backdrop-blur-xl shadow-sm shadow-gray-200/20 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-40"
           style={{ minHeight: `calc(3.5rem + ${safeTop})`, paddingTop: safeTop }}
         >
           <div className="flex items-center gap-3 md:hidden">
@@ -233,7 +230,7 @@ export default function DashboardLayout({
             <NotificationBell />
             <Link
               href="/dashboard/settings"
-              className="w-8 h-8 rounded-full bg-gray-100 text-gray hover:bg-gray-200 transition-colors flex items-center justify-center"
+              className="w-8 h-8 rounded-xl bg-gray-100 text-gray hover:bg-gray-200 hover:text-primary transition-all flex items-center justify-center"
               title="Configuración"
             >
               <IconUser className="w-4 h-4" />
@@ -244,7 +241,7 @@ export default function DashboardLayout({
                 localStorage.removeItem("refresh_token");
                 window.location.href = "/";
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
               title="Cerrar sesión"
             >
               <IconLogout className="w-3.5 h-3.5" />
@@ -254,11 +251,11 @@ export default function DashboardLayout({
         </header>
 
         {/* Content with page transition */}
-        <main key={pathname} className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 sm:pb-6 lg:pb-8 animate-page-enter">{children}</main>
+        <main key={pathname} className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 sm:pb-6 lg:pb-8 animate-page-enter dashboard-scroll overflow-y-auto">{children}</main>
       </div>
 
       {/* MOBILE BOTTOM NAV */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 pb-[env(safe-area-inset-bottom,0px)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-gray-200/70 shadow-lg shadow-gray-200/30 pb-[env(safe-area-inset-bottom,0px)]">
         <div className="flex items-center justify-around h-14">
           {navItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
@@ -266,10 +263,11 @@ export default function DashboardLayout({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${
-                  isActive ? "text-primary" : "text-gray hover:text-dark"
+                className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition-all ${
+                  isActive ? "text-primary" : "text-gray-400 hover:text-dark"
                 }`}
               >
+                {isActive && <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />}
                 <div className={isActive ? "scale-110 transition-transform" : ""}>
                   {item.icon}
                 </div>

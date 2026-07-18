@@ -102,28 +102,28 @@ const themes = [
     border: "border-blue-100",
   },
   {
-    bg: "from-amber-400 to-amber-500",
-    shadow: "shadow-amber-400/20",
-    light: "bg-amber-50",
-    icon: "text-amber-500",
-    gradient: "bg-gradient-to-br from-amber-50 to-white",
-    border: "border-amber-100",
+    bg: "from-blue-400 to-blue-500",
+    shadow: "shadow-blue-400/20",
+    light: "bg-blue-50",
+    icon: "text-blue-600",
+    gradient: "bg-gradient-to-br from-blue-50 to-white",
+    border: "border-blue-100",
   },
   {
-    bg: "from-emerald-500 to-emerald-600",
-    shadow: "shadow-emerald-500/20",
-    light: "bg-emerald-50",
-    icon: "text-emerald-600",
-    gradient: "bg-gradient-to-br from-emerald-50 to-white",
-    border: "border-emerald-100",
+    bg: "from-cyan-500 to-blue-600",
+    shadow: "shadow-cyan-500/20",
+    light: "bg-cyan-50",
+    icon: "text-cyan-600",
+    gradient: "bg-gradient-to-br from-cyan-50 to-white",
+    border: "border-cyan-100",
   },
   {
-    bg: "from-violet-500 to-violet-600",
-    shadow: "shadow-violet-500/20",
-    light: "bg-violet-50",
-    icon: "text-violet-600",
-    gradient: "bg-gradient-to-br from-violet-50 to-white",
-    border: "border-violet-100",
+    bg: "from-indigo-500 to-blue-600",
+    shadow: "shadow-indigo-500/20",
+    light: "bg-indigo-50",
+    icon: "text-indigo-600",
+    gradient: "bg-gradient-to-br from-indigo-50 to-white",
+    border: "border-indigo-100",
   },
 ];
 
@@ -208,7 +208,7 @@ export default function DashboardPage() {
       label: isWorker ? "Trabajos realizados" : "Trabajos publicados",
       value: isWorker ? completedJobs : totalJobs,
       icon: <IconBriefcase />,
-      href: "/dashboard/jobs",
+      href: "/dashboard/jobs?filter=completed",
       theme: themes[1],
     },
     {
@@ -230,25 +230,25 @@ export default function DashboardPage() {
 
   const quickActions = isWorker
     ? [
-        { label: "Buscar trabajos", href: "/jobs", icon: <IconSearch />, desc: "Encuentra turnos cerca de ti", color: "bg-blue-50 text-blue-600" },
-        { label: "Mis postulaciones", href: "/dashboard/jobs", icon: <IconClipboard />, desc: "Revisa el estado de tus aplicaciones", color: "bg-violet-50 text-violet-600" },
-        { label: "Mi billetera", href: "/dashboard/wallet", icon: <IconCreditCard />, desc: "Revisa tu saldo y movimientos", color: "bg-emerald-50 text-emerald-600" },
+        { label: "Buscar trabajos", href: "/jobs", icon: <IconSearch />, desc: "Encuentra turnos cerca de ti", color: "from-blue-500 to-blue-600 text-white" },
+        { label: "Mis postulaciones", href: "/dashboard/jobs", icon: <IconClipboard />, desc: "Revisa el estado de tus aplicaciones", color: "from-indigo-500 to-blue-600 text-white" },
+        { label: "Mi billetera", href: "/dashboard/wallet", icon: <IconCreditCard />, desc: "Revisa tu saldo y movimientos", color: "from-cyan-500 to-blue-600 text-white" },
       ]
     : [
-        { label: "Publicar trabajo", href: "/jobs/new", icon: <IconPlusCircle />, desc: "Crea un nuevo turno disponible", color: "bg-blue-50 text-blue-600" },
-        { label: "Ver candidatos", href: "/dashboard/candidates", icon: <IconUsers />, desc: "Revisa quién aplicó a tus trabajos", color: "bg-violet-50 text-violet-600" },
-        { label: "Depositar fondos", href: "/dashboard/wallet", icon: <IconCreditCard />, desc: "Agrega USDT a tu wallet", color: "bg-emerald-50 text-emerald-600" },
+        { label: "Publicar trabajo", href: "/jobs/new", icon: <IconPlusCircle />, desc: "Crea un nuevo turno disponible", color: "from-blue-500 to-blue-600 text-white" },
+        { label: "Ver candidatos", href: "/dashboard/candidates", icon: <IconUsers />, desc: "Revisa quién aplicó a tus trabajos", color: "from-indigo-500 to-blue-600 text-white" },
+        { label: "Depositar fondos", href: "/dashboard/wallet", icon: <IconCreditCard />, desc: "Agrega USDT a tu wallet", color: "from-cyan-500 to-blue-600 text-white" },
       ];
 
   const statusMap: Record<string, { label: string; color: string }> = {
-    open: { label: "Abierto", color: "bg-emerald-50 text-emerald-600" },
-    in_progress: { label: "En progreso", color: "bg-blue-50 text-blue-600" },
-    checked_in: { label: "Check-in", color: "bg-amber-50 text-amber-600" },
-    review_pending: { label: "Revisión", color: "bg-violet-50 text-violet-600" },
-    completed: { label: "Completado", color: "bg-gray-100 text-gray-500" },
-    cancelled: { label: "Cancelado", color: "bg-red-50 text-red-500" },
-    pending: { label: "Pendiente", color: "bg-amber-50 text-amber-600" },
-    accepted: { label: "Aceptado", color: "bg-emerald-50 text-emerald-600" },
+    open: { label: "Abierto", color: "bg-blue-50 text-blue-700" },
+    in_progress: { label: "En progreso", color: "bg-blue-50 text-blue-700" },
+    checked_in: { label: "Check-in", color: "bg-blue-50 text-blue-700" },
+    review_pending: { label: "Revisión", color: "bg-yellow-50 text-yellow-700" },
+    completed: { label: "Completado", color: "bg-gray-50 text-gray-500" },
+    cancelled: { label: "Cancelado", color: "bg-gray-50 text-gray-500" },
+    pending: { label: "Pendiente", color: "bg-blue-50 text-blue-700" },
+    accepted: { label: "Aceptado", color: "bg-blue-50 text-blue-700" },
   };
 
   const typeIcon: Record<string, (c?: string) => React.ReactNode> = {
@@ -262,14 +262,19 @@ export default function DashboardPage() {
     <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
       {/* ═══════ WELCOME ═══════ */}
       <div className="animate-fade-in">
-        <h1 className="text-xl sm:text-2xl font-bold text-dark">
-          Hola, {user.full_name.split(" ")[0]}
-        </h1>
-        <p className="text-xs sm:text-sm text-gray mt-0.5 sm:mt-1">
-          {isWorker
-            ? "Encuentra trabajos cerca de ti y empieza a ganar."
-            : "Publica turnos y encuentra trabajadores verificados."}
-        </p>
+        <div className="text-center">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-dark">
+              Hola, {user.full_name.split(" ")[0]}
+            </h1>
+            <p className="text-xs sm:text-sm text-gray">
+              {isWorker
+                ? "Encuentra trabajos cerca de ti y empieza a ganar."
+                : "Publica turnos y encuentra trabajadores verificados."}
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 h-px bg-gradient-to-r from-primary/30 via-primary/10 to-transparent" />
       </div>
 
       {/* ═══════ STATS CARDS (stagger entrance) ═══════ */}
@@ -306,40 +311,46 @@ export default function DashboardPage() {
 
       {/* ═══════ QUICK ACTIONS ═══════ */}
       <div>
-        <h2 className="text-base sm:text-lg font-semibold text-dark mb-3 sm:mb-4">Acciones rápidas</h2>
+        <h2 className="text-base sm:text-lg font-semibold text-dark mb-3 sm:mb-4 flex items-center gap-2">
+          <div className="w-1.5 h-5 bg-gradient-to-b from-primary to-blue-500 rounded-full"></div>
+          Acciones rápidas
+        </h2>
         <div className="grid sm:grid-cols-3 gap-3 sm:gap-5 stagger-children">
           {quickActions.map((a) => (
             <Link
               key={a.label}
               href={a.href}
-              className="group relative bg-white rounded-xl sm:rounded-2xl border border-gray-200 p-4 sm:p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+              className="group relative bg-white rounded-xl sm:rounded-2xl border border-gray-200/80 p-4 sm:p-6 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1 hover:border-primary/20 transition-all duration-300 overflow-hidden"
             >
+              {/* Hover gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              
               {/* Icon with subtle background */}
-              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl ${a.color} flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 transition-all duration-300`}>
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br ${a.color} flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 group-hover:shadow-lg transition-all duration-300`}>
                 {a.icon}
               </div>
 
-              <h3 className="font-semibold text-sm sm:text-base text-dark group-hover:text-primary transition-colors">
+              <h3 className="font-semibold text-sm sm:text-base text-dark group-hover:text-primary transition-colors relative z-10">
                 {a.label}
               </h3>
-              <p className="text-xs sm:text-sm text-gray mt-0.5 sm:mt-1 leading-relaxed">{a.desc}</p>
+              <p className="text-xs sm:text-sm text-gray mt-0.5 sm:mt-1 leading-relaxed relative z-10">{a.desc}</p>
             </Link>
           ))}
         </div>
       </div>
 
       {/* ═══════ RECENT ACTIVITY ═══════ */}
-      <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex items-center justify-between">
+      <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200/70 overflow-hidden shadow-sm shadow-gray-200/20">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100/80 flex items-center justify-between bg-gradient-to-r from-white to-blue-50/30">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-primary to-blue-600 text-white flex items-center justify-center shadow-sm">
               <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <h2 className="text-sm sm:text-base font-semibold text-dark">Actividad reciente</h2>
           </div>
-          <Link href="/dashboard/jobs" className="inline-flex items-center gap-1 text-xs font-medium text-gray hover:text-primary transition-colors">
+          <Link href="/dashboard/jobs" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors">
             Ver todo
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -365,21 +376,17 @@ export default function DashboardPage() {
                 <Link
                   key={i}
                   href={act.type === "transaction" ? "/dashboard/wallet" : `/jobs/${act.id}`}
-                  className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-gray-50/70 transition-colors group"
+                  className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-blue-50/30 transition-colors group"
                 >
                   {/* Timeline dot */}
                   <div className="relative flex items-center justify-center">
-                    <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center ${
-                      act.type === "job" ? "bg-blue-50 text-blue-600" :
-                      act.type === "application" ? "bg-violet-50 text-violet-600" :
-                      "bg-emerald-50 text-emerald-600"
+                    <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm ${
+                      act.type === "job" ? "bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600" :
+                      act.type === "application" ? "bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600" :
+                      "bg-gradient-to-br from-cyan-50 to-cyan-100 text-cyan-600"
                     }`}>
                       {IconComp && IconComp("w-3.5 h-3.5 sm:w-4 sm:h-4")}
                     </div>
-                    {/* Dot connector */}
-                    {i < activity.length - 1 && (
-                      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-px h-4 bg-gray-100" />
-                    )}
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -389,7 +396,7 @@ export default function DashboardPage() {
                     </p>
                   </div>
 
-                  <span className={`inline-block flex-shrink-0 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-medium rounded-full ${st.color}`}>
+                  <span className={`inline-block flex-shrink-0 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-medium rounded-full shadow-sm ${st.color}`}>
                     {st.label}
                   </span>
                 </Link>

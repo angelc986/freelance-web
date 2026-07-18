@@ -163,10 +163,7 @@ html {
   animation: modal-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Modal custom scrollbar */
-.modal-scroll::-webkit-scrollbar {
-  width: 4px;
-}
+
 
 .modal-scroll::-webkit-scrollbar-track {
   background: transparent;
@@ -187,7 +184,105 @@ html {
   scrollbar-color: #CBD5E1 transparent;
 }
 
+
+
+/* ═══════════════════════════════════════
+   MODERN SCROLLBAR — Global
+   ═══════════════════════════════════════ */
+
+/* WebKit (Chrome, Safari, Edge) — thin, subtle blue */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  background-clip: content-box;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #93C5FD;
+  border-color: transparent;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #60A5FA;
+}
+
+/* Firefox — global */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 transparent;
+}
+
+/* 
+  Custom scrollbar classes for specific containers.
+  Override the global defaults by using these class names.
+*/
+
+.dashboard-scroll::-webkit-scrollbar,
+.modal-scroll::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.dashboard-scroll::-webkit-scrollbar-thumb,
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: #BFDBFE;
+  border: 1px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+.dashboard-scroll::-webkit-scrollbar-thumb:hover,
+.modal-scroll::-webkit-scrollbar-thumb:hover {
+  background: #60A5FA;
+}
+
+.dashboard-scroll::-webkit-scrollbar-thumb:active,
+.modal-scroll::-webkit-scrollbar-thumb:active {
+  background: #3B82F6;
+}
+
+/*
+  Dark scrollbar for modals/overlays on light backgrounds.
+  Add .scrollbar-dark to any container for an inverted look.
+*/
+.scrollbar-dark::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Animations for scrollbar appearance */
+@keyframes scrollbar-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Hide scrollbar when not scrolling (auto-hide style) — add .scrollbar-auto class */
+.scrollbar-auto {
+  scrollbar-width: thin;
+}
+
+.scrollbar-auto::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
 /* ========== BACK TO TOP ========== */
+
 @keyframes btt-enter {
   from { opacity: 0; transform: translateY(20px) scale(0.9); }
   to { opacity: 1; transform: translateY(0) scale(1); }
@@ -364,17 +459,31 @@ html {
   to { opacity: 1; }
 }
 
-/* ========== SCROLLBAR THIN ========== */
-.scrollbar-thin::-webkit-scrollbar {
-  width: 4px;
+
+
+/* Firefox */
+.dashboard-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #BFDBFE transparent;
 }
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
+
+
+/* ─── NOTIFICATION ANIMATIONS ─── */
+@keyframes bounce-in {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
 }
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 99px;
+
+.animate-bounce-in {
+  animation: bounce-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+
+@keyframes notif-dropdown {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-notif-dropdown {
+  animation: notif-dropdown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
