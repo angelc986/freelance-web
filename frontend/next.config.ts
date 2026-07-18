@@ -6,12 +6,27 @@ const nextConfig: NextConfig = {
   // apuntando al backend en Railway
 
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8003/api/v1";
-    const backendBase = apiUrl.replace("/api/v1", "");
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    // If env var is set, use it; otherwise use Railway production URL
+    const backendBase = apiUrl
+      ? apiUrl.replace("/api/v1", "")
+      : "https://freelance-web-production-add4.up.railway.app";
     return [
+      {
+        source: "/api/:path*",
+        destination: backendBase + "/api/:path*",
+      },
       {
         source: "/uploads/:path*",
         destination: backendBase + "/uploads/:path*",
+      },
+      {
+        source: "/docs",
+        destination: backendBase + "/docs",
+      },
+      {
+        source: "/openapi.json",
+        destination: backendBase + "/openapi.json",
       },
     ];
   },
