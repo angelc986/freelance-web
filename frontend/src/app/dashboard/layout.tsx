@@ -175,7 +175,7 @@ export default function DashboardLayout({
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1.5">
+        <nav className="px-3 py-4 space-y-1.5">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -203,7 +203,7 @@ export default function DashboardLayout({
         </nav>
 
         {/* Logout */}
-        <div className="px-3 pb-4">
+        <div className="px-3 pb-4 mt-auto">
           <button
             onClick={() => {
               localStorage.removeItem("access_token");
