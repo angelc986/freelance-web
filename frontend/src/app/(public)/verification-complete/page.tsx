@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { getVerificationStatus } from "@/lib/api";
-import "./auth.css";
+import "../auth/auth.css";
 
 type Status = "checking" | "verified" | "pending" | "error";
 
