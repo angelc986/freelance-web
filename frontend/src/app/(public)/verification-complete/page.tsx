@@ -122,33 +122,33 @@ function useParticles(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
 /* ═════════════ BIG VISIBLE BUBBLES ═════════════ */
 function FloatingBubbles() {
   return (
-    <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 5, overflow: "hidden", pointerEvents: "none" }}>
+    <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 14, overflow: "hidden", pointerEvents: "none" }}>
       <div style={{
-        position: "absolute", width: 300, height: 300, borderRadius: "50%",
-        top: "15%", left: "-10%",
-        background: "radial-gradient(circle at 30% 30%, rgba(59,130,246,0.4), rgba(59,130,246,0.05) 70%)",
-        filter: "blur(30px)",
+        position: "absolute", width: 400, height: 400, borderRadius: "50%",
+        top: "10%", left: "-8%",
+        background: "radial-gradient(circle at 30% 30%, rgba(59,130,246,0.55), rgba(37,99,235,0.1) 60%)",
+        filter: "blur(20px)",
         animation: "bubble1 18s ease-in-out infinite alternate",
       }} />
       <div style={{
-        position: "absolute", width: 350, height: 350, borderRadius: "50%",
-        bottom: "10%", right: "-8%",
-        background: "radial-gradient(circle at 60% 40%, rgba(37,99,235,0.35), rgba(37,99,235,0.05) 70%)",
-        filter: "blur(30px)",
+        position: "absolute", width: 420, height: 420, borderRadius: "50%",
+        bottom: "5%", right: "-10%",
+        background: "radial-gradient(circle at 60% 40%, rgba(37,99,235,0.5), rgba(29,78,216,0.1) 60%)",
+        filter: "blur(20px)",
         animation: "bubble2 22s ease-in-out infinite alternate",
       }} />
       <div style={{
-        position: "absolute", width: 250, height: 250, borderRadius: "50%",
-        top: "45%", left: "40%",
-        background: "radial-gradient(circle at 50% 50%, rgba(96,165,250,0.3), rgba(96,165,250,0.05) 70%)",
-        filter: "blur(30px)",
+        position: "absolute", width: 320, height: 320, borderRadius: "50%",
+        top: "40%", left: "35%",
+        background: "radial-gradient(circle at 50% 50%, rgba(96,165,250,0.4), rgba(59,130,246,0.1) 60%)",
+        filter: "blur(20px)",
         animation: "bubble3 25s ease-in-out infinite alternate",
       }} />
       <div style={{
-        position: "absolute", width: 200, height: 200, borderRadius: "50%",
-        top: "5%", right: "15%",
-        background: "radial-gradient(circle at 40% 40%, rgba(147,197,253,0.35), rgba(147,197,253,0.05) 70%)",
-        filter: "blur(25px)",
+        position: "absolute", width: 280, height: 280, borderRadius: "50%",
+        top: "2%", right: "10%",
+        background: "radial-gradient(circle at 40% 40%, rgba(147,197,253,0.5), rgba(96,165,250,0.1) 60%)",
+        filter: "blur(20px)",
         animation: "bubble4 20s ease-in-out infinite alternate",
       }} />
     </div>
@@ -321,7 +321,7 @@ export default function VerificationCompletePage() {
                 </span>
               </Link>
 
-              <p className="text-gray-400 text-sm mt-8">TurnoGO — Tu seguridad es nuestra prioridad</p>
+              <p className="text-gray-500 text-sm mt-8">TurnoGO — Tu seguridad es nuestra prioridad</p>
             </div>
           </div>
         </div>
