@@ -73,44 +73,51 @@ function useMeshGradient(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
   }, [canvasRef]);
 }
 
-/* ═════════════ PARTICLES ═════════════ */
-function useParticles(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
+/* ═════════════ FLOATING DOTS ═════════════ */
+function useFloatingDots(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    interface Particle { x: number; y: number; size: number; speedX: number; speedY: number; opacity: number; }
-    let particles: Particle[] = [];
     let animId = 0;
 
     function reset() {
       const w = canvas!.clientWidth; const h = canvas!.clientHeight;
       canvas!.width = w; canvas!.height = h;
-      particles = Array.from({ length: 12 }, () => ({
-        x: Math.random() * w, y: Math.random() * h,
-        size: Math.random() * 3 + 1,
-        speedX: (Math.random() - 0.5) * 0.1, speedY: (Math.random() - 0.5) * 0.1,
-        opacity: Math.random() * 0.12 + 0.02,
-      }));
     }
 
-    function draw() {
+    const dots = Array.from({ length: 15 }, () => ({
+      x: 0, y: 0,
+      size: Math.random() * 4 + 2,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      opacity: Math.random() * 0.3 + 0.2,
+      delay: Math.random() * 5000,
+    }));
+
+    function draw(time: number) {
       ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
-      for (const p of particles) {
-        p.x += p.speedX; p.y += p.speedY;
-        if (p.x < -10 || p.x > canvas!.width + 10) p.speedX *= -1;
-        if (p.y < -10 || p.y > canvas!.height + 10) p.speedY *= -1;
+      for (const d of dots) {
+        if (time < d.delay) continue;
+        if (d.x === 0 && d.y === 0) { d.x = Math.random() * canvas!.width; d.y = Math.random() * canvas!.height; }
+        d.x += d.vx;
+        d.y += d.vy;
+        if (d.x < -20) d.x = canvas!.width + 20;
+        if (d.x > canvas!.width + 20) d.x = -20;
+        if (d.y < -20) d.y = canvas!.height + 20;
+        if (d.y > canvas!.height + 20) d.y = -20;
         ctx!.beginPath();
-        ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx!.fillStyle = `rgba(37,99,235,${p.opacity})`;
+        ctx!.arc(d.x, d.y, d.size, 0, Math.PI * 2);
+        ctx!.fillStyle = `rgba(37,99,235,${d.opacity})`;
         ctx!.fill();
       }
       animId = requestAnimationFrame(draw);
     }
 
-    reset(); draw();
-    const handleResize = () => { reset(); };
+    reset();
+    animId = requestAnimationFrame(draw);
+    const handleResize = () => reset();
     window.addEventListener("resize", handleResize);
     return () => {
       window.removeEventListener("resize", handleResize);
@@ -119,53 +126,19 @@ function useParticles(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
   }, [canvasRef]);
 }
 
-/* ═════════════ BIG VISIBLE BUBBLES ═════════════ */
-function FloatingBubbles() {
-  return (
-    <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 14, overflow: "hidden", pointerEvents: "none" }}>
-      <div style={{
-        position: "absolute", width: 400, height: 400, borderRadius: "50%",
-        top: "10%", left: "-8%",
-        background: "radial-gradient(circle at 30% 30%, rgba(59,130,246,0.55), rgba(37,99,235,0.1) 60%)",
-        filter: "blur(20px)",
-        animation: "bubble1 18s ease-in-out infinite alternate",
-      }} />
-      <div style={{
-        position: "absolute", width: 420, height: 420, borderRadius: "50%",
-        bottom: "5%", right: "-10%",
-        background: "radial-gradient(circle at 60% 40%, rgba(37,99,235,0.5), rgba(29,78,216,0.1) 60%)",
-        filter: "blur(20px)",
-        animation: "bubble2 22s ease-in-out infinite alternate",
-      }} />
-      <div style={{
-        position: "absolute", width: 320, height: 320, borderRadius: "50%",
-        top: "40%", left: "35%",
-        background: "radial-gradient(circle at 50% 50%, rgba(96,165,250,0.4), rgba(59,130,246,0.1) 60%)",
-        filter: "blur(20px)",
-        animation: "bubble3 25s ease-in-out infinite alternate",
-      }} />
-      <div style={{
-        position: "absolute", width: 280, height: 280, borderRadius: "50%",
-        top: "2%", right: "10%",
-        background: "radial-gradient(circle at 40% 40%, rgba(147,197,253,0.5), rgba(96,165,250,0.1) 60%)",
-        filter: "blur(20px)",
-        animation: "bubble4 20s ease-in-out infinite alternate",
-      }} />
-    </div>
-  );
-}
+/* ═════════════ BIG VISIBLE BUBBLES (removed — using floating dots instead) ═════════════ */
 
 /* ═════════════ PAGE ═════════════ */
 export default function VerificationCompletePage() {
   const [status, setStatus] = useState<Status>("checking");
   const [dots, setDots] = useState("");
   const meshRef = useRef<HTMLCanvasElement | null>(null);
-  const particlesRef = useRef<HTMLCanvasElement | null>(null);
+  const dotsRef = useRef<HTMLCanvasElement | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useMeshGradient(meshRef);
-  useParticles(particlesRef);
+  useFloatingDots(dotsRef);
 
   const checkStatus = useCallback(async () => {
     try {
@@ -206,7 +179,6 @@ export default function VerificationCompletePage() {
 
       <div className="phone-frame">
         <canvas ref={meshRef} className="mesh-canvas" />
-        <FloatingBubbles />
         <div className="aurora" />
 
         <div className="glass-container">
@@ -326,7 +298,7 @@ export default function VerificationCompletePage() {
         </div>
       </div>
 
-      <canvas ref={particlesRef} className="particle-canvas" style={{ zIndex: 11 }} />
+      <canvas ref={dotsRef} className="particle-canvas" style={{ zIndex: 11 }} />
     </>
   );
 }
