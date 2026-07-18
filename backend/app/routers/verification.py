@@ -13,6 +13,7 @@ from app.config import get_settings
 from app.database import SessionLocal
 from app.limiter import limiter
 from app.models.user import User
+from app.routers.auth import SECRET_KEY, ALGORITHM
 from app.schemas.user import UserResponse
 
 router = APIRouter(prefix="/api/v1/verification", tags=["verification"])
@@ -60,9 +61,8 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
         db.refresh(user)
         return user
 
-    settings = get_settings()
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")
