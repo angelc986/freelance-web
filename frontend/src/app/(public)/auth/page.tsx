@@ -280,6 +280,7 @@ function AuthPageInner() {
  const [regCedula, setRegCedula] = useState("");
  const [regPassword, setRegPassword] = useState("");
  const [regShowPw, setRegShowPw] = useState(false);
+  const [regRole, setRegRole] = useState<"worker" | "contractor">("worker");
 
  const [loginEmail, setLoginEmail] = useState("");
  const [loginPassword, setLoginPassword] = useState("");
@@ -370,7 +371,7 @@ function AuthPageInner() {
  full_name: `${regFirstName} ${regLastName}`,
  cedula: regCedula,
  password: regPassword,
- role: "worker",
+ role: regRole,
  });
  router.push(u.is_admin ? "/admin" : "/dashboard");
  } catch (err: any) {
@@ -477,6 +478,25 @@ function AuthPageInner() {
  <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Crear cuenta</h2>
  <p className="text-gray-500 text-[14px] mb-6">Únete hoy — es gratis</p>
  </div>
+
+          <div className="stagger">
+            <div className="flex items-center gap-1 bg-slate-100 rounded-full p-0.5 w-fit mx-auto mb-4">
+              <button
+                type="button"
+                onClick={() => setRegRole("worker")}
+                className={"px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 " + (regRole === "worker" ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-700")}
+              >
+                Trabajador
+              </button>
+              <button
+                type="button"
+                onClick={() => setRegRole("contractor")}
+                className={"px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 " + (regRole === "contractor" ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-700")}
+              >
+                Contratista
+              </button>
+            </div>
+          </div>
 
  {error && <div className="error-msg">{error}</div>}
 
