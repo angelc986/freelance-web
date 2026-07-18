@@ -129,7 +129,7 @@ export default function DashboardLayout({
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-dark text-sm truncate">{user.full_name}</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
+              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                 <span className={"inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium " + (isWorker ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600")}>
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     {isWorker ? (
@@ -140,6 +140,14 @@ export default function DashboardLayout({
                   </svg>
                   {isWorker ? "Trabajador" : "Contratista"}
                 </span>
+                {user.is_verified && (
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600 border border-blue-200">
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                      <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
+                    </svg>
+                    Verificado
+                  </span>
+                )}
               </div>
             </div>
           </div>

@@ -322,7 +322,7 @@ export default function SettingsPage() {
       <Card icon={<IconInfo className="w-5 h-5 text-primary" />} title="Detalles de la cuenta">
         <div className="p-5 space-y-1">
           {[
-            { label: "Rol", value: user.role === "worker" ? "Trabajador" : "Contratista" },
+            { label: "Rol", value: <span className="flex items-center gap-2">{user.role === "worker" ? "Trabajador" : "Contratista"}{user.is_verified && <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">Verificado <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" /></svg></span>}</span> },
             { label: "Email", value: user.email },
             { label: "Cédula", value: user.cedula },
             { label: "Calificación", value: <span className="flex items-center gap-1"><IconStar className="w-4 h-4 text-blue-400" /> {user.rating_avg.toFixed(1)}</span> },
@@ -337,6 +337,13 @@ export default function SettingsPage() {
             <span className={"font-medium text-sm flex items-center gap-1.5 " + (user.is_active ? "text-blue-600" : "text-red-500")}>
               <span className={"w-2 h-2 rounded-full " + (user.is_active ? "bg-blue-500" : "bg-red-500")} />
               {user.is_active ? "Activa" : "Inactiva"}
+            </span>
+          </div>
+          <div className="flex justify-between py-3 px-3 rounded-lg hover:bg-blue-50/30 transition-colors">
+            <span className="text-gray text-sm">Identidad</span>
+            <span className={"font-medium text-sm flex items-center gap-1.5 " + (user.is_verified ? "text-green-600" : "text-amber-600")}>
+              <span className={"w-2 h-2 rounded-full " + (user.is_verified ? "bg-green-500" : "bg-amber-500")} />
+              {user.is_verified ? "Verificada" : "Pendiente"}
             </span>
           </div>
         </div>
