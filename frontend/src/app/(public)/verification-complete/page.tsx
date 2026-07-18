@@ -226,12 +226,12 @@ export default function VerificationCompletePage() {
               <div className="relative mx-auto w-20 h-20 mb-5">
                 <div className={`absolute inset-0 rounded-full blur-2xl transition-all duration-1000 ${
                   status === "verified" ? "bg-[#2563EB]/30 scale-150" :
-                  status === "rejected" ? "bg-rose-300/20 scale-150" :
+                  status === "rejected" ? "bg-gray-300/20 scale-150" :
                   "bg-[#2563EB]/20"
                 }`} />
                 <div className={`relative w-full h-full rounded-full flex items-center justify-center transition-all duration-700 shadow-lg ${
                   status === "verified" ? "bg-gradient-to-br from-[#2563EB] to-[#1D4ED8]" :
-                  status === "rejected" ? "bg-gradient-to-br from-rose-300 to-red-400" :
+                  status === "rejected" ? "bg-gradient-to-br from-gray-300 to-gray-400" :
                   "bg-gradient-to-br from-[#2563EB] to-[#1D4ED8]"
                 }`}>
                   {status === "verified" ? (
@@ -252,17 +252,13 @@ export default function VerificationCompletePage() {
                 </>
               ) : status === "rejected" ? (
                 <>
-                  <h1 className="text-[28px] font-extrabold tracking-tight text-gray-900 mb-3">Verificación rechazada</h1>
-                  <p className="text-gray-500 text-base max-w-[300px] mx-auto leading-relaxed mb-6">No pudimos verificar tu identidad. Intenta de nuevo o contacta a soporte.</p>
+                  <h1 className="text-[28px] font-extrabold tracking-tight text-gray-900 mb-3">No pudimos verificarte</h1>
+                  <p className="text-gray-500 text-base max-w-[300px] mx-auto leading-relaxed mb-6">Algo no coincidió con tus datos. Vuelve a intentarlo y asegúrate de que tu información sea correcta. Si el problema persiste, contáctanos.</p>
                 </>
               ) : status === "checking" ? (
                 <>
                   <h1 className="text-[28px] font-extrabold tracking-tight text-gray-900 mb-3">Verificando identidad{dots}</h1>
                   <p className="text-gray-500 text-base max-w-[300px] mx-auto leading-relaxed mb-6">Estamos procesando tu verificación. Esto tomará solo unos segundos.</p>
-                  <div className="w-full max-w-[160px] mx-auto">
-                    <div className="h-1.5 bg-blue-100 rounded-full overflow-hidden"><div className="h-full bg-[#2563EB] rounded-full animate-pulse w-full" /></div>
-                    <p className="text-gray-400 text-sm mt-2">Esperando confirmación</p>
-                  </div>
                 </>
               ) : (
                 <>
@@ -276,20 +272,14 @@ export default function VerificationCompletePage() {
                 href="/dashboard"
                 className="group relative inline-flex items-center justify-center px-8 py-3.5 rounded-2xl font-semibold text-base text-white transition-all duration-300 hover:scale-[1.02] active:scale-95"
                 style={{
-                  background: status === "verified"
-                    ? "linear-gradient(135deg, #2563EB, #1D4ED8)"
-                    : status === "rejected"
-                    ? "linear-gradient(135deg, #F87171, #EF4444)"
-                    : "linear-gradient(135deg, #2563EB, #3B82F6)",
+                  background: "linear-gradient(135deg, #2563EB, #1D4ED8)",
                   boxShadow: status === "verified"
                     ? "0 4px 20px rgba(37,99,235,0.35)"
-                    : status === "rejected"
-                    ? "0 4px 20px rgba(248,113,113,0.25)"
                     : "0 4px 20px rgba(37,99,235,0.25)",
                 }}
               >
                 <span className="flex items-center gap-2">
-                  {status === "verified" ? "Ir al Dashboard" : status === "rejected" ? "Volver a intentar" : "Ir al Dashboard"}
+                  {status === "verified" ? "Ir al Dashboard" : status === "rejected" ? "Intentar de nuevo" : "Ir al Dashboard"}
                   <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                   </svg>
