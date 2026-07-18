@@ -226,12 +226,12 @@ export default function VerificationCompletePage() {
               <div className="relative mx-auto w-20 h-20 mb-5">
                 <div className={`absolute inset-0 rounded-full blur-2xl transition-all duration-1000 ${
                   status === "verified" ? "bg-[#2563EB]/30 scale-150" :
-                  status === "rejected" ? "bg-red-400/30 scale-150" :
+                  status === "rejected" ? "bg-rose-300/20 scale-150" :
                   "bg-[#2563EB]/20"
                 }`} />
                 <div className={`relative w-full h-full rounded-full flex items-center justify-center transition-all duration-700 shadow-lg ${
                   status === "verified" ? "bg-gradient-to-br from-[#2563EB] to-[#1D4ED8]" :
-                  status === "rejected" ? "bg-gradient-to-br from-red-400 to-red-600" :
+                  status === "rejected" ? "bg-gradient-to-br from-rose-300 to-red-400" :
                   "bg-gradient-to-br from-[#2563EB] to-[#1D4ED8]"
                 }`}>
                   {status === "verified" ? (
@@ -248,20 +248,12 @@ export default function VerificationCompletePage() {
               {status === "verified" ? (
                 <>
                   <h1 className="text-[28px] font-extrabold tracking-tight text-gray-900 mb-3">¡Identidad verificada!</h1>
-                  <p className="text-gray-500 text-base max-w-[300px] mx-auto leading-relaxed mb-4">Tu identidad ha sido verificada exitosamente. Ya puedes publicar y postularte a trabajos sin restricciones.</p>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-[#2563EB] text-sm font-medium border border-blue-200/50 mb-6">
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    Verificación completada
-                  </span>
+                  <p className="text-gray-500 text-base max-w-[300px] mx-auto leading-relaxed mb-6">Tu identidad ha sido verificada exitosamente. Ya puedes publicar y postularte a trabajos sin restricciones.</p>
                 </>
               ) : status === "rejected" ? (
                 <>
                   <h1 className="text-[28px] font-extrabold tracking-tight text-gray-900 mb-3">Verificación rechazada</h1>
-                  <p className="text-gray-500 text-base max-w-[300px] mx-auto leading-relaxed mb-4">No pudimos verificar tu identidad. Intenta de nuevo o contacta a soporte.</p>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-600 text-sm font-medium border border-red-200/50 mb-6">
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
-                    No se pudo verificar
-                  </span>
+                  <p className="text-gray-500 text-base max-w-[300px] mx-auto leading-relaxed mb-6">No pudimos verificar tu identidad. Intenta de nuevo o contacta a soporte.</p>
                 </>
               ) : status === "checking" ? (
                 <>
@@ -287,12 +279,12 @@ export default function VerificationCompletePage() {
                   background: status === "verified"
                     ? "linear-gradient(135deg, #2563EB, #1D4ED8)"
                     : status === "rejected"
-                    ? "linear-gradient(135deg, #EF4444, #DC2626)"
+                    ? "linear-gradient(135deg, #F87171, #EF4444)"
                     : "linear-gradient(135deg, #2563EB, #3B82F6)",
                   boxShadow: status === "verified"
                     ? "0 4px 20px rgba(37,99,235,0.35)"
                     : status === "rejected"
-                    ? "0 4px 20px rgba(239,68,68,0.35)"
+                    ? "0 4px 20px rgba(248,113,113,0.25)"
                     : "0 4px 20px rgba(37,99,235,0.25)",
                 }}
               >
