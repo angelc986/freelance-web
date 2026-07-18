@@ -196,15 +196,15 @@ export default function SettingsPage() {
                   user.full_name.charAt(0).toUpperCase()
                 )}
               </div>
-              {/* Locked: avatar came from identity verification */}
-              {user.avatar_verified && user.avatar_url ? (
-                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center" title="Foto verificada">
+              {/* Locked: avatar can't be changed once set */}
+              {user.avatar_url ? (
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center" title="Foto protegida">
                   <svg className="w-3.5 h-3.5 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
                     <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
                   </svg>
                 </div>
               ) : (
-                /* Upload button: only when avatar NOT from verification */
+                /* Upload button: only when no photo yet */
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -219,20 +219,18 @@ export default function SettingsPage() {
               )}
             </div>
             <div>
-              {user.avatar_verified && user.avatar_url ? (
+              {user.avatar_url ? (
                 <>
-                  <p className="text-sm font-medium text-dark flex items-center gap-1.5">Foto de perfil <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600 border border-blue-200">Verificada</span></p>
-                  <p className="text-xs text-gray mt-0.5">Esta foto fue tomada durante tu verificación de identidad. Para cambiarla, contacta a soporte.</p>
-                </>
-              ) : user.avatar_url ? (
-                <>
-                  <p className="text-sm font-medium text-dark">Foto de perfil</p>
-                  <p className="text-xs text-gray mt-0.5">JPG, PNG o WebP. Max 5MB.</p>
+                  <p className="text-sm font-medium text-dark flex items-center gap-1.5">
+                    Foto de perfil
+                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600 border border-blue-200">Protegida</span>
+                  </p>
+                  <p className="text-xs text-gray mt-0.5">Esta foto no se puede modificar. Para cambiarla, contacta a soporte y verifica tu identidad nuevamente.</p>
                 </>
               ) : (
                 <>
                   <p className="text-sm font-medium text-dark">Foto de perfil</p>
-                  <p className="text-xs text-gray mt-0.5">JPG, PNG o WebP. Max 5MB.</p>
+                  <p className="text-xs text-gray mt-0.5">Sube tu foto. JPG, PNG o WebP. Max 5MB.</p>
                 </>
               )}
               {avatarUploading && (
