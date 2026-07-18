@@ -1,10 +1,13 @@
 import hashlib
 import hmac
 import json
+import logging
 import os
 import time
 from datetime import datetime, timezone
 
+import cloudinary
+import cloudinary.uploader
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
@@ -15,6 +18,8 @@ from app.limiter import limiter
 from app.models.user import User
 from app.routers.auth import SECRET_KEY, ALGORITHM
 from app.schemas.user import UserResponse
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/verification", tags=["verification"])
 
@@ -88,6 +93,70 @@ def shorten_floats(data):
 
 
 # ─── Endpoints ───
+
+def _extract_portrait_url(payload: dict) -> str | None:
+    """Extract the user's portrait/selfie image URL from Didit webhook payload."""
+    # Try direct portrait_image field
+    portrait = payload.get("portrait_image")
+    if portrait:
+        return portrait
+
+    # Try inside decision -> face_matches
+    decision = payload.get("decision")
+    if isinstance(decision, dict):
+        for feature_list in ["face_matches", "liveness_checks", "id_verifications"]:
+            items = decision.get(feature_list)
+            if isinstance(items, list):
+                for item in items:
+                    if isinstance(item, dict):
+                        img = item.get("portrait_image") or item.get("face_image") or item.get("image")
+                        if img:
+                            return img
+
+    # Try inside documents array
+    documents = payload.get("documents")
+    if isinstance(documents, list):
+        for doc in documents:
+            if isinstance(doc, dict):
+                images = doc.get("images")
+                if isinstance(images, list) and images:
+                    return images[0].get("url") if isinstance(images[0], dict) else images[0]
+
+    return None
+
+
+def _upload_avatar_from_url(image_url: str, user_id: int) -> str | None:
+    """Download portrait from Didit and upload to Cloudinary. Returns Cloudinary URL."""
+    settings = get_settings()
+    if not all([settings.CLOUDINARY_CLOUD_NAME, settings.CLOUDINARY_API_KEY, settings.CLOUDINARY_API_SECRET]):
+        logger.warning("Cloudinary not configured, skipping avatar upload")
+        return None
+
+    cloudinary.config(
+        cloud_name=settings.CLOUDINARY_CLOUD_NAME,
+        api_key=settings.CLOUDINARY_API_KEY,
+        api_secret=settings.CLOUDINARY_API_SECRET,
+    )
+
+    try:
+        # Download from Didit (presigned URL, limited validity)
+        with httpx.Client(timeout=30) as client:
+            resp = client.get(image_url)
+            resp.raise_for_status()
+
+        # Upload to Cloudinary
+        result = cloudinary.uploader.upload(
+            resp.content,
+            public_id=f"avatars/user_{user_id}",
+            folder="turnogo/avatars",
+            overwrite=True,
+            resource_type="image",
+            transformation=[{"width": 300, "height": 300, "crop": "fill", "gravity": "face"}],
+        )
+        return result.get("secure_url")
+    except Exception as e:
+        logger.error(f"Failed to upload avatar for user {user_id}: {e}")
+        return None
 
 @router.post("/create")
 @limiter.limit("5/minute")
@@ -230,6 +299,12 @@ async def didit_webhook(request: Request):
             if status_val == "Approved":
                 user.is_verified = True
                 user.verified_at = datetime.now(timezone.utc)
+                # Extract and upload portrait as avatar
+                portrait_url = _extract_portrait_url(payload)
+                if portrait_url:
+                    cloud_url = _upload_avatar_from_url(portrait_url, user.id)
+                    if cloud_url:
+                        user.avatar_url = cloud_url
             elif status_val in ("Declined", "Expired", "Abandoned"):
                 user.is_verified = False
                 user.didit_session_id = None  # Allow re-verification
