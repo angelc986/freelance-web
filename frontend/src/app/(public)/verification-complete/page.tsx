@@ -208,7 +208,6 @@ export default function VerificationCompletePage() {
         <canvas ref={meshRef} className="mesh-canvas" />
         <FloatingBubbles />
         <div className="aurora" />
-        <canvas ref={particlesRef} className="particle-canvas" />
 
         <div className="glass-container">
           <div className="screen screen-active" style={{ pointerEvents: "auto" }}>
@@ -326,6 +325,8 @@ export default function VerificationCompletePage() {
           </div>
         </div>
       </div>
+
+      <canvas ref={particlesRef} className="particle-canvas" style={{ zIndex: 11 }} />
     </>
   );
 }
