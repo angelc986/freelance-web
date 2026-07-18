@@ -264,7 +264,7 @@ export default function DashboardLayout({
 
       {/* MOBILE BOTTOM NAV */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-gray-200/70 shadow-lg shadow-gray-200/30 pb-[env(safe-area-inset-bottom,0px)]">
-        <div className="flex items-center justify-around h-14">
+        <div className="grid grid-cols-4 h-14">
           {navItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
             return (
