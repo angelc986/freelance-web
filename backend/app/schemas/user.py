@@ -16,6 +16,7 @@ class UserLogin(BaseModel):
 class UpdateProfileRequest(BaseModel):
     full_name: str | None = None
     phone: str | None = None
+    cedula: str | None = None
 
 
 class UpdateWalletRequest(BaseModel):
@@ -36,6 +37,7 @@ class UserResponse(BaseModel):
     rating_avg: float
     avatar_url: str | None = None
     avatar_verified: bool = False
+    cedula_locked: bool = False
     is_verified: bool = False
 
     class Config:

@@ -222,6 +222,16 @@ def update_profile(
             raise HTTPException(status_code=400, detail="Teléfono ya registrado por otro usuario")
         user.phone = request.phone
 
+    # Cedula: se puede actualizar solo si no está bloqueada
+    if request.cedula:
+        if user.cedula_locked:
+            raise HTTPException(status_code=400, detail="La cédula ya fue registrada y no se puede modificar")
+        existing = db.query(User).filter(User.cedula == request.cedula, User.id != user.id).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Cédula ya registrada por otro usuario")
+        user.cedula = request.cedula
+        user.cedula_locked = True
+
     db.commit()
     db.refresh(user)
     return user

@@ -14,6 +14,7 @@ export interface User {
   rating_avg: number;
   avatar_url: string | null;
   avatar_verified: boolean;
+  cedula_locked: boolean;
   is_verified: boolean;
 }
 
@@ -169,6 +170,7 @@ export function updateProfile(data: {
   full_name?: string;
   phone?: string;
   email?: string;
+  cedula?: string;
 }): Promise<User> {
   return request("/auth/me", {
     method: "PATCH",

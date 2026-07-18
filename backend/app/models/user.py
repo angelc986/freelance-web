@@ -19,6 +19,7 @@ class User(Base):
     rating_avg = Column(Float, default=0.0)
     avatar_url = Column(String, nullable=True)
     avatar_verified = Column(Boolean, default=False)
+    cedula_locked = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
     didit_session_id = Column(String, nullable=True)
     verified_at = Column(DateTime(timezone=True), nullable=True)

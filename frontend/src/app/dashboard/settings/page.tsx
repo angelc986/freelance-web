@@ -100,6 +100,10 @@ export default function SettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Detect if cedula is a hash (64 hex chars = stored as hash before the fix)
+  const hasCedulaHash = user?.cedula?.length === 64 && /^[a-f0-9]{64}$/i.test(user.cedula);
+  const [cedula, setCedula] = useState("");
   const resolveAvatarUrl = (url: string | null) => {
     if (!url) return null;
     if (url.startsWith("http")) return url;
@@ -113,6 +117,7 @@ export default function SettingsPage() {
       setEmail(user.email);
       setWallet(user.wallet_address || "");
       if (user.avatar_url) setAvatarUrl(resolveAvatarUrl(user.avatar_url));
+      if (hasCedulaHash) setCedula(""); else setCedula(user.cedula || "");
     }
   }, [user]);
 
@@ -123,7 +128,7 @@ export default function SettingsPage() {
     setProfileMsg(null);
     setSavingProfile(true);
     try {
-      await updateProfile({ full_name: name, phone, email });
+      await updateProfile({ full_name: name, phone, email, cedula: hasCedulaHash ? cedula : undefined });
       await refreshUser?.();
       setProfileMsg({ ok: true, text: "Perfil actualizado correctamente." });
     } catch (err: any) {
@@ -272,7 +277,32 @@ export default function SettingsPage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1.5">Cédula</label>
-              <input type="text" value={user.cedula} disabled className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray text-sm" />
+              {hasCedulaHash ? (
+                <>
+                  <div className="mb-2 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                    <p className="text-xs font-medium text-amber-800">Actualiza tu número de cédula</p>
+                    <p className="text-xs text-amber-600 mt-0.5">Tu documento de identidad necesita ser actualizado. Solo podrás hacerlo una vez.</p>
+                  </div>
+                  <input
+                    type="text"
+                    value={cedula}
+                    onChange={(e) => setCedula(e.target.value)}
+                    required
+                    className="w-full px-3.5 py-2.5 border border-amber-300 rounded-xl text-sm focus:ring-2 focus:ring-amber/20 focus:border-amber outline-none transition-all"
+                    placeholder="Ingresa tu número de cédula"
+                  />
+                </>
+              ) : user.cedula_locked ? (
+                <div className="flex items-center gap-2 w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray text-sm">
+                  <svg className="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
+                  </svg>
+                  <span className="flex-1">{user.cedula}</span>
+                  <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-200">Verificada</span>
+                </div>
+              ) : (
+                <input type="text" value={user.cedula} disabled className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray text-sm" />
+              )}
             </div>
           </div>
 
