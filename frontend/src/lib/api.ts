@@ -13,6 +13,7 @@ export interface User {
   balance: number;
   rating_avg: number;
   avatar_url: string | null;
+  is_verified: boolean;
 }
 
 export interface AuthTokens {
@@ -467,4 +468,23 @@ export interface UserRatingSummary {
 
 export function getUserRatings(userId: number): Promise<UserRatingSummary> {
   return request(`/users/${userId}/ratings`);
+}
+
+// ─── Verification ───
+
+export interface VerificationSession {
+  status: string;
+  verification_url?: string;
+  session_id?: string;
+  message?: string;
+}
+
+export function createVerificationSession(): Promise<VerificationSession> {
+  return request("/verification/create", {
+    method: "POST",
+  });
+}
+
+export function getVerificationStatus(): Promise<{ is_verified: boolean; verified_at: string | null }> {
+  return request("/verification/status");
 }

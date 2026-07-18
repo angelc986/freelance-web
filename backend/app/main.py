@@ -7,7 +7,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.limiter import limiter
 from app.database import engine, Base
-from app.routers import auth_router, jobs_router, payments_router, ratings_router, users_router, admin_router, events_router, notifications_router
+from app.routers import auth_router, jobs_router, payments_router, ratings_router, users_router, admin_router, events_router, notifications_router, verification_router
 
 # Sentry - monitoreo de errores en produccion
 import sentry_sdk
@@ -80,6 +80,7 @@ app.include_router(users_router)
 app.include_router(admin_router)
 app.include_router(events_router)
 app.include_router(notifications_router)
+app.include_router(verification_router)
 
 # Servir archivos subidos (avatares)
 os.makedirs("uploads", exist_ok=True)

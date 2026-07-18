@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     MAX_WITHDRAWALS_PER_DAY: int = 3
     LARGE_TX_THRESHOLD: float = 100.0  # Monto para doble confirmación
 
+    # Didit Identity Verification
+    DIDIT_API_KEY: str = os.getenv("DIDIT_API_KEY", "")
+    DIDIT_WEBHOOK_SECRET: str = os.getenv("DIDIT_WEBHOOK_SECRET", "")
+    DIDIT_WORKFLOW_ID: str = os.getenv("DIDIT_WORKFLOW_ID", "")
+
 
 @lru_cache()
 def get_settings() -> Settings:

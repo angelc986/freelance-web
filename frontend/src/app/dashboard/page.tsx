@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import EmptyState from "@/components/EmptyState";
 import PullToRefresh from "@/components/PullToRefresh";
 import { StatSkeleton, CardSkeleton, ActivitySkeleton } from "@/components/Skeleton";
+import VerificationBanner from "@/components/VerificationBanner";
 import { myJobs, getMyApplications, getBalance, type Job, type Application } from "@/lib/api";
 
 // ─── TYPES ───
@@ -276,6 +277,11 @@ export default function DashboardPage() {
         </div>
         <div className="mt-3 h-px bg-gradient-to-r from-primary/30 via-primary/10 to-transparent" />
       </div>
+
+      {/* ═══════ VERIFICATION BANNER ═══════ */}
+      {user && !user.is_verified && (
+        <VerificationBanner onComplete={() => window.location.reload()} />
+      )}
 
       {/* ═══════ STATS CARDS (stagger entrance) ═══════ */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 stagger-children">

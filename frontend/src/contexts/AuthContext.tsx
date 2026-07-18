@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       is_active: true,
       wallet_address: null,
       balance: 1500,
+      is_verified: true,
     },
     "empleado@test.com": {
       id: 2,
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       is_active: true,
       wallet_address: null,
       balance: 580,
+      is_verified: false,
     },
   };
 
