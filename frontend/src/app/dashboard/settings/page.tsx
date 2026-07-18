@@ -117,9 +117,13 @@ export default function SettingsPage() {
       setEmail(user.email);
       setWallet(user.wallet_address || "");
       if (user.avatar_url) setAvatarUrl(resolveAvatarUrl(user.avatar_url));
-      if (hasCedulaHash) setCedula(""); else setCedula(user.cedula || "");
     }
   }, [user]);
+
+  // Only set initial cedula once on mount, never overwrite while user is typing
+  useEffect(() => {
+    if (hasCedulaHash) setCedula(""); else setCedula(user?.cedula || "");
+  }, []);
 
   if (!user) return null;
 
