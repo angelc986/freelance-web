@@ -141,15 +141,18 @@ export default function VerificationCompletePage() {
   useFloatingDots(dotsRef);
 
   // Mock mode: ?mock=verified | ?mock=rejected | ?mock=checking (for preview)
+  const mockRef = useRef<string | null>(null);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const m = params.get("mock");
+    if (m) { mockRef.current = m; }
     if (m === "verified") { setStatus("verified"); return; }
     if (m === "rejected") { setStatus("rejected"); return; }
     if (m === "checking") { setStatus("checking"); return; }
   }, []);
 
   const checkStatus = useCallback(async () => {
+    if (mockRef.current) return; // skip API when mocking
     try {
       const res = await getVerificationStatus();
       if (res.is_verified) { setStatus("verified"); return; }
