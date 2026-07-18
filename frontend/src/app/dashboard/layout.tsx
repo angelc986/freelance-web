@@ -221,7 +221,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
         {/* Top bar — safe-area aware for iPhone notch/dynamic island */}
         <header
           className="border-b border-gray-200/80 bg-white/95 backdrop-blur-xl shadow-sm shadow-gray-200/20 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-40"
