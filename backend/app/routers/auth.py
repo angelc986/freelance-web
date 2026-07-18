@@ -65,9 +65,8 @@ def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     if db_user:
         raise HTTPException(status_code=400, detail="Email ya registrado")
 
-    # Hashear cédula antes de comparar/buscar
-    cedula_hash = hashlib.sha256(user.cedula.encode()).hexdigest()
-    db_user = db.query(User).filter(User.cedula == cedula_hash).first()
+    # Cedula - duplicate check con valor real
+    db_user = db.query(User).filter(User.cedula == user.cedula).first()
     if db_user:
         log_action(None, "register_failed", {"reason": "cedula_duplicada"}, ip=request.client.host)
         raise HTTPException(status_code=400, detail="Cédula ya registrada")
@@ -81,7 +80,7 @@ def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
         email=user.email,
         phone=user.phone,
         full_name=user.full_name,
-        cedula=cedula_hash,
+        cedula=user.cedula,
         password_hash=hashed_password,
         role=user.role,
     )
