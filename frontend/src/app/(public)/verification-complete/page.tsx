@@ -243,8 +243,9 @@ export default function VerificationCompletePage() {
         </div>
       </div>
 
-      {/* Animations */}
+      {/* Override body & animations */}
       <style>{`
+        html, body { background: linear-gradient(to bottom, #EFF6FF 0%, #EFF6FF 92%, #DBEAFE 96%, #BFDBFE 98%, #fff 100%) !important; }
         @keyframes float1 { 0% { transform: translate(0,0) scale(1) rotate(0); } 33% { transform: translate(40px,-25px) scale(1.12) rotate(4deg); } 66% { transform: translate(-20px,15px) scale(0.92) rotate(-2deg); } 100% { transform: translate(15px,-8px) scale(1.04) rotate(1deg); } }
         @keyframes float2 { 0% { transform: translate(0,0) scale(1) rotate(0); } 50% { transform: translate(-35px,20px) scale(1.15) rotate(-6deg); } 100% { transform: translate(20px,-15px) scale(0.88) rotate(5deg); } }
         @keyframes float3 { 0% { transform: translate(0,0) scale(1) rotate(0); } 25% { transform: translate(25px,8px) scale(1.08) rotate(2deg); } 75% { transform: translate(-40px,-20px) scale(0.94) rotate(-3deg); } 100% { transform: translate(8px,25px) scale(1.06) rotate(3deg); } }
