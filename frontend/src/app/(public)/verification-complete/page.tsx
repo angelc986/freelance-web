@@ -140,6 +140,15 @@ export default function VerificationCompletePage() {
   useMeshGradient(meshRef);
   useFloatingDots(dotsRef);
 
+  // Mock mode: ?mock=verified | ?mock=rejected | ?mock=checking (for preview)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const m = params.get("mock");
+    if (m === "verified") { setStatus("verified"); return; }
+    if (m === "rejected") { setStatus("rejected"); return; }
+    if (m === "checking") { setStatus("checking"); return; }
+  }, []);
+
   const checkStatus = useCallback(async () => {
     try {
       const res = await getVerificationStatus();
