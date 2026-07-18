@@ -175,14 +175,14 @@ export default function DashboardLayout({
         </div>
 
         {/* Nav */}
-        <nav className="px-3 py-4 space-y-1.5">
+        <nav className="px-3 py-4 space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = typeof window !== 'undefined' ? pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href)) : false;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={"relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all overflow-hidden border-l-[3px] " + (isActive ? "bg-gradient-to-r from-primary/10 via-primary/5 to-white text-primary border-primary shadow-sm" : "text-gray-500 hover:text-dark hover:bg-gray-100/80 border-transparent")}
+                className={"relative flex items-center justify-start gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors border-l-[3px] w-full " + (isActive ? "bg-gradient-to-r from-primary/10 via-primary/5 to-white text-primary border-primary shadow-sm" : "text-gray-500 hover:text-dark hover:bg-gray-100/80 border-transparent")}
               >
                 {item.icon}
                 {item.label}
