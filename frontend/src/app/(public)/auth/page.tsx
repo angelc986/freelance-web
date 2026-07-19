@@ -290,6 +290,15 @@ function AuthPageInner() {
  const [transition, setTransition] = useState("");
  const current = history[history.length - 1];
 
+ // ─── Sincronizar URL con la pantalla actual ───
+ useEffect(() => {
+   if (current === "welcome") {
+     router.replace("/auth", { scroll: false });
+   } else {
+     router.replace(`/auth?screen=${current}`, { scroll: false });
+   }
+ }, [current, router]);
+
  const [legalOpen, setLegalOpen] = useState(false);
  const [legalTab, setLegalTab] = useState<"terms" | "privacy">("terms");
 
