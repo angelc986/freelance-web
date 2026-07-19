@@ -374,9 +374,7 @@ export default function Home() {
               <div>
                 <p className="text-3xl sm:text-4xl font-bold text-dark flex items-center justify-center gap-1">
                   <Counter target={48} />
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500 inline-block" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
+<svg className="w-5 h-5 sm:w-6 sm:h-6 ml-1.5 inline-block -mt-0.5" viewBox="0 0 22 22" fill="none"><path d="M11 1.5l2.82 5.72 6.31.92-4.57 4.45 1.08 6.28L11 15.44l-5.64 2.97 1.08-6.28L1.87 8.14l6.31-.92L11 1.5z" fill="#FCD34D" stroke="#F59E0B" strokeWidth="0.3" /><path d="M11 3.5l2.12 4.3 4.75.69-3.44 3.35.81 4.72L11 13.9l-4.24 2.23.81-4.72-3.44-3.35 4.75-.69L11 3.5z" fill="url(#starG1)" /><path d="M11 5l1.6 3.24L15.5 8.7l-2.5 2.43.6 3.5L11 12.88l-2.6 1.36.6-3.5L6.5 8.7l2.9-.42L11 5z" fill="white" opacity="0.25" /><defs><linearGradient id="starG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F59E0B" /><stop offset="100%" stopColor="#D97706" /></linearGradient></defs></svg>
                 </p>
                 <p className="text-sm text-gray mt-1">Valoración</p>
               </div>
@@ -455,9 +453,9 @@ export default function Home() {
 
                   {/* Steps with timeline */}
                   <div className="space-y-0">
-                    <BlueStep num={1} title="Publica o busca" desc="El contratista publica el trabajo con todos los detalles. El trabajador encuentra turnos cerca de su ubicaciÃ³n." isLast={false} />
+                    <BlueStep num={1} title="Publica o busca" desc="El contratista publica el trabajo con todos los detalles. El trabajador encuentra turnos cerca de su ubicación." isLast={false} />
                     <BlueStep num={2} title="Conecta al instante" desc="Match directo en minutos. Sin esperar llamadas ni correos. Todo desde la app." isLast={false} />
-                    <BlueStep num={3} title="Pago protegido en USDT" desc="Cada trabajo tiene protecciÃ³n. Depositas los USDT y el pago se libera solo cuando el trabajo estÃ© listo. AsÃ­ de simple." isLast={true} />
+                    <BlueStep num={3} title="Pago protegido en USDT" desc="Cada trabajo tiene protección. Depositas los USDT y el pago se libera solo cuando el trabajo esté listo. Así de simple." isLast={true} />
                   </div>
 
                   {/* CTA */}
@@ -472,7 +470,7 @@ export default function Home() {
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
                       </svg>
-                      MÃ¡s informaciÃ³n
+                      Más información
                     </button>
                     <a
                       href="/auth?screen=register"
@@ -507,13 +505,13 @@ export default function Home() {
                   <div className="space-y-0">
                     <StepRow num={1} title="Llamadas y mensajes" desc="Horas perdidas buscando contactos, preguntando disponibilidad, esperando respuestas." muted isLast={false} />
                     <StepRow num={2} title="Papeleo infinito" desc="Contratos, recibos, transferencias bancarias. Mucha burocracia para algo simple." muted isLast={false} />
-                    <StepRow num={3} title="Pagos lentos" desc="Transferencias que tardan dÃ­as, comisiones altas, efectivo inseguro." muted isLast={true} />
+                    <StepRow num={3} title="Pagos lentos" desc="Transferencias que tardan días, comisiones altas, efectivo inseguro." muted isLast={true} />
                   </div>
 
                   {/* Bottom hint */}
                   <div className="mt-6 pt-5 border-t border-gray-100">
                     <p className="text-xs text-gray-300 text-center italic">
-                      Sin protecciÃ³n, sin garantÃ­as, sin tranquilidad.
+                      Sin protección, sin garantías, sin tranquilidad.
                     </p>
                   </div>
                 </div>
@@ -595,9 +593,7 @@ export default function Home() {
               <div className="animate-float" style={{ animationDelay: "0.8s" }}>
                 <p className="text-4xl sm:text-5xl font-bold text-white">
                   <Counter target={48} />
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400 ml-1.5 inline-block -mt-1" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
+<svg className="w-5 h-5 sm:w-6 sm:h-6 ml-1.5 inline-block -mt-0.5" viewBox="0 0 22 22" fill="none"><path d="M11 1.5l2.82 5.72 6.31.92-4.57 4.45 1.08 6.28L11 15.44l-5.64 2.97 1.08-6.28L1.87 8.14l6.31-.92L11 1.5z" fill="#FCD34D" stroke="#F59E0B" strokeWidth="0.3" /><path d="M11 3.5l2.12 4.3 4.75.69-3.44 3.35.81 4.72L11 13.9l-4.24 2.23.81-4.72-3.44-3.35 4.75-.69L11 3.5z" fill="url(#starG1)" /><path d="M11 5l1.6 3.24L15.5 8.7l-2.5 2.43.6 3.5L11 12.88l-2.6 1.36.6-3.5L6.5 8.7l2.9-.42L11 5z" fill="white" opacity="0.25" /><defs><linearGradient id="starG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F59E0B" /><stop offset="100%" stopColor="#D97706" /></linearGradient></defs></svg>
                 </p>
                 <p className="text-primary-light/80 mt-2 text-sm font-medium">
                   Calificación promedio de trabajadores
@@ -632,7 +628,7 @@ export default function Home() {
                                 <FeatureCard
                   icon={FeatureIcons.target}
                   title="Matching inteligente"
-                  desc="Encuentra al trabajador ideal para cada turno segÃºn su historial, calificaciones y ubicaciÃ³n."
+                  desc="Encuentra al trabajador ideal para cada turno según su historial, calificaciones y ubicación."
                 />
                 <FeatureCard
                   icon={FeatureIcons.shield}
