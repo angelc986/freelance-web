@@ -569,7 +569,7 @@ function AuthPageInner() {
 
  <div className="stagger">
  <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Crear cuenta</h2>
- <p className="text-gray-500 text-[14px] mb-6">Únete hoy — es gratis</p>
+ <p className="text-gray-500 text-[13px] mb-2">Únete hoy — es gratis</p>
  </div>
 
           <div className="stagger">
@@ -577,14 +577,14 @@ function AuthPageInner() {
               <button
                 type="button"
                 onClick={() => setRegRole("worker")}
-                className={"px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 " + (regRole === "worker" ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-700")}
+                className={"px-2.5 py-1 text-[11px] font-medium rounded-full transition-all duration-200 " + (regRole === "worker" ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-700")}
               >
                 Trabajador
               </button>
               <button
                 type="button"
                 onClick={() => setRegRole("contractor")}
-                className={"px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 " + (regRole === "contractor" ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-700")}
+                className={"px-2.5 py-1 text-[11px] font-medium rounded-full transition-all duration-200 " + (regRole === "contractor" ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-700")}
               >
                 Contratista
               </button>
@@ -632,12 +632,12 @@ function AuthPageInner() {
  </div></div>
 
  <div className="stagger">
- <button type="submit" disabled={loading} className="btn-main mt-2 mb-6">{loading ? "Creando cuenta..." : "Crear Cuenta"}</button>
+ <button type="submit" disabled={loading} className="btn-main mt-0 mb-2">{loading ? "Creando cuenta..." : "Crear Cuenta"}</button>
  </div>
  </form>
 
  <div className="stagger">
- <div className="flex items-center gap-4 mb-5"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-600 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
+ <div className="flex items-center gap-3 mb-2"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-600 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
  <div className="flex justify-center">
  <button onClick={handleGoogleLogin} disabled={googleLoading} className="btn-social">
    {googleLoading
@@ -687,12 +687,12 @@ function AuthPageInner() {
  <div className="flex justify-end mb-5">
  <button type="button" onClick={() => push("reset")} className="text-[#2563EB] text-[13px] font-semibold hover:underline">¿Olvidaste tu contraseña?</button>
  </div>
- <button type="submit" disabled={loading} className="btn-main mb-6">{loading ? "Iniciando sesión..." : "Iniciar Sesión"}</button>
+ <button type="submit" disabled={loading} className="btn-main mb-2">{loading ? "Iniciando sesión..." : "Iniciar Sesión"}</button>
  </div>
  </form>
 
  <div className="stagger">
- <div className="flex items-center gap-4 mb-5"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-600 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
+ <div className="flex items-center gap-3 mb-2"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-600 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
  <div className="flex justify-center">
  <button onClick={handleGoogleLogin} disabled={googleLoading} className="btn-social">
    {googleLoading
