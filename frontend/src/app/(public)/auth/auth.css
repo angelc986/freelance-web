@@ -5,7 +5,7 @@
 
 
 
-.auth-page .phone-frame{position:absolute;top:0;right:0;left:0;height:100vh;height:-webkit-fill-available;height:100dvh;background:transparent;overflow:hidden}
+.auth-page .phone-frame{position:absolute;top:0;right:0;left:0;bottom:0;background:transparent;overflow:hidden}
 /* ===== DESKTOP (≥480px): auth full-screen, sin frame de teléfono ===== */
 @media(min-width:480px){
   .auth-page .phone-frame{

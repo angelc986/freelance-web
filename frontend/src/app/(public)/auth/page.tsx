@@ -268,10 +268,22 @@ function AuthPageInner() {
  useParticles(particlesRef);
  useRipple();
 
- // Resetear overflow del body al montar/desmontar (previene scroll trabado al volver)
+ // Bloquear scroll del body/html cuando el auth está montado
  useEffect(() => {
-   document.body.style.overflow = "";
-   return () => { document.body.style.overflow = ""; };
+   const prevBodyOverflow = document.body.style.overflow;
+   const prevHtmlOverflow = document.documentElement.style.overflow;
+   const prevHtmlHeight = document.documentElement.style.height;
+   const prevBodyHeight = document.body.style.height;
+   document.body.style.overflow = "hidden";
+   document.body.style.height = "100dvh";
+   document.documentElement.style.overflow = "hidden";
+   document.documentElement.style.height = "100dvh";
+   return () => {
+     document.body.style.overflow = prevBodyOverflow;
+     document.body.style.height = prevBodyHeight;
+     document.documentElement.style.overflow = prevHtmlOverflow;
+     document.documentElement.style.height = prevHtmlHeight;
+   };
  }, []);
 
  const [history, setHistory] = useState<Screen[]>(["welcome"]);
