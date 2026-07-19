@@ -335,7 +335,7 @@ function AuthPageInner() {
      callback: async (response: { access_token: string }) => {
        try {
          const res = await fetch(
-           `${process.env.NEXT_PUBLIC_API_URL}/auth/google`,
+           `/api/v1/auth/google`,
            {
              method: "POST",
              headers: { "Content-Type": "application/json" },
