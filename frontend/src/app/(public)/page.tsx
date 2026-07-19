@@ -519,6 +519,26 @@ export default function Home() {
         </section>
       </RevealSection>
 
+      {/* ========== DIDIT TRUST ========== */}
+      <RevealSection delay={100}>
+        <section className="py-10 sm:py-12 bg-gradient-to-b from-light to-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 p-5 sm:p-6 rounded-2xl bg-white border border-gray-200/60 shadow-sm max-w-2xl mx-auto">
+              <div className="flex items-center gap-2.5">
+                <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#2563EB" /><path d="M16 6C12 6 9 9 9 13v2a3 3 0 00-3 3v5a3 3 0 003 3h14a3 3 0 003-3v-5a3 3 0 00-3-3v-2c0-4-3-7-7-7z" fill="white" opacity="0.9" /><path d="M14 17l2 2 3-4" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="22" cy="9" r="3" fill="#10B981" /><path d="M21 9l.67.67L23 8.33" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                <span className="font-bold text-base sm:text-lg text-dark tracking-tight">Didit</span>
+              </div>
+              <div className="hidden sm:block w-px h-8 bg-gray-200" />
+              <div className="block sm:hidden w-12 h-px bg-gray-200" />
+              <div className="text-center sm:text-left">
+                <p className="text-sm font-semibold text-dark">Identidad verificada</p>
+                <p className="text-xs text-gray mt-0.5">Cada trabajador verifica su identidad con <span className="font-medium text-primary">Didit</span> antes de activarse</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </RevealSection>
+
       {/* ========== CATEGORÍAS ========== */}
       <RevealSection delay={100}>
         <section id="categorias" className="py-16 sm:py-24">
