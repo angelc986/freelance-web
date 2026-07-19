@@ -1,41 +1,41 @@
 ﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-*,*::before,*::after{box-sizing:border-box}
-*{font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent}
 
-html,body{margin:0;padding:0;height:100%;background:linear-gradient(to bottom,#EFF6FF 0%,#EFF6FF 92%,#DBEAFE 96%,#BFDBFE 98%,#fff 100%)}
 
-.phone-frame{position:absolute;top:0;right:0;left:0;height:100vh;height:-webkit-fill-available;height:100dvh;background:transparent;overflow:hidden}
+
+
+
+.auth-page .phone-frame{position:absolute;top:0;right:0;left:0;height:100vh;height:-webkit-fill-available;height:100dvh;background:transparent;overflow:hidden}
 /* ===== DESKTOP (≥480px): auth full-screen, sin frame de teléfono ===== */
 @media(min-width:480px){
-  .phone-frame{
+  .auth-page .phone-frame{
     position:absolute;top:0;right:0;bottom:0;left:0;
     width:auto;height:100vh;height:-webkit-fill-available;height:100dvh;
     background:transparent;overflow:hidden;
     border-radius:0;box-shadow:none;transform:none;
   }
-  .glass-container{
+  .auth-page .glass-container{
     max-width:100%;
     left:0 !important;
     right:0 !important;
     transform:none;
   }
-  .screen{
+  .auth-page .screen{
     padding:48px 24px 12px;
     align-items:center;
   }
   /* Top-row: logo izq, pill derecha — full width */
-  .screen > .top-bar,
-  .screen > .top-row{
+  .auth-page .screen > .top-bar,
+  .auth-page .screen > .top-row{
     align-self:stretch;
   }
   /* Todos los hijos de screen que NO son top-bar: centrados y con max-width */
-  .screen > *:not(.top-bar):not(.top-row){
+  .auth-page .screen > *:not(.top-bar):not(.top-row){
     width:100%;
     max-width:440px;
   }
   /* Formulario centrado con max-width */
-  .screen .form-area{
+  .auth-page .screen .form-area{
     align-self:center;
     overflow-y:auto;
     justify-content:flex-start;
@@ -44,79 +44,79 @@ html,body{margin:0;padding:0;height:100%;background:linear-gradient(to bottom,#E
     margin-left:auto;
     margin-right:auto;
   }
-  .input-field{
+  .auth-page .input-field{
     font-size:15px;
     padding:14px 16px 14px 44px;
     border-radius:10px;
   }
-  .input-icon{
+  .auth-page .input-icon{
     display:none;
   }
-  .btn-main{
+  .auth-page .btn-main{
     font-size:15px !important;
     padding:14px !important;
     max-width:100% !important;
   }
   /* Botones sociales centrados */
-  .btn-social{
+  .auth-page .btn-social{
     font-size:14px;
     padding:12px;
     max-width:200px;
   }
-  .flex.gap-3{
+  .auth-page .flex.gap-3{
     justify-content:center;
   }
   /* Welcome screen: logo + título centrados */
-  .logo-container{
+  .auth-page .logo-container{
     margin-left:auto;
     margin-right:auto;
   }
-  .legal-text{
+  .auth-page .legal-text{
     font-size:12px;
   }
-  h1,h2{
+  .auth-page h1,h2{
     font-size:clamp(1.5rem,2.5vw,2rem) !important;
   }
-  .email-icon{
+  .auth-page .email-icon{
     width:80px;
     height:80px;
     border-radius:24px;
   }
-  .email-icon svg{
+  .auth-page .email-icon svg{
     width:40px;
     height:40px;
   }
-  .pw-toggle{
+  .auth-page .pw-toggle{
     padding:8px;
   }
-  .top-row .logo-text{font-size:22px;}
-  .top-row svg{width:32px;height:32px;}
-  .pill-toggle{width:180px;height:44px;}
-  .pill-slider{width:86px;}
-  .pill-btn{font-size:14px;}
-  .pill-slider.right{transform:translateX(90px)}
-  .btn-back{
+  .auth-page .top-row .logo-text{font-size:22px;}
+  .auth-page .top-row svg{width:32px;height:32px;}
+  .auth-page .pill-toggle{width:180px;height:44px;}
+  .auth-page .pill-slider{width:86px;}
+  .auth-page .pill-btn{font-size:14px;}
+  .auth-page .pill-slider.right{transform:translateX(90px)}
+  .auth-page .btn-back{
     width:44px;
     height:44px;
   }
   /* Welcome: logo central más grande */
-  .screen-active .logo-mark{
+  .auth-page .screen-active .logo-mark{
     width:100px;
     height:100px;
   }
-  .screen-active .logo-text{
+  .auth-page .screen-active .logo-text{
     font-size:32px;
   }
 }
 
-.mesh-canvas{position:absolute;top:0;right:0;bottom:0;left:0;z-index:0;width:100%;height:100%}
-.blob-layer{position:absolute;top:0;right:0;bottom:0;left:0;z-index:1;overflow:hidden}
-.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.45;animation-iteration-count:infinite;animation-direction:alternate;animation-timing-function:cubic-bezier(0.4,0,0.2,1)}
-.blob-1{width:65%;height:65%;top:-20%;left:-15%;background:radial-gradient(circle,#3B82F6,transparent 70%);animation:float1 20s infinite alternate}
-.blob-2{width:55%;height:55%;bottom:-25%;right:-10%;background:radial-gradient(circle,#2563EB,transparent 70%);animation:float2 24s infinite alternate}
-.blob-3{width:50%;height:50%;top:30%;left:35%;background:radial-gradient(circle,#60A5FA,transparent 70%);animation:float3 30s infinite alternate}
-.blob-4{width:40%;height:40%;top:55%;left:-8%;background:radial-gradient(circle,#93C5FD,transparent 70%);animation:float4 28s infinite alternate}
-.blob-5{width:45%;height:45%;top:5%;right:0;background:radial-gradient(circle,#1D4ED8,transparent 70%);animation:float5 36s infinite alternate}
+.auth-page .mesh-canvas{position:absolute;top:0;right:0;bottom:0;left:0;z-index:0;width:100%;height:100%}
+.auth-page .blob-layer{position:absolute;top:0;right:0;bottom:0;left:0;z-index:1;overflow:hidden}
+.auth-page .blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.45;animation-iteration-count:infinite;animation-direction:alternate;animation-timing-function:cubic-bezier(0.4,0,0.2,1)}
+.auth-page .blob-1{width:65%;height:65%;top:-20%;left:-15%;background:radial-gradient(circle,#3B82F6,transparent 70%);animation:float1 20s infinite alternate}
+.auth-page .blob-2{width:55%;height:55%;bottom:-25%;right:-10%;background:radial-gradient(circle,#2563EB,transparent 70%);animation:float2 24s infinite alternate}
+.auth-page .blob-3{width:50%;height:50%;top:30%;left:35%;background:radial-gradient(circle,#60A5FA,transparent 70%);animation:float3 30s infinite alternate}
+.auth-page .blob-4{width:40%;height:40%;top:55%;left:-8%;background:radial-gradient(circle,#93C5FD,transparent 70%);animation:float4 28s infinite alternate}
+.auth-page .blob-5{width:45%;height:45%;top:5%;right:0;background:radial-gradient(circle,#1D4ED8,transparent 70%);animation:float5 36s infinite alternate}
 @keyframes float1{0%{transform:translate(0,0) scale(1) rotate(0)}33%{transform:translate(40px,-25px) scale(1.12) rotate(4deg)}66%{transform:translate(-20px,15px) scale(.92) rotate(-2deg)}100%{transform:translate(15px,-8px) scale(1.04) rotate(1deg)}}
 @keyframes float2{0%{transform:translate(0,0) scale(1) rotate(0)}50%{transform:translate(-35px,20px) scale(1.15) rotate(-6deg)}100%{transform:translate(20px,-15px) scale(.88) rotate(5deg)}}
 @keyframes float3{0%{transform:translate(0,0) scale(1) rotate(0)}25%{transform:translate(25px,8px) scale(1.08) rotate(2deg)}75%{transform:translate(-40px,-20px) scale(.94) rotate(-3deg)}100%{transform:translate(8px,25px) scale(1.06) rotate(3deg)}}
