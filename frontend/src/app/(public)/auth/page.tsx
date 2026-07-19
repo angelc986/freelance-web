@@ -222,8 +222,8 @@ function Particles({ count = 15 }: { count?: number }) {
 function TopRowLogo({ onBack }: { onBack: () => void }) {
   return (
     <div className="flex items-center gap-2">
-      {/* Logo + texto: solo visible en desktop (md+) */}
-      <div className="hidden md:flex items-center gap-2">
+      {/* Logo + texto: solo visible en desktop (md+) — enlace al inicio */}
+      <a href="/" className="hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity">
         <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs><linearGradient id="tlg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#2563EB"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs>
           <circle cx="24" cy="24" r="22" fill="url(#tlg)"/>
@@ -234,7 +234,7 @@ function TopRowLogo({ onBack }: { onBack: () => void }) {
         </svg>
         <span className="logo-text font-bold tracking-tight">Turno<span style={{color:"#2563EB"}}>GO</span></span>
         <div className="w-px h-4 bg-gray-300 mx-1"></div>
-      </div>
+      </a>
       <button onClick={onBack} className="btn-back" style={{marginLeft:0,width:32,height:32,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",color:"#475569",border:"none",background:"none",cursor:"pointer"}}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
@@ -445,9 +445,9 @@ function AuthPageInner() {
 
  <div className="glass-container">
             {/* ─── Logo flotante: visible en mobile (todas las pantallas), oculto en desktop ─── */}
-            <div className="absolute left-4 z-30 md:hidden" style={{top:"calc(env(safe-area-inset-top,0px) + 14px)"}}>
+            <a href="/" className="absolute left-4 z-30 md:hidden" style={{top:"calc(env(safe-area-inset-top,0px) + 14px)"}}>
               <Logo size="sm" />
-            </div>
+            </a>
 
  {/* ─── Partículas flotantes ─── */}
  <Particles />
