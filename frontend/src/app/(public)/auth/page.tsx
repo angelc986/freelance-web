@@ -637,7 +637,7 @@ function AuthPageInner() {
  </form>
 
  <div className="stagger">
- <div className="flex items-center gap-4 mb-5"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-400 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
+ <div className="flex items-center gap-4 mb-5"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-600 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
  <div className="flex justify-center">
  <button onClick={handleGoogleLogin} disabled={googleLoading} className="btn-social">
    {googleLoading
@@ -692,7 +692,7 @@ function AuthPageInner() {
  </form>
 
  <div className="stagger">
- <div className="flex items-center gap-4 mb-5"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-400 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
+ <div className="flex items-center gap-4 mb-5"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-600 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
  <div className="flex justify-center">
  <button onClick={handleGoogleLogin} disabled={googleLoading} className="btn-social">
    {googleLoading
