@@ -15,18 +15,19 @@ from sqlalchemy import text as sa_text
 # donde PostgreSQL ya tiene tablas creadas sin ciertas columnas
 def run_migrations():
     with engine.connect() as conn:
-        # Agregar columna google_id si no existe (Google OAuth)
         dialect = conn.dialect.name
         try:
             if dialect == "postgresql":
                 conn.execute(sa_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR"))
+                conn.execute(sa_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_completed BOOLEAN DEFAULT FALSE"))
             elif dialect == "sqlite":
-                # SQLite no soporta IF NOT EXISTS para ADD COLUMN
                 cols = [row[1] for row in conn.execute(sa_text("PRAGMA table_info(users)")).fetchall()]
                 if "google_id" not in cols:
                     conn.execute(sa_text("ALTER TABLE users ADD COLUMN google_id VARCHAR"))
+                if "profile_completed" not in cols:
+                    conn.execute(sa_text("ALTER TABLE users ADD COLUMN profile_completed BOOLEAN DEFAULT 0"))
             conn.commit()
-            print(f"[migracion] columna google_id ok ({dialect})")
+            print(f"[migracion] columnas ok ({dialect})")
         except Exception as e:
             print(f"[migracion] aviso: {e}")
 
@@ -77,16 +78,17 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS
+# CORS: permitir todos los orígenes para desarrollo y múltiples frontends
+allow_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://10.0.0.101:3000",
+    "https://freelance-web-beta.vercel.app",
+    "https://freelance-web.vercel.app",
+]
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
-    allow_origins = [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://10.0.0.101:3000",
-        frontend_url,
-    ]
-else:
-    allow_origins = ["*"]
+    allow_origins.append(frontend_url)
 
 app.add_middleware(
     CORSMiddleware,
