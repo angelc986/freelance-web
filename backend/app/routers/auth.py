@@ -14,6 +14,10 @@ from app.models.user import User
 from app.models.refresh_token import RefreshToken
 from app.schemas.user import UserCreate, UserLogin, UserResponse, UpdateProfileRequest, UpdateWalletRequest
 from app.services.audit import log_action
+from app.config import get_settings
+
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
@@ -90,6 +94,96 @@ def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
 
     log_action(db_user.id, "register_success", {"role": user.role}, ip=request.client.host)
     return db_user
+
+
+from pydantic import BaseModel
+
+class GoogleLoginRequest(BaseModel):
+    id_token: str
+
+
+@router.post("/google")
+@limiter.limit("5/minute")
+def google_login(request: Request, body: GoogleLoginRequest, db: Session = Depends(get_db)):
+    """Login/registro con Google OAuth.
+    Recibe un id_token de Google, lo verifica y crea/autentica al usuario.
+    """
+    settings = get_settings()
+    if not settings.GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=500, detail="Google OAuth no configurado")
+
+    id_token_str = body.id_token
+
+    # Verificar el token con Google
+    try:
+        info = id_token.verify_oauth2_token(
+            id_token_str,
+            google_requests.Request(),
+            settings.GOOGLE_CLIENT_ID
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=f"Token de Google inválido: {e}")
+
+    google_id = info["sub"]
+    email = info.get("email", "")
+    name = info.get("name", "")
+    picture = info.get("picture", "")
+
+    if not email:
+        raise HTTPException(status_code=400, detail="La cuenta de Google no tiene email")
+
+    # Buscar usuario existente por Google ID o email
+    user = db.query(User).filter(
+        (User.google_id == google_id) | (User.email == email)
+    ).first()
+
+    if user:
+        # Actualizar google_id si el usuario existe pero no lo tiene
+        if not user.google_id:
+            user.google_id = google_id
+        # Actualizar avatar si no tiene uno
+        if not user.avatar_url and picture:
+            user.avatar_url = picture
+        db.commit()
+        db.refresh(user)
+    else:
+        # Crear usuario nuevo desde Google
+        # Generar placeholders para phone y cédula (el usuario puede cambiarlos después)
+        import secrets as _secrets
+        random_suffix = _secrets.token_hex(4)
+        placeholder_phone = f"+google_{random_suffix}"
+        placeholder_cedula = f"GOOGLE-{google_id[:12]}"
+        # Password aleatorio (nunca se usa, solo para cumplir esquema)
+        random_password = _secrets.token_urlsafe(32)
+        hashed_password = pwd_context.hash(random_password)
+
+        user = User(
+            email=email,
+            phone=placeholder_phone,
+            full_name=name,
+            cedula=placeholder_cedula,
+            password_hash=hashed_password,
+            google_id=google_id,
+            role="worker",
+            avatar_url=picture,
+            is_active=True,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    # Generar JWT tokens
+    access_token = create_access_token({"sub": str(user.id)})
+    refresh_token = create_refresh_token({"sub": str(user.id)}, db)
+
+    log_action(user.id, "google_login", {"email": email}, ip=request.client.host)
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "user": UserResponse.model_validate(user),
+    }
 
 
 @router.post("/login")

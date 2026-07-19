@@ -11,6 +11,7 @@ class User(Base):
     full_name = Column(String, nullable=False)
     cedula = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
+    google_id = Column(String, nullable=True, index=True)
     role = Column(String, default="worker")  # worker o contractor
     is_admin = Column(Boolean, default=False)
     wallet_address = Column(String, nullable=True)
