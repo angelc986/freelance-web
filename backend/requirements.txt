@@ -72,7 +72,6 @@ typing_extensions==4.16.0
 urllib3==2.7.0
 uvicorn==0.51.0
 cloudinary==1.41.0
-google-auth==2.56.0
 web3==7.16.0
 websockets==15.0.1
 wrapt==2.2.2

@@ -16,8 +16,7 @@ from app.schemas.user import UserCreate, UserLogin, UserResponse, UpdateProfileR
 from app.services.audit import log_action
 from app.config import get_settings
 
-from google.auth.transport import requests as google_requests
-from google.oauth2 import id_token
+import requests as http_requests
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
@@ -99,32 +98,35 @@ def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
 from pydantic import BaseModel
 
 class GoogleLoginRequest(BaseModel):
-    id_token: str
+    access_token: str
 
 
 @router.post("/google")
 @limiter.limit("5/minute")
 def google_login(request: Request, body: GoogleLoginRequest, db: Session = Depends(get_db)):
     """Login/registro con Google OAuth.
-    Recibe un id_token de Google, lo verifica y crea/autentica al usuario.
+    Recibe un access_token del popup de Google y obtiene los datos del usuario.
     """
     settings = get_settings()
     if not settings.GOOGLE_CLIENT_ID:
         raise HTTPException(status_code=500, detail="Google OAuth no configurado")
 
-    id_token_str = body.id_token
-
-    # Verificar el token con Google
+    # Usar el access_token para obtener info del usuario desde Google
     try:
-        info = id_token.verify_oauth2_token(
-            id_token_str,
-            google_requests.Request(),
-            settings.GOOGLE_CLIENT_ID
+        resp = http_requests.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            headers={"Authorization": f"Bearer {body.access_token}"},
+            timeout=10,
         )
-    except ValueError as e:
-        raise HTTPException(status_code=401, detail=f"Token de Google inválido: {e}")
+        if resp.status_code != 200:
+            raise HTTPException(status_code=401, detail="Token de Google invalido o expirado")
+        info = resp.json()
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Error al verificar token con Google: {e}")
 
-    google_id = info["sub"]
+    google_id = info.get("sub", "")
     email = info.get("email", "")
     name = info.get("name", "")
     picture = info.get("picture", "")

@@ -315,7 +315,7 @@ function AuthPageInner() {
  const [legalTab, setLegalTab] = useState<"terms" | "privacy">("terms");
  const [googleLoading, setGoogleLoading] = useState(false);
 
-  // ─── Google OAuth ───
+  // ─── Google OAuth (popup, sin FedCM) ───
  const handleGoogleLogin = useCallback(async () => {
    if (!googleClientId) {
      setError("Google OAuth no configurado. Contacta al administrador.");
@@ -323,56 +323,47 @@ function AuthPageInner() {
    }
    setGoogleLoading(true);
    setError("");
-   try {
-     if (!(window as any).google?.accounts?.id) {
-       await new Promise<void>((resolve) => {
-         const check = setInterval(() => {
-           if ((window as any).google?.accounts?.id) {
-             clearInterval(check);
-             resolve();
+   const google = (window as any).google;
+   if (!google?.accounts?.oauth2) {
+     setError("Google Identity Services no cargo. Recarga la pagina.");
+     setGoogleLoading(false);
+     return;
+   }
+   const client = google.accounts.oauth2.initTokenClient({
+     client_id: googleClientId,
+     scope: "openid email profile",
+     callback: async (response: { access_token: string }) => {
+       try {
+         const res = await fetch(
+           `${process.env.NEXT_PUBLIC_API_URL}/auth/google`,
+           {
+             method: "POST",
+             headers: { "Content-Type": "application/json" },
+             body: JSON.stringify({ access_token: response.access_token }),
            }
-         }, 100);
-       });
-     }
-     (window as any).google.accounts.id.initialize({
-       client_id: googleClientId,
-       callback: (response: { credential: string }) => {
-         handleGoogleCredential(response.credential);
-       },
-       cancel_on_tap_outside: false,
-     });
-     (window as any).google.accounts.id.prompt();
-   } catch (err) {
-     console.error("Google login error:", err);
-     setError("Error al iniciar sesion con Google");
-     setGoogleLoading(false);
-   }
- }, [googleClientId]);
-
- const handleGoogleCredential = useCallback(async (credential: string) => {
-   try {
-     const res = await fetch(
-       `${process.env.NEXT_PUBLIC_API_URL}/auth/google`,
-       {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ id_token: credential }),
+         );
+         if (!res.ok) {
+           const err = await res.json().catch(() => ({ detail: "Error desconocido" }));
+           throw new Error(err.detail || "Error al autenticar con Google");
+         }
+         const data = await res.json();
+         localStorage.setItem("access_token", data.access_token);
+         localStorage.setItem("refresh_token", data.refresh_token);
+         window.location.href = "/dashboard";
+       } catch (err: any) {
+         console.error("Google token error:", err);
+         setError(err.message || "Error al iniciar sesion con Google");
+         setGoogleLoading(false);
        }
-     );
-     if (!res.ok) {
-       const err = await res.json().catch(() => ({ detail: "Error desconocido" }));
-       throw new Error(err.detail || "Error al autenticar con Google");
-     }
-     const data = await res.json();
-     localStorage.setItem("access_token", data.access_token);
-     localStorage.setItem("refresh_token", data.refresh_token);
-     window.location.href = "/dashboard";
-   } catch (err: any) {
-     console.error("Google credential error:", err);
-     setError(err.message || "Error al iniciar sesion con Google");
-     setGoogleLoading(false);
-   }
- }, []);
+     },
+     error_callback: (error: any) => {
+       console.error("Google popup error:", error);
+       setError("Se cancelo o no se pudo completar el inicio con Google");
+       setGoogleLoading(false);
+     },
+   });
+   client.requestAccessToken();
+ }, [googleClientId]);
 
  // Form state
  const [regFirstName, setRegFirstName] = useState("");
