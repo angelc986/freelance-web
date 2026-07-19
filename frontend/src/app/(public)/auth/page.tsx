@@ -568,7 +568,7 @@ function AuthPageInner() {
  </div>
 
  <div className="stagger">
- <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Crear cuenta</h2>
+ <h2 className="text-[22px] font-bold mb-0.5 tracking-tight text-gray-900">Crear cuenta</h2>
  <p className="text-gray-500 text-[13px] mb-2">Únete hoy — es gratis</p>
  </div>
 
@@ -661,7 +661,7 @@ function AuthPageInner() {
  </div>
 
  <div className="stagger">
- <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Bienvenido de nuevo</h2>
+ <h2 className="text-[22px] font-bold mb-0.5 tracking-tight text-gray-900">Bienvenido de nuevo</h2>
  <p className="text-gray-500 text-[14px] mb-6">Inicia sesión para continuar</p>
  </div>
 
