@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -6,14 +6,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import Logo from "@/components/Logo";
 import "./auth.css";
 
-/* ══════════════════════════════════════════════════════════════
+/* --------------------------------------------------------------
    SCREENS: welcome | register | login | reset | email
-   ══════════════════════════════════════════════════════════════ */
+   -------------------------------------------------------------- */
 type Screen = "welcome" | "register" | "login" | "reset" | "email";
 
-/* ══════════════════════════════════════════════════════════════
+/* --------------------------------------------------------------
    MESH GRADIENT (Canvas)
-   ══════════════════════════════════════════════════════════════ */
+   -------------------------------------------------------------- */
 function useMeshGradient(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
  useEffect(() => {
  const canvas = canvasRef.current;
@@ -94,9 +94,9 @@ function useMeshGradient(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
  }, [canvasRef]);
 }
 
-/* ══════════════════════════════════════════════════════════════
+/* --------------------------------------------------------------
    PARTICLES (Canvas)
-   ══════════════════════════════════════════════════════════════ */
+   -------------------------------------------------------------- */
 function useParticles(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
  useEffect(() => {
  const canvas = canvasRef.current;
@@ -155,9 +155,9 @@ function useParticles(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
  }, [canvasRef]);
 }
 
-/* ══════════════════════════════════════════════════════════════
+/* --------------------------------------------------------------
    RIPPLE HOOK
-   ══════════════════════════════════════════════════════════════ */
+   -------------------------------------------------------------- */
 function useRipple() {
  useEffect(() => {
  const handler = (e: MouseEvent) => {
@@ -178,9 +178,9 @@ function useRipple() {
  }, []);
 }
 
-/* ══════════════════════════════════════════════════════════════
+/* --------------------------------------------------------------
    FLOATING PARTICLES (burbujas azules)
-   ══════════════════════════════════════════════════════════════ */
+   -------------------------------------------------------------- */
 function Particles({ count = 15 }: { count?: number }) {
  const particles = Array.from({ length: count }, (_, i) => ({
  id: i,
@@ -214,15 +214,15 @@ function Particles({ count = 15 }: { count?: number }) {
  );
 }
 
-/* ══════════════════════════════════════════════════════════════
+/* --------------------------------------------------------------
    TOP ROW (logo + separator + back button)
-   Desktop: logo SVG + TurnoGO + | + ←
-   Mobile: solo ←
-   ══════════════════════════════════════════════════════════════ */
+   Desktop: logo SVG + TurnoGO + | + ?
+   Mobile: solo ?
+   -------------------------------------------------------------- */
 function TopRowLogo({ onBack }: { onBack: () => void }) {
   return (
     <div className="flex items-center gap-2">
-      {/* Logo + texto: solo visible en desktop (md+) — enlace al inicio */}
+      {/* Logo + texto: solo visible en desktop (md+) � enlace al inicio */}
       <a href="/" className="hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity">
         <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs><linearGradient id="tlg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#2563EB"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs>
@@ -242,9 +242,9 @@ function TopRowLogo({ onBack }: { onBack: () => void }) {
   );
 }
 
-/* ══════════════════════════════════════════════════════════════
+/* --------------------------------------------------------------
    MAIN COMPONENT
-   ══════════════════════════════════════════════════════════════ */
+   -------------------------------------------------------------- */
 export default function AuthPage() {
  return (
  <Suspense fallback={
@@ -268,7 +268,7 @@ function AuthPageInner() {
  useParticles(particlesRef);
  useRipple();
 
- // Bloquear scroll del body/html cuando el auth está montado
+ // Bloquear scroll del body/html cuando el auth est� montado
  useEffect(() => {
    const prevBodyOverflow = document.body.style.overflow;
    const prevHtmlOverflow = document.documentElement.style.overflow;
@@ -292,7 +292,7 @@ function AuthPageInner() {
 
  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
- // ─── Cargar Google Identity Services ───
+ // --- Cargar Google Identity Services ---
  useEffect(() => {
    if (!googleClientId) return;
    const script = document.createElement("script");
@@ -302,7 +302,7 @@ function AuthPageInner() {
    document.head.appendChild(script);
  }, [googleClientId]);
 
- // ─── Sincronizar URL con la pantalla actual ───
+ // --- Sincronizar URL con la pantalla actual ---
  useEffect(() => {
    if (current === "welcome") {
      router.replace("/auth", { scroll: false });
@@ -315,7 +315,7 @@ function AuthPageInner() {
  const [legalTab, setLegalTab] = useState<"terms" | "privacy">("terms");
  const [googleLoading, setGoogleLoading] = useState(false);
 
-  // ─── Google OAuth (popup, sin FedCM) ───
+  // --- Google OAuth (popup, sin FedCM) ---
  const handleGoogleLogin = useCallback(async () => {
    if (!googleClientId) {
      setError("Google OAuth no configurado. Contacta al administrador.");
@@ -384,7 +384,7 @@ function AuthPageInner() {
  const [error, setError] = useState("");
  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
- // ─── Redirect if already logged in ───
+ // --- Redirect if already logged in ---
  useEffect(() => {
  if (user) {
  if (user.is_admin) router.push("/admin");
@@ -392,7 +392,7 @@ function AuthPageInner() {
  }
  }, [user, router]);
 
- // ─── Auto-navigate from ?screen= param ───
+ // --- Auto-navigate from ?screen= param ---
  useEffect(() => {
  const screen = searchParams.get("screen");
  if (screen === "login" || screen === "register" || screen === "reset") {
@@ -400,7 +400,7 @@ function AuthPageInner() {
  }
  }, [searchParams]);
 
- // ─── Navigation ───
+ // --- Navigation ---
  const push = useCallback((screen: Screen) => {
  const last = history[history.length - 1];
  if (last === screen) return;
@@ -427,7 +427,7 @@ function AuthPageInner() {
  });
  }, []);
 
- // ─── Screen class ───
+ // --- Screen class ---
  function screenClass(s: Screen) {
  const idx = history.indexOf(s);
  if (idx === -1) return "screen screen-hidden";
@@ -437,7 +437,7 @@ function AuthPageInner() {
  return "screen screen-right";
  }
 
- // ─── Handlers ───
+ // --- Handlers ---
  async function handleLogin(e: React.FormEvent) {
  e.preventDefault();
  setError("");
@@ -447,7 +447,7 @@ function AuthPageInner() {
  const u = await login(loginEmail, loginPassword);
  router.push(u.is_admin ? "/admin" : "/dashboard");
  } catch (err: any) {
- setError(err.message || "Error al iniciar sesión");
+ setError(err.message || "Error al iniciar sesi�n");
  } finally { setLoading(false); }
  }
 
@@ -455,7 +455,7 @@ function AuthPageInner() {
  e.preventDefault();
  setError("");
  if (!regFirstName || !regLastName || !regEmail || !regPhone || !regCedula || !regPassword) { setError("Completa todos los campos"); return; }
- if (regPassword.length < 6) { setError("La contraseña debe tener al menos 6 caracteres"); return; }
+ if (regPassword.length < 6) { setError("La contrase�a debe tener al menos 6 caracteres"); return; }
  setLoading(true);
  try {
  const u = await register({
@@ -479,7 +479,7 @@ function AuthPageInner() {
  btn.textContent = "Enviando...";
  btn.style.opacity = "0.7";
  setTimeout(() => {
- btn.textContent = "¡Enviado! ✓";
+ btn.textContent = "�Enviado! ?";
  btn.classList.add("done");
  btn.style.opacity = "1";
  setTimeout(() => {
@@ -491,7 +491,7 @@ function AuthPageInner() {
  }, 1200);
  }
 
- // ─── Stagger animation trigger ───
+ // --- Stagger animation trigger ---
  useEffect(() => {
  const timers: NodeJS.Timeout[] = [];
  const items = document.querySelectorAll('.stagger');
@@ -505,7 +505,7 @@ function AuthPageInner() {
 
  return (
  <>
- {/* ═══════ CONTAINER ═══════ */}
+ {/* ------- CONTAINER ------- */}
  <div className="phone-frame auth-page">
  <canvas ref={meshRef} className="mesh-canvas" />
  <div className="blob-layer">
@@ -516,17 +516,17 @@ function AuthPageInner() {
  <canvas ref={particlesRef} className="particle-canvas" />
 
  <div className="glass-container">
-            {/* ─── Logo flotante: visible en mobile (todas las pantallas), oculto en desktop ─── */}
+            {/* --- Logo flotante: visible en mobile (todas las pantallas), oculto en desktop --- */}
             <a href="/" className="absolute left-4 z-30 md:hidden" style={{top:"calc(env(safe-area-inset-top,0px) + 14px)"}}>
               <Logo size="sm" />
             </a>
 
- {/* ─── Partículas flotantes ─── */}
+ {/* --- Part�culas flotantes --- */}
  <Particles />
 
- {/* ═══════ 1. WELCOME ═══════ */}
+ {/* ------- 1. WELCOME ------- */}
  <div className={screenClass("welcome")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
-            {/* Top row: logo + back — uniforme en las 5 pantallas (desktop) */}
+            {/* Top row: logo + back � uniforme en las 5 pantallas (desktop) */}
             <div className="top-row top-bar">
               <TopRowLogo onBack={() => router.push('/')} />
             </div>
@@ -547,16 +547,16 @@ function AuthPageInner() {
  </div>
  </div>
  <h1 className="text-[30px] font-extrabold mb-2 tracking-tight text-gray-900 stagger">Bienvenido</h1>
- <p className="text-gray-500 text-[15px] max-w-[260px] mx-auto leading-relaxed stagger">Encuentra trabajos, conecta y crece. Tu oportunidad empieza aquí.</p>
+ <p className="text-gray-500 text-[15px] max-w-[260px] mx-auto leading-relaxed stagger">Encuentra trabajos, conecta y crece. Tu oportunidad empieza aqu�.</p>
  </div>
  <div className="space-y-3 pb-2">
  <div className="stagger"><button onClick={() => push("register")} className="btn-main" style={{fontSize:17,padding:"18px 28px",marginTop:-16}}>Comenzar</button></div>
  <div className="stagger"><button onClick={() => push("login")} className="ghost-btn">Ya tengo una cuenta</button></div>
  </div>
- <div className="stagger"><p className="legal-text text-center mt-auto">Al continuar aceptas nuestros <a href="#" onClick={(e) => { e.preventDefault(); setLegalTab("terms"); setLegalOpen(true); }}>Términos</a> y <a href="#" onClick={(e) => { e.preventDefault(); setLegalTab("privacy"); setLegalOpen(true); }}>Privacidad</a>.</p></div>
+ <div className="stagger"><p className="legal-text text-center mt-auto">Al continuar aceptas nuestros <a href="#" onClick={(e) => { e.preventDefault(); setLegalTab("terms"); setLegalOpen(true); }}>T�rminos</a> y <a href="#" onClick={(e) => { e.preventDefault(); setLegalTab("privacy"); setLegalOpen(true); }}>Privacidad</a>.</p></div>
  </div>
 
- {/* ═══════ 2. REGISTER ═══════ */}
+ {/* ------- 2. REGISTER ------- */}
  <div className={screenClass("register")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
  <div className="top-row top-bar">
  <TopRowLogo onBack={pop} />
@@ -569,7 +569,7 @@ function AuthPageInner() {
 
  <div className="stagger">
  <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Crear cuenta</h2>
- <p className="text-gray-500 text-[14px] mb-6">Únete hoy — es gratis</p>
+ <p className="text-gray-500 text-[14px] mb-6">�nete hoy � es gratis</p>
  </div>
 
           <div className="stagger">
@@ -605,25 +605,25 @@ function AuthPageInner() {
 
  <div className="stagger"><div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
- <input type="email" className="input-field" placeholder="Correo electrónico" value={regEmail} onChange={e => setRegEmail(e.target.value)} />
+ <input type="email" className="input-field" placeholder="Correo electr�nico" value={regEmail} onChange={e => setRegEmail(e.target.value)} />
  </div></div>
 
  <div className="stagger">
  <div className="grid grid-cols-2 gap-3">
  <div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
- <input type="tel" className="input-field" placeholder="Teléfono" value={regPhone} onChange={e => setRegPhone(e.target.value)} />
+ <input type="tel" className="input-field" placeholder="Tel�fono" value={regPhone} onChange={e => setRegPhone(e.target.value)} />
  </div>
  <div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V7.5A2.25 2.25 0 0019.5 5.25h-15a2.25 2.25 0 00-2.25 2.25v9.75A2.25 2.25 0 004.5 19.5zm6.75-10.5a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z"/></svg>
- <input type="text" className="input-field" placeholder="Cédula" value={regCedula} onChange={e => setRegCedula(e.target.value)} />
+ <input type="text" className="input-field" placeholder="C�dula" value={regCedula} onChange={e => setRegCedula(e.target.value)} />
  </div>
  </div>
  </div>
 
  <div className="stagger"><div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
- <input type={regShowPw ? "text" : "password"} className="input-field" placeholder="Contraseña" value={regPassword} onChange={e => setRegPassword(e.target.value)} />
+ <input type={regShowPw ? "text" : "password"} className="input-field" placeholder="Contrase�a" value={regPassword} onChange={e => setRegPassword(e.target.value)} />
  <button type="button" onClick={() => setRegShowPw(!regShowPw)} className="pw-toggle">
  {regShowPw
  ? <svg className="w-5 h-5" fill="none" stroke="#475569" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
@@ -637,22 +637,19 @@ function AuthPageInner() {
  </form>
 
  <div className="stagger">
- <div className="flex items-center gap-4 mb-5"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-400 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
- <div className="flex gap-3">
+ <div className="flex items-center gap-4 mb-5"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-400 text-xs font-medium">O contin�a con</span><div className="flex-1 h-px bg-gray-200"></div></div>
+ <div className="flex justify-center">
  <button onClick={handleGoogleLogin} disabled={googleLoading} className="btn-social">
    {googleLoading
      ? <span className="inline-block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-     : <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5 5 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/></svg>}
+     : <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0124 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>}
    Google
-  </button>
-  <button className="btn-social" onClick={() => setError("Apple Sign In prosimamente")}>
-   <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>Apple
   </button>
  </div>
  </div>
  </div>
 
- {/* ═══════ 3. LOGIN ═══════ */}
+ {/* ------- 3. LOGIN ------- */}
  <div className={screenClass("login")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
  <div className="top-row top-bar">
  <TopRowLogo onBack={pop} />
@@ -665,7 +662,7 @@ function AuthPageInner() {
 
  <div className="stagger">
  <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Bienvenido de nuevo</h2>
- <p className="text-gray-500 text-[14px] mb-6">Inicia sesión para continuar</p>
+ <p className="text-gray-500 text-[14px] mb-6">Inicia sesi�n para continuar</p>
  </div>
 
  {error && <div className="error-msg">{error}</div>}
@@ -673,12 +670,12 @@ function AuthPageInner() {
  <form onSubmit={handleLogin}>
  <div className="stagger"><div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
- <input type="email" className="input-field" placeholder="Correo electrónico" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} />
+ <input type="email" className="input-field" placeholder="Correo electr�nico" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} />
  </div></div>
 
  <div className="stagger"><div className="input-group mb-1">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
- <input type={loginShowPw ? "text" : "password"} className="input-field" placeholder="Contraseña" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
+ <input type={loginShowPw ? "text" : "password"} className="input-field" placeholder="Contrase�a" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
  <button type="button" onClick={() => setLoginShowPw(!loginShowPw)} className="pw-toggle">
  {loginShowPw
  ? <svg className="w-5 h-5" fill="none" stroke="#475569" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
@@ -688,54 +685,51 @@ function AuthPageInner() {
 
  <div className="stagger">
  <div className="flex justify-end mb-5">
- <button type="button" onClick={() => push("reset")} className="text-[#2563EB] text-[13px] font-semibold hover:underline">¿Olvidaste tu contraseña?</button>
+ <button type="button" onClick={() => push("reset")} className="text-[#2563EB] text-[13px] font-semibold hover:underline">�Olvidaste tu contrase�a?</button>
  </div>
- <button type="submit" disabled={loading} className="btn-main mb-6">{loading ? "Iniciando sesión..." : "Iniciar Sesión"}</button>
+ <button type="submit" disabled={loading} className="btn-main mb-6">{loading ? "Iniciando sesi�n..." : "Iniciar Sesi�n"}</button>
  </div>
  </form>
 
  <div className="stagger">
- <div className="flex items-center gap-4 mb-5"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-400 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
- <div className="flex gap-3">
+ <div className="flex items-center gap-4 mb-5"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-400 text-xs font-medium">O contin�a con</span><div className="flex-1 h-px bg-gray-200"></div></div>
+ <div className="flex justify-center">
  <button onClick={handleGoogleLogin} disabled={googleLoading} className="btn-social">
    {googleLoading
      ? <span className="inline-block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-     : <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5 5 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/></svg>}
+     : <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0124 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>}
    Google
-  </button>
-  <button className="btn-social" onClick={() => setError("Apple Sign In prosimamente")}>
-   <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>Apple
   </button>
  </div>
  </div>
  </div>
 
- {/* ═══════ 4. RESET PASSWORD ═══════ */}
+ {/* ------- 4. RESET PASSWORD ------- */}
  <div className={screenClass("reset")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
  <div className="top-row top-bar">
  <TopRowLogo onBack={pop} />
  </div>
 
  <div className="stagger">
- <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Restablecer contraseña</h2>
- <p className="text-gray-500 text-[14px] leading-relaxed mb-6">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+ <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Restablecer contrase�a</h2>
+ <p className="text-gray-500 text-[14px] leading-relaxed mb-6">Ingresa tu correo y te enviaremos un enlace para restablecer tu contrase�a.</p>
  </div>
 
  <div className="stagger"><div className="input-group mb-6">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
- <input type="email" className="input-field" placeholder="Correo electrónico" value={resetEmail} onChange={e => setResetEmail(e.target.value)} />
+ <input type="email" className="input-field" placeholder="Correo electr�nico" value={resetEmail} onChange={e => setResetEmail(e.target.value)} />
  </div></div>
 
  <div className="stagger">
  <button onClick={simulateReset} className="btn-main mb-5" id="send-link-btn">Enviar Enlace</button>
  <button onClick={() => popTo("login")} className="link-btn w-full py-2">
  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
- Volver a iniciar sesión
+ Volver a iniciar sesi�n
  </button>
  </div>
  </div>
 
- {/* ═══════ 5. CHECK EMAIL ═══════ */}
+ {/* ------- 5. CHECK EMAIL ------- */}
  <div className={screenClass("email")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
  <div className="top-row top-bar">
  <TopRowLogo onBack={() => popTo("reset")} />
@@ -749,7 +743,7 @@ function AuthPageInner() {
  </div>
  <div className="stagger">
  <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Revisa tu correo</h2>
- <p className="text-gray-500 text-[14px] max-w-[260px] mx-auto leading-relaxed mb-8">Te enviamos un enlace para restablecer tu contraseña.</p>
+ <p className="text-gray-500 text-[14px] max-w-[260px] mx-auto leading-relaxed mb-8">Te enviamos un enlace para restablecer tu contrase�a.</p>
  </div>
  <div className="stagger space-y-3">
  <button className="btn-main">Abrir Correo</button>
@@ -758,7 +752,7 @@ function AuthPageInner() {
  <div className="stagger">
  <button onClick={() => popTo("login")} className="link-btn w-full py-2 mt-4">
  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
- Volver a iniciar sesión
+ Volver a iniciar sesi�n
  </button>
  </div>
  </div>
@@ -779,9 +773,9 @@ function AuthPageInner() {
  );
 }
 
-/* ══════════════════════════════════════════════════════════════
+/* --------------------------------------------------------------
    LEGAL MODAL
-   ══════════════════════════════════════════════════════════════ */
+   -------------------------------------------------------------- */
 function LegalModal({ tab, onClose }: { tab: "terms" | "privacy"; onClose: () => void }) {
  const [active, setActive] = useState<"terms" | "privacy">(tab);
 
@@ -812,7 +806,7 @@ function LegalModal({ tab, onClose }: { tab: "terms" | "privacy"; onClose: () =>
  onClick={() => setActive("terms")}
  className={"flex-1 py-2.5 rounded-lg text-sm font-medium transition-all " + (active === "terms" ? "bg-white text-primary shadow-sm" : "text-gray hover:text-dark")}
  >
- Términos
+ T�rminos
  </button>
  <button
  onClick={() => setActive("privacy")}
@@ -836,27 +830,27 @@ function TermsContent() {
  return (
  <>
  <div>
- <h3 className="font-semibold text-dark text-base mb-2">1. Aceptación</h3>
- <p>Al registrarte y usar TurnoGO aceptas estos términos. La plataforma conecta trabajadores con contratistas, actuando como intermediaria tecnológica.</p>
+ <h3 className="font-semibold text-dark text-base mb-2">1. Aceptaci�n</h3>
+ <p>Al registrarte y usar TurnoGO aceptas estos t�rminos. La plataforma conecta trabajadores con contratistas, actuando como intermediaria tecnol�gica.</p>
  </div>
  <div>
  <h3 className="font-semibold text-dark text-base mb-2">2. Obligaciones</h3>
- <p>Los trabajadores deben cumplir con los servicios contratados. Los contratistas deben pagar el monto acordado. Está prohibido acordar pagos fuera de la plataforma.</p>
+ <p>Los trabajadores deben cumplir con los servicios contratados. Los contratistas deben pagar el monto acordado. Est� prohibido acordar pagos fuera de la plataforma.</p>
  </div>
  <div>
  <h3 className="font-semibold text-dark text-base mb-2">3. Pagos</h3>
- <p>Los USDT quedan retenidos en escrow hasta que el contratista confirme el trabajo. TurnoGO cobra una comisión por cada trabajo completado.</p>
+ <p>Los USDT quedan retenidos en escrow hasta que el contratista confirme el trabajo. TurnoGO cobra una comisi�n por cada trabajo completado.</p>
  </div>
  <div>
  <h3 className="font-semibold text-dark text-base mb-2">4. Conducta prohibida</h3>
- <p>No crear cuentas falsas, no acosar, no discriminar. El incumplimiento resulta en suspensión permanente de la cuenta.</p>
+ <p>No crear cuentas falsas, no acosar, no discriminar. El incumplimiento resulta en suspensi�n permanente de la cuenta.</p>
  </div>
  <div>
  <h3 className="font-semibold text-dark text-base mb-2">5. Modificaciones</h3>
- <p>TurnoGO puede modificar estos términos. Los cambios serán notificados con anticipación. El uso continuo constituye aceptación.</p>
+ <p>TurnoGO puede modificar estos t�rminos. Los cambios ser�n notificados con anticipaci�n. El uso continuo constituye aceptaci�n.</p>
  </div>
  <div className="pt-3 text-xs text-gray-400 border-t border-gray-100">
- <a href="/terminos" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>Leer términos completos →</a>
+ <a href="/terminos" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>Leer t�rminos completos ?</a>
  </div>
  </>
  );
@@ -867,26 +861,26 @@ function PrivacyContent() {
  <>
  <div>
  <h3 className="font-semibold text-dark text-base mb-2">1. Datos recopilados</h3>
- <p>Recopilamos nombre, email, teléfono, cédula, foto y datos de uso. Tus documentos se comparten con Didit para verificación de identidad.</p>
+ <p>Recopilamos nombre, email, tel�fono, c�dula, foto y datos de uso. Tus documentos se comparten con Didit para verificaci�n de identidad.</p>
  </div>
  <div>
  <h3 className="font-semibold text-dark text-base mb-2">2. Uso de datos</h3>
- <p>Usamos tu información para gestionar tu cuenta, conectarte con trabajos, procesar pagos y mejorar la plataforma. No vendemos datos a terceros.</p>
+ <p>Usamos tu informaci�n para gestionar tu cuenta, conectarte con trabajos, procesar pagos y mejorar la plataforma. No vendemos datos a terceros.</p>
  </div>
  <div>
- <h3 className="font-semibold text-dark text-base mb-2">3. Protección</h3>
- <p>Tu cédula se almacena encriptada (hash SHA-256). Usamos conexiones HTTPS. Datos sensibles solo accesibles por personal autorizado.</p>
+ <h3 className="font-semibold text-dark text-base mb-2">3. Protecci�n</h3>
+ <p>Tu c�dula se almacena encriptada (hash SHA-256). Usamos conexiones HTTPS. Datos sensibles solo accesibles por personal autorizado.</p>
  </div>
  <div>
- <h3 className="font-semibold text-dark text-base mb-2">4. Retención</h3>
- <p>Conservamos tus datos mientras tengas cuenta activa. Al eliminar tu cuenta, los datos personales se borran en 30 días.</p>
+ <h3 className="font-semibold text-dark text-base mb-2">4. Retenci�n</h3>
+ <p>Conservamos tus datos mientras tengas cuenta activa. Al eliminar tu cuenta, los datos personales se borran en 30 d�as.</p>
  </div>
  <div>
  <h3 className="font-semibold text-dark text-base mb-2">5. Tus derechos</h3>
- <p>Puedes acceder, rectificar o eliminar tus datos desde configuración. Para más información, contáctanos por la plataforma.</p>
+ <p>Puedes acceder, rectificar o eliminar tus datos desde configuraci�n. Para m�s informaci�n, cont�ctanos por la plataforma.</p>
  </div>
  <div className="pt-3 text-xs text-gray-400 border-t border-gray-100">
- <a href="/privacidad" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>Leer política completa →</a>
+ <a href="/privacidad" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>Leer pol�tica completa ?</a>
  </div>
  </>
  );
