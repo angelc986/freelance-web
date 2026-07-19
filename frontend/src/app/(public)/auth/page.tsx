@@ -558,82 +558,89 @@ function AuthPageInner() {
  <Particles />
 
  {/* ------- 5. COMPLETE PROFILE ------- */}
- <div className={screenClass("complete")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 24px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 8px)"} }>
+ <div className={screenClass("complete")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 40px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"} }>
  <div className="top-row top-bar">
  <TopRowLogo onBack={pop} />
  </div>
 
- <div className="stagger">
- <h2 className="text-[20px] font-bold mb-0.5 tracking-tight text-gray-900">Completa tu perfil</h2>
- <p className="text-gray-600 text-[12px]">Solo unos datos más para terminar</p>
+ <div className="stagger text-center">
+ <div className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-100 rounded-full px-3.5 py-1 mb-3">
+ <svg className="w-3 h-3 text-primary" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+ <span className="text-[11px] font-semibold text-primary">{regRole === "worker" ? "Trabajador" : "Contratista"}</span>
  </div>
-
- <div className="stagger">
- <div className="flex items-center gap-1 bg-slate-100 rounded-full p-0.5 w-fit mx-auto mb-3">
- <span className="px-2.5 py-1 text-[11px] font-medium rounded-full bg-primary text-white shadow-sm">{regRole === "worker" ? "Trabajador" : "Contratista"}</span>
- </div>
+ <h2 className="text-[22px] font-bold tracking-tight text-gray-900">Completa tu perfil</h2>
+ <p className="text-gray-500 text-[13px] mt-1">Cuéntanos un poco sobre ti</p>
  </div>
 
  {error && <div className="error-msg">{error}</div>}
 
  <form onSubmit={handleCompleteProfile}>
 
- {/*** Datos personales ***/}
- <div className="stagger">
- <div className="flex items-center gap-2 mb-2">
- <svg className="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
- <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">Datos personales</span>
- <div className="flex-1 h-px bg-gray-100"></div>
+ {/*** Card: Datos personales ***/}
+ <div className="stagger bg-white rounded-xl border border-gray-100 shadow-sm p-4 mt-4">
+ <div className="flex items-center gap-2 mb-3">
+ <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center">
+ <svg className="w-3 h-3 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+ </div>
+ <span className="text-[13px] font-semibold text-gray-800">Datos personales</span>
  </div>
 
- <div className="grid grid-cols-2 gap-2">
- <div className="input-group">
- <input type="text" className="input-field input-field-sm" placeholder="Nombre" value={compFirstName} onChange={e => setCompFirstName(e.target.value)} />
+ <div className="grid grid-cols-2 gap-3">
+ <div>
+ <label className="block text-[11px] font-medium text-gray-500 mb-1">Nombre</label>
+ <input type="text" className="input-field" placeholder="Tu nombre" value={compFirstName} onChange={e => setCompFirstName(e.target.value)} style={{padding:"9px 12px",fontSize:"13px"}} />
  </div>
- <div className="input-group">
- <input type="text" className="input-field input-field-sm" placeholder="Apellido" value={compLastName} onChange={e => setCompLastName(e.target.value)} />
+ <div>
+ <label className="block text-[11px] font-medium text-gray-500 mb-1">Apellido</label>
+ <input type="text" className="input-field" placeholder="Tu apellido" value={compLastName} onChange={e => setCompLastName(e.target.value)} style={{padding:"9px 12px",fontSize:"13px"}} />
  </div>
- </div>
- </div>
-
- {/*** Contacto ***/}
- <div className="stagger">
- <div className="flex items-center gap-2 mb-2 mt-1">
- <svg className="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
- <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">Contacto</span>
- <div className="flex-1 h-px bg-gray-100"></div>
- </div>
-
- <div className="grid grid-cols-2 gap-2">
- <div className="input-group">
- <input type="tel" className="input-field input-field-sm" placeholder="Teléfono" value={compPhone} onChange={e => setCompPhone(e.target.value)} />
- </div>
- <div className="input-group">
- <input type="text" className="input-field input-field-sm" placeholder="Cédula" value={compCedula} onChange={e => setCompCedula(e.target.value)} />
  </div>
  </div>
 
- <div className="input-group mt-1">
- <input type="text" className="input-field input-field-sm" placeholder="Dirección" value={compAddress} onChange={e => setCompAddress(e.target.value)} />
+ {/*** Card: Contacto ***/}
+ <div className="stagger bg-white rounded-xl border border-gray-100 shadow-sm p-4 mt-3">
+ <div className="flex items-center gap-2 mb-3">
+ <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center">
+ <svg className="w-3 h-3 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+ </div>
+ <span className="text-[13px] font-semibold text-gray-800">Contacto</span>
+ </div>
+
+ <div className="grid grid-cols-2 gap-3">
+ <div>
+ <label className="block text-[11px] font-medium text-gray-500 mb-1">Teléfono</label>
+ <input type="tel" className="input-field" placeholder="+58 414..." value={compPhone} onChange={e => setCompPhone(e.target.value)} style={{padding:"9px 12px",fontSize:"13px"}} />
+ </div>
+ <div>
+ <label className="block text-[11px] font-medium text-gray-500 mb-1">Cédula</label>
+ <input type="text" className="input-field" placeholder="V-12345678" value={compCedula} onChange={e => setCompCedula(e.target.value)} style={{padding:"9px 12px",fontSize:"13px"}} />
  </div>
  </div>
 
- {/*** Profesión ***/}
- <div className="stagger">
- <div className="flex items-center gap-2 mb-2 mt-1">
- <svg className="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z"/></svg>
- <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">Profesión</span>
- <div className="flex-1 h-px bg-gray-100"></div>
+ <div className="mt-3">
+ <label className="block text-[11px] font-medium text-gray-500 mb-1">Dirección</label>
+ <input type="text" className="input-field" placeholder="Av., calle, ciudad" value={compAddress} onChange={e => setCompAddress(e.target.value)} style={{padding:"9px 12px",fontSize:"13px"}} />
+ </div>
  </div>
 
- <div className="input-group">
- <input type="text" className="input-field input-field-sm" placeholder="Ej: Electricista, Diseñador, Programador..." value={compProfession} onChange={e => setCompProfession(e.target.value)} />
+ {/*** Card: Profesión ***/}
+ <div className="stagger bg-white rounded-xl border border-gray-100 shadow-sm p-4 mt-3">
+ <div className="flex items-center gap-2 mb-3">
+ <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center">
+ <svg className="w-3 h-3 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z"/></svg>
  </div>
- <p className="text-[10px] text-gray-500 mt-0.5 ml-1">Opcional — ayúdanos a encontrarte mejores oportunidades</p>
+ <span className="text-[13px] font-semibold text-gray-800">Profesión</span>
+ <span className="text-[10px] text-gray-400 font-medium ml-auto">Opcional</span>
  </div>
 
- <div className="stagger mt-2">
- <button type="submit" disabled={loading} className="btn-main">{loading ? "Guardando..." : "Guardar y Continuar"}</button>
+ <div>
+ <input type="text" className="input-field" placeholder="Ej: Electricista, Diseñador, Programador..." value={compProfession} onChange={e => setCompProfession(e.target.value)} style={{padding:"9px 12px",fontSize:"13px"}} />
+ </div>
+ <p className="text-[11px] text-gray-400 mt-1.5 leading-relaxed">Ayúdanos a encontrarte mejores oportunidades y conectar con clientes afines.</p>
+ </div>
+
+ <div className="stagger mt-4">
+ <button type="submit" disabled={loading} className="btn-main text-[14px]">{loading ? "Guardando..." : "Guardar y Continuar"}</button>
  </div>
  </form>
  </div>
