@@ -7,6 +7,31 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.limiter import limiter
 from app.database import engine, Base
+from sqlalchemy import text as sa_text
+
+
+# Migraciones automáticas
+# Se ejecutan al iniciar el backend para evitar errores en Railway
+# donde PostgreSQL ya tiene tablas creadas sin ciertas columnas
+def run_migrations():
+    with engine.connect() as conn:
+        # Agregar columna google_id si no existe (Google OAuth)
+        dialect = conn.dialect.name
+        try:
+            if dialect == "postgresql":
+                conn.execute(sa_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR"))
+            elif dialect == "sqlite":
+                # SQLite no soporta IF NOT EXISTS para ADD COLUMN
+                cols = [row[1] for row in conn.execute(sa_text("PRAGMA table_info(users)")).fetchall()]
+                if "google_id" not in cols:
+                    conn.execute(sa_text("ALTER TABLE users ADD COLUMN google_id VARCHAR"))
+            conn.commit()
+            print(f"[migracion] columna google_id ok ({dialect})")
+        except Exception as e:
+            print(f"[migracion] aviso: {e}")
+
+
+run_migrations()
 from app.routers import auth_router, jobs_router, payments_router, ratings_router, users_router, admin_router, events_router, notifications_router, verification_router
 
 # Sentry - monitoreo de errores en produccion
