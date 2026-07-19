@@ -281,32 +281,31 @@ export default function SettingsPage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1.5">Cédula</label>
-              {hasCedulaHash ? (
-                <>
-                  <div className="mb-2 p-3 rounded-xl bg-amber-50 border border-amber-200">
-                    <p className="text-xs font-medium text-amber-800">Actualiza tu número de cédula</p>
-                    <p className="text-xs text-amber-600 mt-0.5">Tu documento de identidad necesita ser actualizado. Solo podrás hacerlo una vez.</p>
-                  </div>
-                  <input
-                    type="text"
-                    value={cedula}
-                    onChange={(e) => setCedula(e.target.value)}
-                    required
-                    className="w-full px-3.5 py-2.5 border border-amber-300 rounded-xl text-sm focus:ring-2 focus:ring-amber/20 focus:border-amber outline-none transition-all"
-                    placeholder="Ingresa tu número de cédula"
-                  />
-                </>
-              ) : user.cedula_locked ? (
-                <div className="flex items-center gap-2 w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray text-sm">
+              {hasCedulaHash && (
+                <div className="mb-2 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                  <p className="text-xs font-medium text-amber-800">Actualiza tu número de cédula</p>
+                  <p className="text-xs text-amber-600 mt-0.5">Tu documento de identidad necesita ser actualizado. Solo podrás hacerlo una vez.</p>
+                </div>
+              )}
+              <div className={"relative flex items-center gap-2 w-full px-3.5 py-2.5 rounded-xl text-sm border transition-all " + (hasCedulaHash ? "border-amber-300 focus-within:ring-2 focus-within:ring-amber/20 focus-within:border-amber" : "border-gray-200 bg-gray-50 text-gray")}>
+                {user.cedula_locked && (
                   <svg className="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                     <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
                   </svg>
-                  <span className="flex-1">{user.cedula}</span>
-                  <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-200">Verificada</span>
-                </div>
-              ) : (
-                <input type="text" value={user.cedula} disabled className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray text-sm" />
-              )}
+                )}
+                <input
+                  type="text"
+                  value={hasCedulaHash ? cedula : user.cedula}
+                  onChange={(e) => { if (hasCedulaHash) setCedula(e.target.value); }}
+                  disabled={!hasCedulaHash}
+                  required={hasCedulaHash}
+                  placeholder={hasCedulaHash ? "Ingresa tu número de cédula" : ""}
+                  className="flex-1 bg-transparent outline-none text-sm disabled:text-gray disabled:cursor-default"
+                />
+                {user.cedula_locked && (
+                  <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-200 flex-shrink-0">Verificada</span>
+                )}
+              </div>
             </div>
           </div>
 

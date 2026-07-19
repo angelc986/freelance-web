@@ -426,79 +426,92 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* TurnoGO column — PROFESSIONAL BLUE CARD */}
-              <div className="group rounded-2xl p-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5" style={{background:"linear-gradient(135deg,rgba(37,99,235,0.08),white,rgba(5,150,105,0.12))",border:"1px solid rgba(37,99,235,0.3)"}}>
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
-                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <span className="font-bold text-base text-dark">TurnoGO</span>
-                      <span className="ml-auto text-xs bg-[#2563EB] text-white px-3 py-1 rounded-full font-semibold shadow-sm">
-                        Recomendado
-                      </span>
-                    </div>
+            <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto items-stretch">
+              {/* TurnoGO column â€” MODERN PREMIUM CARD */}
+              <div className="group relative rounded-2xl bg-white p-6 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1" style={{boxShadow:"0 4px 24px rgba(37,99,235,0.08), 0 1px 3px rgba(0,0,0,0.04)",border:"1px solid rgba(37,99,235,0.15)"}}>
+                {/* Gradient left accent */}
+                <div className="absolute left-0 top-6 bottom-6 w-1 rounded-r-full bg-gradient-to-b from-primary via-primary/70 to-green-500/60" />
 
-                    <div className="space-y-4">
-                      <BlueStep num={1} title="Publica o busca" desc="El contratista publica el trabajo con todos los detalles. El trabajador encuentra turnos cerca de su ubicación." />
-                      <BlueStep num={2} title="Conecta al instante" desc="Match directo en minutos. Sin esperar llamadas ni correos. Todo desde la app." />
-                      <BlueStep num={3} title="Pago protegido en USDT" desc="Cada trabajo tiene protección. Depositas los USDT y el pago se libera solo cuando el trabajo esté listo. Así de simple." />
+                <div className="relative z-10 pl-3">
+                  {/* Header */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg shadow-primary/25">
+                      <svg className="w-4.5 h-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
                     </div>
-
-                    <div className="mt-6 pt-4 border-t border-primary/20 flex items-center justify-between">
-                      <button
-                        onClick={() => {
-                          document.getElementById("como-funciona")?.scrollIntoView({ behavior: "smooth" });
-                          setInfoOpen(true);
-                        }}
-                        className="inline-flex items-center gap-1.5 text-xs text-gray hover:text-primary transition-colors cursor-pointer"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                        </svg>
-                        Más información
-                      </button>
-                      <a href="/auth?screen=register" className="group inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary-dark transition-colors">
-                        Empezar ahora
-                        <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
-                      </a>
-                    </div>
+                    <span className="font-bold text-lg text-dark tracking-tight">TurnoGO</span>
+                    <span className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-1 rounded-full shadow-lg" style={{background:"linear-gradient(135deg, #2563EB, #1d4ed8)",boxShadow:"0 4px 12px rgba(37,99,235,0.35)"}}>
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      Recomendado
+                    </span>
                   </div>
+
+                  {/* Steps with timeline */}
+                  <div className="space-y-0">
+                    <BlueStep num={1} title="Publica o busca" desc="El contratista publica el trabajo con todos los detalles. El trabajador encuentra turnos cerca de su ubicaci\u00f3n." isLast={false} />
+                    <BlueStep num={2} title="Conecta al instante" desc="Match directo en minutos. Sin esperar llamadas ni correos. Todo desde la app." isLast={false} />
+                    <BlueStep num={3} title="Pago protegido en USDT" desc="Cada trabajo tiene protecci\u00f3n. Depositas los USDT y el pago se libera solo cuando el trabajo est\u00e9 listo. As\u00ed de simple." isLast={true} />
+                  </div>
+
+                  {/* CTA */}
+                  <div className="mt-6 pt-5 border-t border-gray-100 flex items-center justify-between">
+                    <button
+                      onClick={() => {
+                        document.getElementById("como-funciona")?.scrollIntoView({ behavior: "smooth" });
+                        setInfoOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-primary transition-colors cursor-pointer"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                      </svg>
+                      M\u00e1s informaci\u00f3n
+                    </button>
+                    <a
+                      href="/auth?screen=register"
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-white px-5 py-2 rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+                      style={{background:"linear-gradient(135deg, #2563EB, #1d4ed8)"}}
+                    >
+                      Empezar ahora
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
               </div>
 
-              {/* Traditional column */}
-              <div className="bg-white/60 rounded-2xl p-5 border border-gray-200/50 opacity-85">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-6 h-6 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <svg className="w-3.5 h-3.5 text-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </div>
-                  <span className="font-bold text-base text-gray">Lo tradicional</span>
-                </div>
+              {/* Traditional column â€” DESATURATED COMPARISON */}
+              <div className="relative rounded-2xl bg-white/50 p-6 transition-all duration-500 border border-gray-200/60" style={{boxShadow:"0 1px 6px rgba(0,0,0,0.03)"}}>
+                <div className="absolute left-0 top-6 bottom-6 w-1 rounded-r-full bg-gradient-to-b from-gray-300 via-gray-200 to-gray-100" />
 
-                <div className="space-y-4">
-                  <StepRow
-                    num={1}
-                    title="Llamadas y mensajes"
-                    desc="Horas perdidas buscando contactos, preguntando disponibilidad, esperando respuestas."
-                    muted
-                  />
-                  <StepRow
-                    num={2}
-                    title="Papeleo infinito"
-                    desc="Contratos, recibos, transferencias bancarias. Mucha burocracia para algo simple."
-                    muted
-                  />
-                  <StepRow
-                    num={3}
-                    title="Pagos lentos"
-                    desc="Transferencias que tardan días, comisiones altas, efectivo inseguro."
-                    muted
-                  />
+                <div className="relative z-10 pl-3">
+                  {/* Header */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 rounded-xl bg-gray-200 flex items-center justify-center">
+                      <svg className="w-4.5 h-4.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <span className="font-bold text-lg text-gray-400 tracking-tight">Lo tradicional</span>
+                  </div>
+
+                  {/* Steps with timeline â€” muted */}
+                  <div className="space-y-0">
+                    <StepRow num={1} title="Llamadas y mensajes" desc="Horas perdidas buscando contactos, preguntando disponibilidad, esperando respuestas." muted isLast={false} />
+                    <StepRow num={2} title="Papeleo infinito" desc="Contratos, recibos, transferencias bancarias. Mucha burocracia para algo simple." muted isLast={false} />
+                    <StepRow num={3} title="Pagos lentos" desc="Transferencias que tardan d\u00edas, comisiones altas, efectivo inseguro." muted isLast={true} />
+                  </div>
+
+                  {/* Bottom hint */}
+                  <div className="mt-6 pt-5 border-t border-gray-100">
+                    <p className="text-xs text-gray-300 text-center italic">
+                      Sin protecci\u00f3n, sin garant\u00edas, sin tranquilidad.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -808,90 +821,61 @@ function BlueStep({
   num,
   title,
   desc,
+  isLast = false,
 }: {
   num: number;
   title: string;
   desc: string;
+  isLast?: boolean;
 }) {
   return (
-    <div className="flex gap-3">
-      <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 via-primary to-primary-dark text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-primary/25">
+    <div className="relative flex gap-4 pb-2">
+      {/* Timeline connecting line */}
+      {!isLast && (
+        <div className="absolute left-[15px] top-8 bottom-0 w-0.5 bg-gradient-to-b from-primary/30 to-primary/5" />
+      )}
+      {/* Number circle */}
+      <div className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary via-primary-dark to-primary text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-primary/25">
         {num}
       </div>
-      <div className="pt-0.5">
+      {/* Content */}
+      <div className="flex-1 min-w-0">
         <h4 className="font-semibold text-dark text-sm">{title}</h4>
         <p className="text-xs mt-0.5 leading-relaxed text-gray">{desc}</p>
       </div>
-    </div>
-  );
-}
-
-/* Gray step for traditional card */
-function StepRow({
+    </div>function StepRow({
   num,
   title,
   desc,
   muted = false,
+  isLast = false,
 }: {
   num: number;
   title: string;
   desc: string;
   muted?: boolean;
+  isLast?: boolean;
 }) {
   return (
-    <div className="flex gap-3">
-      <div className={`flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold ${
-        muted ? "bg-gray-100 text-gray" : "bg-primary/10 text-primary"
+    <div className="relative flex gap-4 pb-2">
+      {/* Timeline line */}
+      {!isLast && (
+        <div className="absolute left-[15px] top-8 bottom-0 w-0.5 bg-gray-100" />
+      )}
+      {/* Circle */}
+      <div className={`relative z-10 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border ${
+        muted
+          ? "bg-gray-50 text-gray-300 border-gray-200"
+          : "bg-primary/10 text-primary border-primary/20"
       }`}>
         {num}
       </div>
-      <div className="pt-0.5">
-        <h4 className={`font-semibold text-sm ${muted ? "text-gray" : "text-dark"}`}>
-          {title}
-        </h4>
-        <p className={`text-xs mt-0.5 leading-relaxed ${muted ? "text-gray-light" : "text-gray"}`}>
-          {desc}
-        </p>
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <h4 className={`font-semibold text-sm ${muted ? "text-gray-400" : "text-dark"}`}>{title}</h4>
+        <p className={`text-xs mt-0.5 leading-relaxed ${muted ? "text-gray-300" : "text-gray"}`}>{desc}</p>
       </div>
-    </div>
-  );
-}
-
-const categoryIcons: Record<string, React.ReactNode> = {
-  construction: (
-    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
-    </svg>
-  ),
-  package: (
-    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-    </svg>
-  ),
-  tools: (
-    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17l-5.879 5.88a2.25 2.25 0 01-3.182 0 2.25 2.25 0 010-3.182l5.879-5.88m0 0l2.88-2.88m-2.88 2.88l2.88-2.88m2.88 2.88l5.88-5.879a2.25 2.25 0 000-3.182 2.25 2.25 0 00-3.182 0l-5.88 5.879m0 0l-2.88 2.88" />
-    </svg>
-  ),
-  paint: (
-    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
-    </svg>
-  ),
-  sparkles: (
-    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M7.05 16.95l-1.414 1.414M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-    </svg>
-  ),
-  people: (
-    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-    </svg>
-  ),
-};
-
-function CategoryCard({
+    </div>function CategoryCard({
   icon,
   title,
   desc,
