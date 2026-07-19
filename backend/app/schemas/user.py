@@ -12,6 +12,8 @@ class CompleteProfileRequest(BaseModel):
     full_name: str
     phone: str
     cedula: str
+    address: str
+    profession: str | None = None
 
 class UserLogin(BaseModel):
     email: str
@@ -38,6 +40,8 @@ class UserResponse(BaseModel):
     balance: float = 0.0
     rating_avg: float
     profile_completed: bool = False
+    address: str | None = None
+    profession: str | None = None
     avatar_url: str | None = None
     avatar_verified: bool = False
     cedula_locked: bool = False

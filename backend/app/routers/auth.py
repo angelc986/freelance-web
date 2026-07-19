@@ -127,7 +127,9 @@ def complete_profile(
     user.full_name = data.full_name
     user.phone = data.phone
     user.cedula = data.cedula
-    user.cedula_locked = True  # Once set, can't change cedula
+    user.address = data.address
+    user.profession = data.profession
+    user.cedula_locked = True
     user.profile_completed = True
 
     db.commit()

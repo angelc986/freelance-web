@@ -380,6 +380,8 @@ function AuthPageInner() {
  const [compLastName, setCompLastName] = useState("");
  const [compPhone, setCompPhone] = useState("");
  const [compCedula, setCompCedula] = useState("");
+ const [compAddress, setCompAddress] = useState("");
+ const [compProfession, setCompProfession] = useState("");
 
  const [loginEmail, setLoginEmail] = useState("");
  const [loginPassword, setLoginPassword] = useState("");
@@ -504,7 +506,7 @@ function AuthPageInner() {
  async function handleCompleteProfile(e: React.FormEvent) {
  e.preventDefault();
  setError("");
- if (!compFirstName || !compLastName || !compPhone || !compCedula) { setError("Completa todos los campos"); return; }
+ if (!compFirstName || !compLastName || !compPhone || !compCedula || !compAddress) { setError("Completa todos los campos obligatorios"); return; }
  if (compPhone.length < 7) { setError("Teléfono inválido"); return; }
  if (!compCedula.trim()) { setError("Ingresa tu cédula"); return; }
  setLoading(true);
@@ -513,6 +515,8 @@ function AuthPageInner() {
  full_name: `${compFirstName} ${compLastName}`,
  phone: compPhone,
  cedula: compCedula,
+ address: compAddress,
+ profession: compProfession || undefined,
  });
  router.push(user.is_admin ? "/admin" : "/dashboard");
  } catch (err: any) {
@@ -578,30 +582,63 @@ function AuthPageInner() {
  {error && <div className="error-msg">{error}</div>}
 
  <form onSubmit={handleCompleteProfile}>
- <div className="stagger"><div className="input-group">
- <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
- <input type="text" className="input-field" placeholder="Nombre" value={compFirstName} onChange={e => setCompFirstName(e.target.value)} />
- </div>
- <div className="input-group">
- <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
- <input type="text" className="input-field" placeholder="Apellido" value={compLastName} onChange={e => setCompLastName(e.target.value)} />
- </div></div>
 
+ {/*** Datos personales ***/}
  <div className="stagger">
- <div className="grid grid-cols-2 gap-3">
+ <div className="flex items-center gap-2 mb-3 mt-1">
+ <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+ <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Datos personales</span>
+ <div className="flex-1 h-px bg-gray-100"></div>
+ </div>
+
+ <div className="grid grid-cols-2 gap-2">
  <div className="input-group">
- <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
- <input type="tel" className="input-field" placeholder="Teléfono" value={compPhone} onChange={e => setCompPhone(e.target.value)} />
+ <input type="text" className="input-field" placeholder="Nombre" value={compFirstName} onChange={e => setCompFirstName(e.target.value)} style={{paddingLeft:"14px"}} />
  </div>
  <div className="input-group">
- <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V7.5A2.25 2.25 0 0019.5 5.25h-15a2.25 2.25 0 00-2.25 2.25v9.75A2.25 2.25 0 004.5 19.5zm6.75-10.5a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z"/></svg>
- <input type="text" className="input-field" placeholder="Cédula" value={compCedula} onChange={e => setCompCedula(e.target.value)} />
+ <input type="text" className="input-field" placeholder="Apellido" value={compLastName} onChange={e => setCompLastName(e.target.value)} style={{paddingLeft:"14px"}} />
  </div>
  </div>
  </div>
 
+ {/*** Contacto ***/}
  <div className="stagger">
- <button type="submit" disabled={loading} className="btn-main mt-0 mb-2">{loading ? "Guardando..." : "Guardar y Continuar"}</button>
+ <div className="flex items-center gap-2 mb-3 mt-2">
+ <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+ <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Contacto</span>
+ <div className="flex-1 h-px bg-gray-100"></div>
+ </div>
+
+ <div className="grid grid-cols-2 gap-2">
+ <div className="input-group">
+ <input type="tel" className="input-field" placeholder="Teléfono" value={compPhone} onChange={e => setCompPhone(e.target.value)} style={{paddingLeft:"14px"}} />
+ </div>
+ <div className="input-group">
+ <input type="text" className="input-field" placeholder="Cédula" value={compCedula} onChange={e => setCompCedula(e.target.value)} style={{paddingLeft:"14px"}} />
+ </div>
+ </div>
+
+ <div className="input-group mt-1">
+ <input type="text" className="input-field" placeholder="Dirección" value={compAddress} onChange={e => setCompAddress(e.target.value)} style={{paddingLeft:"14px"}} />
+ </div>
+ </div>
+
+ {/*** Profesión ***/}
+ <div className="stagger">
+ <div className="flex items-center gap-2 mb-3 mt-2">
+ <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z"/></svg>
+ <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Profesión</span>
+ <div className="flex-1 h-px bg-gray-100"></div>
+ </div>
+
+ <div className="input-group">
+ <input type="text" className="input-field" placeholder="Ej: Electricista, Diseñador, Programador..." value={compProfession} onChange={e => setCompProfession(e.target.value)} style={{paddingLeft:"14px"}} />
+ </div>
+ <p className="text-[10px] text-gray-400 mt-0.5 ml-1">Opcional — ayúdanos a encontrarte mejores oportunidades</p>
+ </div>
+
+ <div className="stagger mt-3">
+ <button type="submit" disabled={loading} className="btn-main">{loading ? "Guardando..." : "Guardar y Continuar"}</button>
  </div>
  </form>
  </div>

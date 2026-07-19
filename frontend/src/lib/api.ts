@@ -168,6 +168,8 @@ export function completeProfile(data: {
   full_name: string;
   phone: string;
   cedula: string;
+  address: string;
+  profession?: string;
 }): Promise<User> {
   return request("/auth/complete-profile", {
     method: "PATCH",
