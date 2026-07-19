@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import Logo from "@/components/Logo";
@@ -449,7 +449,9 @@ export default function Home() {
                     </div>
 
                     <div className="mt-6 pt-4 border-t border-primary/10 flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1.5 text-xs text-gray group-hover:text-primary transition-colors">
+                      <button onClick={() => document.getElementById("como-funciona")?.scrollIntoView({ behavior: "smooth" })}
+                               setInfoOpen(true)}
+                               className="inline-flex items-center gap-1.5 text-xs text-gray hover:text-primary transition-colors cursor-pointer"
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
                         </svg>
@@ -632,7 +634,7 @@ export default function Home() {
 
       {/* ========== TESTIMONIOS ========== */}
       <RevealSection delay={100}>
-        <section className="py-16 sm:py-24 bg-light relative overflow-hidden">
+        <section className="py-16 sm:py-24 px-4 sm:px-0 bg-light relative overflow-hidden">
           <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -654,7 +656,7 @@ export default function Home() {
 
       {/* ========== FAQ ========== */}
       <RevealSection delay={100}>
-        <section className="py-16 sm:py-24">
+        <section className="py-16 sm:py-24 px-4 sm:px-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <div className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-semibold px-4 py-1.5 rounded-full mb-4 border border-primary/20">
@@ -757,16 +759,16 @@ export default function Home() {
                 <li><a href="#como-funciona" className="hover:text-white transition-colors">Cómo funciona</a></li>
                 <li><a href="#categorias" className="hover:text-white transition-colors">Categorías</a></li>
                 <li><a href="#empresas" className="hover:text-white transition-colors">Para empresas</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+                <li><a href="https://medium.com/@turnogo" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Blog</a></li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-semibold mb-4 text-white">Legal</h4>
               <ul className="space-y-2 text-sm text-gray-light/60">
-                <li><a href="#" className="hover:text-white transition-colors">Términos de uso</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacidad</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Política de pagos</a></li>
+                <li><a href="/terminos" className="hover:text-white transition-colors">Términos de uso</a></li>
+                <li><a href="/privacidad" className="hover:text-white transition-colors">Privacidad</a></li>
+                <li><a href="/politica-pagos" className="hover:text-white transition-colors">Política de pagos</a></li>
               </ul>
             </div>
 
@@ -780,7 +782,7 @@ export default function Home() {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">@turnogo_ve</a>
+                  <a href="https://instagram.com/turnogo_ve" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">@turnogo_ve</a>
                 </li>
               </ul>
             </div>
@@ -898,8 +900,8 @@ function CategoryCard({
 
   return (
     <a
-      href="/jobs"
-      className="flex items-center gap-5 p-6 rounded-xl border border-gray-200 bg-white"
+      href={`/jobs?category=${encodeURIComponent(title)}`}
+      className="flex items-center gap-5 p-6 rounded-xl border border-gray-200 bg-white hover:shadow-lg hover:border-primary/30 transition-all duration-300"
     >
       {/* Icon container with gradient background */}
       <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
@@ -950,7 +952,7 @@ function FeatureCard({
   desc: string;
 }) {
   return (
-    <div className="p-6 rounded-xl bg-white border border-gray-200">
+    <div className="p-6 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300">
       <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
         {icon}
       </div>

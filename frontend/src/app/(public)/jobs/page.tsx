@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
@@ -110,7 +110,7 @@ export default function JobsPage() {
               </>
             ) : (
               <>
-                <a href="/auth/login" className="text-sm text-gray hover:text-dark transition-colors">Iniciar sesión</a>
+                <a href="/auth/login" className="text-sm text-gray hover:text-dark transition-colors">Iniciar sesiónón</a>
                 <a href="/auth/register" className="btn-ripple px-4 py-2 text-sm font-medium text-white bg-primary rounded-full hover:bg-primary-dark transition-all">Registrarse</a>
               </>
             )}
