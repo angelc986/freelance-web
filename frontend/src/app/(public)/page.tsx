@@ -1,5 +1,7 @@
 ﻿"use client";
 
+"use client";
+
 import { useState, useEffect, useRef } from "react";
 import Logo from "@/components/Logo";
 import RevealSection from "@/components/RevealSection";
@@ -340,14 +342,14 @@ export default function Home() {
                 style={{ backgroundColor: '#2563EB' }}
               >
                 Quiero trabajar
-                <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform text-white/80">→</span>
+                <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform text-white/80">?</span>
               </a>
               <a
                 href="/auth"
                 className="btn-ripple group w-full sm:w-auto px-8 py-3.5 bg-white text-dark font-semibold border-2 border-primary/30 rounded-full hover:border-primary hover:text-primary hover:bg-primary/[0.03] transition-all hover:shadow-md"
               >
                 Quiero contratar
-                <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">?</span>
               </a>
             </div>
 
@@ -372,7 +374,7 @@ export default function Home() {
               <div>
                 <p className="text-3xl sm:text-4xl font-bold text-dark">
                   <Counter target={48} />
-                  <span className="text-accent">★</span>
+                  <span className="text-accent">?</span>
                 </p>
                 <p className="text-sm text-gray mt-1">Valoración</p>
               </div>
@@ -519,27 +521,7 @@ export default function Home() {
         </section>
       </RevealSection>
 
-      {/* ========== DIDIT TRUST ========== */}
-      <RevealSection delay={100}>
-        <section className="py-10 sm:py-12 bg-gradient-to-b from-light to-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 p-5 sm:p-6 rounded-2xl bg-white border border-gray-200/60 shadow-sm max-w-2xl mx-auto">
-              <div className="flex items-center gap-2.5">
-                <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#2563EB" /><path d="M16 6C12 6 9 9 9 13v2a3 3 0 00-3 3v5a3 3 0 003 3h14a3 3 0 003-3v-5a3 3 0 00-3-3v-2c0-4-3-7-7-7z" fill="white" opacity="0.9" /><path d="M14 17l2 2 3-4" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="22" cy="9" r="3" fill="#10B981" /><path d="M21 9l.67.67L23 8.33" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                <span className="font-bold text-base sm:text-lg text-dark tracking-tight">Didit</span>
-              </div>
-              <div className="hidden sm:block w-px h-8 bg-gray-200" />
-              <div className="block sm:hidden w-12 h-px bg-gray-200" />
-              <div className="text-center sm:text-left">
-                <p className="text-sm font-semibold text-dark">Identidad verificada</p>
-                <p className="text-xs text-gray mt-0.5">Cada trabajador verifica su identidad con <span className="font-medium text-primary">Didit</span> antes de activarse</p>
-              </div>
-            </div>
-          </div>
-        </section>
-      </RevealSection>
-
-      {/* ========== CATEGORÍAS ========== */}
+      {/* ========== CATEGORIAS ========== */}
       <RevealSection delay={100}>
         <section id="categorias" className="py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -611,7 +593,7 @@ export default function Home() {
               <div className="animate-float" style={{ animationDelay: "0.8s" }}>
                 <p className="text-4xl sm:text-5xl font-bold text-white">
                   <Counter target={48} />
-                  <span className="text-accent ml-1">★</span>
+                  <span className="text-accent ml-1">?</span>
                 </p>
                 <p className="text-primary-light/80 mt-2 text-sm font-medium">
                   Calificación promedio de trabajadores
@@ -643,23 +625,34 @@ export default function Home() {
               </div>
 
               <div className="grid sm:grid-cols-2 gap-6 stagger-children">
-                <FeatureCard
+                                <FeatureCard
                   icon={FeatureIcons.target}
                   title="Matching inteligente"
-                  desc="Encuentra al trabajador ideal para cada turno según su historial, calificaciones y ubicación."
+                  desc="Encuentra al trabajador ideal para cada turno segÃºn su historial, calificaciones y ubicaciÃ³n."
                 />
                 <FeatureCard
                   icon={FeatureIcons.shield}
-                  title="Verificación completa"
-                  desc="Todos los trabajadores pasan por verificación de identidad y referencias antes de activarse."
+                  title="Verificación con Didit"
+                  desc={<span>Verificación de identidad documental, selfie y biométrica con <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/5 px-1.5 py-0.5 rounded-md border border-primary/20">
+                    <svg className="w-3 h-3" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="#2563EB" /><path d="M16 6C12 6 9 9 9 13v2a3 3 0 00-3 3v5a3 3 0 003 3h14a3 3 0 003-3v-5a3 3 0 00-3-3v-2c0-4-3-7-7-7z" fill="white" opacity="0.9" /><path d="M14 17l2 2 3-4" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    Didit
+                  </span></span>}
                 />
                 <FeatureCard
-                  icon={FeatureIcons.clock}
+                  icon={
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  }
                   title="Tracking en tiempo real"
                   desc="Geocerca y monitoreo para saber exactamente cuándo llegan, se van y cuántas horas trabajan."
                 />
                 <FeatureCard
-                  icon={FeatureIcons.robot}
+                  icon={
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                    </svg>
+                  }
                   title="Backup automático"
                   desc="Si alguien no se presenta, el sistema activa automáticamente a otro trabajador disponible."
                 />
@@ -747,7 +740,7 @@ export default function Home() {
                 className="btn-ripple group w-full sm:w-auto px-8 py-3.5 text-white font-semibold border-2 border-white/30 rounded-full hover:bg-white/15 transition-all hover:border-white/60"
               >
                 Crear cuenta gratis
-                <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">?</span>
               </a>
               <a
                 href="/auth?screen=login"
@@ -812,7 +805,7 @@ export default function Home() {
             <div>
               <h4 className="font-semibold mb-4 text-white">Contacto</h4>
               <ul className="space-y-2 text-sm text-gray-light/60">
-                <li className="flex items-center gap-1.5">🇻🇪 Venezuela</li>
+                <li className="flex items-center gap-1.5">???? Venezuela</li>
                 <li>
                   <a href="mailto:hola@turnogo.com" className="hover:text-white transition-colors">
                     hola@turnogo.com
@@ -844,7 +837,7 @@ function BlueStep({
   isLast = false,
 }: {
   num: number;
-  title: string;
+  title: React.ReactNode;
   desc: string;
   isLast?: boolean;
 }) {
@@ -875,7 +868,7 @@ function StepRow({
   isLast = false,
 }: {
   num: number;
-  title: string;
+  title: React.ReactNode;
   desc: string;
   muted?: boolean;
   isLast?: boolean;
@@ -1000,7 +993,7 @@ function FeatureCard({
 }: {
   icon: React.ReactNode;
   title: string;
-  desc: string;
+  desc: React.ReactNode;
 }) {
   return (
     <div className="p-6 rounded-xl bg-white border border-gray-200 shadow-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300">
