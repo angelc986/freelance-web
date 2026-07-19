@@ -268,6 +268,12 @@ function AuthPageInner() {
  useParticles(particlesRef);
  useRipple();
 
+ // Resetear overflow del body al montar/desmontar (previene scroll trabado al volver)
+ useEffect(() => {
+   document.body.style.overflow = "";
+   return () => { document.body.style.overflow = ""; };
+ }, []);
+
  const [history, setHistory] = useState<Screen[]>(["welcome"]);
  const [transition, setTransition] = useState("");
  const current = history[history.length - 1];

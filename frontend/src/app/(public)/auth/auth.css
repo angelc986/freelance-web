@@ -3,7 +3,7 @@
 *,*::before,*::after{box-sizing:border-box}
 *{font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent}
 
-html,body{margin:0;padding:0;height:100%;overflow:hidden;background:linear-gradient(to bottom,#EFF6FF 0%,#EFF6FF 92%,#DBEAFE 96%,#BFDBFE 98%,#fff 100%)}
+html,body{margin:0;padding:0;height:100%;background:linear-gradient(to bottom,#EFF6FF 0%,#EFF6FF 92%,#DBEAFE 96%,#BFDBFE 98%,#fff 100%)}
 
 .phone-frame{position:absolute;top:0;right:0;left:0;height:100vh;height:-webkit-fill-available;height:100dvh;background:transparent;overflow:hidden}
 /* ===== DESKTOP (≥480px): auth full-screen, sin frame de teléfono ===== */
