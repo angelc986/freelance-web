@@ -3,13 +3,14 @@
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { completeProfile } from "@/lib/api";
 import Logo from "@/components/Logo";
 import "./auth.css";
 
 /* --------------------------------------------------------------
    SCREENS: welcome | register | login | reset | email
    -------------------------------------------------------------- */
-type Screen = "welcome" | "register" | "login" | "reset" | "email";
+type Screen = "welcome" | "register" | "login" | "reset" | "email" | "complete";
 
 /* --------------------------------------------------------------
    MESH GRADIENT (Canvas)
@@ -349,7 +350,11 @@ function AuthPageInner() {
          const data = await res.json();
          localStorage.setItem("access_token", data.access_token);
          localStorage.setItem("refresh_token", data.refresh_token);
-         window.location.href = "/dashboard";
+         if (data.needs_profile) {
+           push("complete");
+         } else {
+           window.location.href = "/dashboard";
+         }
        } catch (err: any) {
          console.error("Google token error:", err);
          setError(err.message || "Error al iniciar sesion con Google");
@@ -366,14 +371,15 @@ function AuthPageInner() {
  }, [googleClientId]);
 
  // Form state
- const [regFirstName, setRegFirstName] = useState("");
- const [regLastName, setRegLastName] = useState("");
  const [regEmail, setRegEmail] = useState("");
- const [regPhone, setRegPhone] = useState("");
- const [regCedula, setRegCedula] = useState("");
  const [regPassword, setRegPassword] = useState("");
  const [regShowPw, setRegShowPw] = useState(false);
-  const [regRole, setRegRole] = useState<"worker" | "contractor">("worker");
+ const [regRole, setRegRole] = useState<"worker" | "contractor">("worker");
+
+ const [compFirstName, setCompFirstName] = useState("");
+ const [compLastName, setCompLastName] = useState("");
+ const [compPhone, setCompPhone] = useState("");
+ const [compCedula, setCompCedula] = useState("");
 
  const [loginEmail, setLoginEmail] = useState("");
  const [loginPassword, setLoginPassword] = useState("");
@@ -384,18 +390,23 @@ function AuthPageInner() {
  const [error, setError] = useState("");
  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
- // --- Redirect if already logged in ---
+ // --- Redirect if already logged in with full profile ---
  useEffect(() => {
  if (user) {
- if (user.is_admin) router.push("/admin");
- else router.push("/dashboard");
+ if (user.profile_completed === false) {
+ push("complete");
+ } else if (user.is_admin) {
+ router.push("/admin");
+ } else {
+ router.push("/dashboard");
+ }
  }
  }, [user, router]);
 
  // --- Auto-navigate from ?screen= param ---
  useEffect(() => {
  const screen = searchParams.get("screen");
- if (screen === "login" || screen === "register" || screen === "reset") {
+ if (screen === "login" || screen === "register" || screen === "reset" || screen === "complete") {
  setHistory(["welcome", screen]);
  }
  }, [searchParams]);
@@ -454,19 +465,17 @@ function AuthPageInner() {
  async function handleRegister(e: React.FormEvent) {
  e.preventDefault();
  setError("");
- if (!regFirstName || !regLastName || !regEmail || !regPhone || !regCedula || !regPassword) { setError("Completa todos los campos"); return; }
+ if (!regEmail || !regPassword) { setError("Completa todos los campos"); return; }
  if (regPassword.length < 6) { setError("La contraseña debe tener al menos 6 caracteres"); return; }
  setLoading(true);
  try {
  const u = await register({
  email: regEmail,
- phone: regPhone,
- full_name: `${regFirstName} ${regLastName}`,
- cedula: regCedula,
  password: regPassword,
  role: regRole,
  });
- router.push(u.is_admin ? "/admin" : "/dashboard");
+ // After partial register, go to complete profile
+ push("complete");
  } catch (err: any) {
  setError(err.message || "Error al registrarse");
  } finally { setLoading(false); }
@@ -491,7 +500,27 @@ function AuthPageInner() {
  }, 1200);
  }
 
- // --- Stagger animation trigger ---
+ 
+ async function handleCompleteProfile(e: React.FormEvent) {
+ e.preventDefault();
+ setError("");
+ if (!compFirstName || !compLastName || !compPhone || !compCedula) { setError("Completa todos los campos"); return; }
+ if (compPhone.length < 7) { setError("Teléfono inválido"); return; }
+ if (!compCedula.trim()) { setError("Ingresa tu cédula"); return; }
+ setLoading(true);
+ try {
+ const user = await completeProfile({
+ full_name: `${compFirstName} ${compLastName}`,
+ phone: compPhone,
+ cedula: compCedula,
+ });
+ router.push(user.is_admin ? "/admin" : "/dashboard");
+ } catch (err: any) {
+ setError(err.message || "Error al completar perfil");
+ } finally { setLoading(false); }
+ }
+
+// --- Stagger animation trigger ---
  useEffect(() => {
  const timers: NodeJS.Timeout[] = [];
  const items = document.querySelectorAll('.stagger');
@@ -524,7 +553,60 @@ function AuthPageInner() {
  {/* --- Partículas flotantes --- */}
  <Particles />
 
- {/* ------- 1. WELCOME ------- */}
+ {/* ------- 5. COMPLETE PROFILE ------- */}
+ <div className={screenClass("complete")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"} }>
+ <div className="top-row top-bar">
+ <div className="flex items-center gap-3">
+ <button onClick={pop} className="btn-back">
+ <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+ </button>
+ <Logo className="h-5 w-auto" />
+ </div>
+ </div>
+
+ <div className="stagger">
+ <h2 className="text-[22px] font-bold mb-0.5 tracking-tight text-gray-900">Completa tu perfil</h2>
+ <p className="text-gray-500 text-[13px] mb-2">Solo unos datos más para terminar</p>
+ </div>
+
+ <div className="stagger">
+ <div className="flex items-center gap-1 bg-slate-100 rounded-full p-0.5 w-fit mx-auto mb-4">
+ <span className="px-2.5 py-1 text-[11px] font-medium rounded-full bg-primary text-white shadow-sm">{regRole === "worker" ? "Trabajador" : "Contratista"}</span>
+ </div>
+ </div>
+
+ {error && <div className="error-msg">{error}</div>}
+
+ <form onSubmit={handleCompleteProfile}>
+ <div className="stagger"><div className="input-group">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+ <input type="text" className="input-field" placeholder="Nombre" value={compFirstName} onChange={e => setCompFirstName(e.target.value)} />
+ </div>
+ <div className="input-group">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+ <input type="text" className="input-field" placeholder="Apellido" value={compLastName} onChange={e => setCompLastName(e.target.value)} />
+ </div></div>
+
+ <div className="stagger">
+ <div className="grid grid-cols-2 gap-3">
+ <div className="input-group">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
+ <input type="tel" className="input-field" placeholder="Teléfono" value={compPhone} onChange={e => setCompPhone(e.target.value)} />
+ </div>
+ <div className="input-group">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V7.5A2.25 2.25 0 0019.5 5.25h-15a2.25 2.25 0 00-2.25 2.25v9.75A2.25 2.25 0 004.5 19.5zm6.75-10.5a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z"/></svg>
+ <input type="text" className="input-field" placeholder="Cédula" value={compCedula} onChange={e => setCompCedula(e.target.value)} />
+ </div>
+ </div>
+ </div>
+
+ <div className="stagger">
+ <button type="submit" disabled={loading} className="btn-main mt-0 mb-2">{loading ? "Guardando..." : "Guardar y Continuar"}</button>
+ </div>
+ </form>
+ </div>
+
+{/* ------- 1. WELCOME ------- */}
  <div className={screenClass("welcome")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
             {/* Top row: logo + back — uniforme en las 5 pantallas (desktop) */}
             <div className="top-row top-bar">
@@ -595,31 +677,9 @@ function AuthPageInner() {
 
  <form onSubmit={handleRegister}>
  <div className="stagger"><div className="input-group">
- <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
- <input type="text" className="input-field" placeholder="Nombre" value={regFirstName} onChange={e => setRegFirstName(e.target.value)} />
- </div>
- <div className="input-group">
- <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
- <input type="text" className="input-field" placeholder="Apellido" value={regLastName} onChange={e => setRegLastName(e.target.value)} />
- </div></div>
-
- <div className="stagger"><div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
  <input type="email" className="input-field" placeholder="Correo electrónico" value={regEmail} onChange={e => setRegEmail(e.target.value)} />
  </div></div>
-
- <div className="stagger">
- <div className="grid grid-cols-2 gap-3">
- <div className="input-group">
- <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
- <input type="tel" className="input-field" placeholder="Teléfono" value={regPhone} onChange={e => setRegPhone(e.target.value)} />
- </div>
- <div className="input-group">
- <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V7.5A2.25 2.25 0 0019.5 5.25h-15a2.25 2.25 0 00-2.25 2.25v9.75A2.25 2.25 0 004.5 19.5zm6.75-10.5a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z"/></svg>
- <input type="text" className="input-field" placeholder="Cédula" value={regCedula} onChange={e => setRegCedula(e.target.value)} />
- </div>
- </div>
- </div>
 
  <div className="stagger"><div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>

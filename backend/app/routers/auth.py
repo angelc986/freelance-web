@@ -12,7 +12,7 @@ from app.database import SessionLocal
 from app.limiter import limiter
 from app.models.user import User
 from app.models.refresh_token import RefreshToken
-from app.schemas.user import UserCreate, UserLogin, UserResponse, UpdateProfileRequest, UpdateWalletRequest
+from app.schemas.user import UserCreate, UserLogin, UserResponse, UpdateProfileRequest, UpdateWalletRequest, CompleteProfileRequest
 from app.services.audit import log_action
 from app.config import get_settings
 
@@ -64,28 +64,25 @@ def create_refresh_token(data: dict, db: Session):
 @router.post("/register", response_model=UserResponse, status_code=201)
 @limiter.limit("3/minute")
 def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
+    """Step 1: Register with just email + password + role"""
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email ya registrado")
 
-    # Cedula - duplicate check con valor real
-    db_user = db.query(User).filter(User.cedula == user.cedula).first()
-    if db_user:
-        log_action(None, "register_failed", {"reason": "cedula_duplicada"}, ip=request.client.host)
-        raise HTTPException(status_code=400, detail="Cédula ya registrada")
-
-    db_user = db.query(User).filter(User.phone == user.phone).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Teléfono ya registrado")
-
     hashed_password = pwd_context.hash(user.password)
+    import secrets as _secrets
+    random_suffix = _secrets.token_hex(4)
+    placeholder_phone = f"+pending_{random_suffix}"
+    placeholder_cedula = f"PENDING-{random_suffix}"
+
     db_user = User(
         email=user.email,
-        phone=user.phone,
-        full_name=user.full_name,
-        cedula=user.cedula,
+        phone=placeholder_phone,
+        full_name=f"Usuario-{random_suffix[:6]}",
+        cedula=placeholder_cedula,
         password_hash=hashed_password,
         role=user.role,
+        profile_completed=False,
     )
     db.add(db_user)
     db.commit()
@@ -95,6 +92,49 @@ def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 
+
+@router.patch("/complete-profile", response_model=UserResponse)
+@limiter.limit("5/minute")
+def complete_profile(
+    request: Request,
+    data: CompleteProfileRequest,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    """Step 2: Complete user profile with name, phone, cedula"""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Token invalido")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token invalido")
+
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    # Validate phone uniqueness
+    existing = db.query(User).filter(User.phone == data.phone, User.id != user.id).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Telefono ya registrado por otro usuario")
+
+    # Validate cedula uniqueness
+    existing = db.query(User).filter(User.cedula == data.cedula, User.id != user.id).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Cedula ya registrada por otro usuario")
+
+    user.full_name = data.full_name
+    user.phone = data.phone
+    user.cedula = data.cedula
+    user.cedula_locked = True  # Once set, can't change cedula
+    user.profile_completed = True
+
+    db.commit()
+    db.refresh(user)
+
+    log_action(user.id, "profile_completed", {"full_name": data.full_name}, ip=request.client.host)
+    return user
 from pydantic import BaseModel
 
 class GoogleLoginRequest(BaseModel):
@@ -169,6 +209,7 @@ def google_login(request: Request, body: GoogleLoginRequest, db: Session = Depen
             role="worker",
             avatar_url=picture,
             is_active=True,
+            profile_completed=False,
         )
         db.add(user)
         db.commit()
@@ -180,10 +221,13 @@ def google_login(request: Request, body: GoogleLoginRequest, db: Session = Depen
 
     log_action(user.id, "google_login", {"email": email}, ip=request.client.host)
 
+    needs_profile = not user.profile_completed
+
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer",
+        "needs_profile": needs_profile,
         "user": UserResponse.model_validate(user),
     }
 
@@ -361,3 +405,4 @@ def update_wallet(
     db.commit()
     db.refresh(user)
     return user
+

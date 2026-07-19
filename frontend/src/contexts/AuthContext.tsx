@@ -11,9 +11,6 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<User>;
   register: (data: {
     email: string;
-    phone: string;
-    full_name: string;
-    cedula: string;
     password: string;
     role: string;
   }) => Promise<User>;
@@ -115,9 +112,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (data: {
     email: string;
-    phone: string;
-    full_name: string;
-    cedula: string;
     password: string;
     role: string;
   }) => {

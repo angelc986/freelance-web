@@ -16,6 +16,7 @@ export interface User {
   avatar_verified: boolean;
   cedula_locked: boolean;
   is_verified: boolean;
+  profile_completed?: boolean;
 }
 
 export interface AuthTokens {
@@ -78,9 +79,9 @@ function getMockResponse<T>(path: string, options: RequestInit): T | undefined {
   if (path === "/auth/me" && method === "GET") {
     const email = localStorage.getItem("mock_email");
     if (email === "empleado@test.com") {
-      return { id: 2, email: "empleado@test.com", full_name: "María Rodríguez", phone: "+584149876543", cedula: "V-87654321", role: "worker", avatar_url: null, rating_avg: 4.2, is_admin: false, is_active: true, wallet_address: null, balance: 580 } as unknown as T;
+      return { id: 2, email: "empleado@test.com", full_name: "María Rodríguez", phone: "+584149876543", cedula: "V-87654321", role: "worker", avatar_url: null, rating_avg: 4.2, is_admin: false, is_active: true, wallet_address: null, balance: 580, profile_completed: true } as unknown as T;
     }
-    return { id: 1, email: "contratista@test.com", full_name: "Carlos Méndez", phone: "+584141234567", cedula: "V-12345678", role: "contractor", avatar_url: null, rating_avg: 4.8, is_admin: false, is_active: true, wallet_address: null, balance: 1500 } as unknown as T;
+    return { id: 1, email: "contratista@test.com", full_name: "Carlos Méndez", phone: "+584141234567", cedula: "V-12345678", role: "contractor", avatar_url: null, rating_avg: 4.8, is_admin: false, is_active: true, wallet_address: null, balance: 1500, profile_completed: true } as unknown as T;
   }
 
   // ── JOBS ──
@@ -140,9 +141,6 @@ function getMockResponse<T>(path: string, options: RequestInit): T | undefined {
 
 export function register(data: {
   email: string;
-  phone: string;
-  full_name: string;
-  cedula: string;
   password: string;
   role: string;
 }): Promise<User> {
@@ -164,6 +162,17 @@ export function login(data: {
 
 export function getMe(): Promise<User> {
   return request("/auth/me");
+}
+
+export function completeProfile(data: {
+  full_name: string;
+  phone: string;
+  cedula: string;
+}): Promise<User> {
+  return request("/auth/complete-profile", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
 }
 
 export function updateProfile(data: {

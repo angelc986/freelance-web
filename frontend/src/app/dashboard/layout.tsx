@@ -87,6 +87,10 @@ export default function DashboardLayout({
     if (!loading && !user) {
       router.push("/auth/login");
     }
+    // Si el perfil esta incompleto, redirigir a completarlo
+    if (!loading && user && !user.profile_completed) {
+      router.push("/auth?screen=complete");
+    }
     // Si el usuario es admin, redirigir al panel admin
     if (!loading && user?.is_admin && pathname.startsWith("/dashboard")) {
       router.push("/admin");

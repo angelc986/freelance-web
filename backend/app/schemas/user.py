@@ -2,12 +2,16 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 class UserCreate(BaseModel):
+    """For initial registration - only needs email, password, role"""
     email: str
-    phone: str
-    full_name: str
-    cedula: str
     password: str
-    role: str = "worker"  # worker por defecto
+    role: str = "worker"
+
+class CompleteProfileRequest(BaseModel):
+    """For the second step - complete user data"""
+    full_name: str
+    phone: str
+    cedula: str
 
 class UserLogin(BaseModel):
     email: str
@@ -18,10 +22,8 @@ class UpdateProfileRequest(BaseModel):
     phone: str | None = None
     cedula: str | None = None
 
-
 class UpdateWalletRequest(BaseModel):
     wallet_address: str
-
 
 class UserResponse(BaseModel):
     id: int
@@ -35,6 +37,7 @@ class UserResponse(BaseModel):
     is_active: bool
     balance: float = 0.0
     rating_avg: float
+    profile_completed: bool = False
     avatar_url: str | None = None
     avatar_verified: bool = False
     cedula_locked: bool = False
