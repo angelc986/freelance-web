@@ -86,7 +86,7 @@ export default function InfoModal({ open, onClose }: Props) {
 
       {/* Modal */}
       <div
-        className="relative w-full max-w-lg max-h-[90vh] md:max-h-[85vh] overflow-y-auto bg-white rounded-3xl shadow-2xl animate-modal-enter modal-scroll"
+        className="relative w-full max-w-lg max-h-[95vh] md:max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl animate-modal-enter modal-scroll"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
@@ -101,63 +101,63 @@ export default function InfoModal({ open, onClose }: Props) {
         </button>
 
         {/* Header */}
-        <div className="pt-6 pb-1 px-6">
-          <div className="flex items-center gap-2 mb-0.5">
-            <svg className="w-6 h-6 text-primary shrink-0" viewBox="0 0 28 28" fill="currentColor">
+        <div className="pt-4 pb-0 px-5">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <svg className="w-5 h-5 text-primary shrink-0" viewBox="0 0 28 28" fill="currentColor">
               <circle cx="14" cy="14" r="12" />
               <path d="M9 14l3.5 3.5L19 11" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
             </svg>
-            <span className="font-bold text-base text-dark">Cómo funciona TurnoGO</span>
+            <span className="font-bold text-sm text-dark">Cómo funciona TurnoGO</span>
           </div>
-          <p className="text-xs text-gray leading-relaxed">
+          <p className="text-[11px] text-gray leading-normal">
             Así de fácil consigues trabajo o contratas ayuda en Venezuela.
           </p>
         </div>
 
         {/* Steps */}
-        <div className="px-6 pb-4 pt-1 space-y-0">
+        <div className="px-5 pb-2 pt-0.5 space-y-0">
           {steps.map((s, i) => (
-            <div key={i} className="flex gap-3 py-2 group">
+            <div key={i} className="flex gap-2.5 py-1.5 group">
               {/* Icon */}
-              <div className={`relative flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 ${
+              <div className={`relative flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
                 s.highlight
-                  ? "bg-primary text-white shadow-md shadow-primary/25 group-hover:scale-110"
-                  : "bg-primary/10 text-primary group-hover:bg-primary/15"
+                  ? "bg-primary text-white shadow-sm shadow-primary/25"
+                  : "bg-primary/10 text-primary"
               }`}>
                 {s.icon}
                 {/* Connector line */}
                 {i < steps.length - 1 && (
-                  <div className={`absolute top-10 left-1/2 -translate-x-1/2 w-px h-4 ${
+                  <div className={`absolute top-9 left-1/2 -translate-x-1/2 w-px h-3 ${
                     s.highlight ? "bg-primary/30" : "bg-gray-200"
                   }`} />
                 )}
               </div>
 
               {/* Content */}
-              <div className="flex-1 min-w-0 pt-0.5">
-                <h4 className={`font-semibold text-sm ${s.highlight ? "text-primary" : "text-dark"}`}>
+              <div className="flex-1 min-w-0">
+                <h4 className={`font-semibold text-xs ${s.highlight ? "text-primary" : "text-dark"}`}>
                   {s.title}
                   {s.highlight && (
-                    <span className="ml-1.5 inline-flex items-center gap-1 text-[10px] font-medium text-white bg-primary px-2 py-0.5 rounded-full">
+                    <span className="ml-1 inline-flex items-center gap-1 text-[9px] font-medium text-white bg-primary px-1.5 py-0.5 rounded-full">
                       Seguro
                     </span>
                   )}
                 </h4>
-                <p className="text-xs text-gray mt-0.5 leading-relaxed">{s.desc}</p>
+                <p className="text-[11px] text-gray mt-0.5 leading-snug">{s.desc}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Footer CTA */}
-        <div className="px-6 pb-5 pt-1">
+        <div className="px-5 pb-4 pt-0.5">
           <a
             href="/auth"
-            className="block w-full py-2.5 bg-primary text-white font-semibold text-sm text-center rounded-2xl hover:bg-primary-dark transition-all shadow-md shadow-primary/20"
+            className="block w-full py-2 bg-primary text-white font-semibold text-sm text-center rounded-xl hover:bg-primary-dark transition-all shadow-sm shadow-primary/20"
           >
             Empezar ahora
           </a>
-          <p className="text-center text-[11px] text-gray mt-1.5">Sin compromiso, créala en 2 minutos</p>
+          <p className="text-center text-[10px] text-gray mt-1">Sin compromiso, créala en 2 minutos</p>
         </div>
       </div>
     </div>
