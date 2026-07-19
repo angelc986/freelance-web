@@ -374,7 +374,11 @@ export default function Home() {
               <div>
                 <p className="text-3xl sm:text-4xl font-bold text-dark flex items-center justify-center gap-1">
                   <Counter target={48} />
-<svg className="w-5 h-5 sm:w-6 sm:h-6 ml-1.5 inline-block -mt-0.5" viewBox="0 0 22 22" fill="none"><path d="M11 1.5l2.82 5.72 6.31.92-4.57 4.45 1.08 6.28L11 15.44l-5.64 2.97 1.08-6.28L1.87 8.14l6.31-.92L11 1.5z" fill="#FCD34D" stroke="#F59E0B" strokeWidth="0.3" /><path d="M11 3.5l2.12 4.3 4.75.69-3.44 3.35.81 4.72L11 13.9l-4.24 2.23.81-4.72-3.44-3.35 4.75-.69L11 3.5z" fill="url(#starG1)" /><path d="M11 5l1.6 3.24L15.5 8.7l-2.5 2.43.6 3.5L11 12.88l-2.6 1.36.6-3.5L6.5 8.7l2.9-.42L11 5z" fill="white" opacity="0.25" /><defs><linearGradient id="starG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F59E0B" /><stop offset="100%" stopColor="#D97706" /></linearGradient></defs></svg>
+<svg className="w-5 h-5 sm:w-6 sm:h-6 ml-1.5 inline-block -mt-0.5" viewBox="0 0 22 22" fill="none">
+<path d="M11 1.5l2.82 5.72 6.31.92-4.57 4.45 1.08 6.28L11 15.44l-5.64 2.97 1.08-6.28L1.87 8.14l6.31-.92L11 1.5z" fill="#FCD34D" stroke="#F59E0B" strokeWidth="0.3" />
+<path d="M11 3.5l2.12 4.3 4.75.69-3.44 3.35.81 4.72L11 13.9l-4.24 2.23.81-4.72-3.44-3.35 4.75-.69L11 3.5z" fill="url(#starG1)" />
+<path d="M11 5l1.6 3.24L15.5 8.7l-2.5 2.43.6 3.5L11 12.88l-2.6 1.36.6-3.5L6.5 8.7l2.9-.42L11 5z" fill="white" opacity="0.25" />
+<defs><linearGradient id="starG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F59E0B" /><stop offset="100%" stopColor="#D97706" /></linearGradient></defs></svg>
                 </p>
                 <p className="text-sm text-gray mt-1">Valoración</p>
               </div>
@@ -593,7 +597,11 @@ export default function Home() {
               <div className="animate-float" style={{ animationDelay: "0.8s" }}>
                 <p className="text-4xl sm:text-5xl font-bold text-white">
                   <Counter target={48} />
-<svg className="w-5 h-5 sm:w-6 sm:h-6 ml-1.5 inline-block -mt-0.5" viewBox="0 0 22 22" fill="none"><path d="M11 1.5l2.82 5.72 6.31.92-4.57 4.45 1.08 6.28L11 15.44l-5.64 2.97 1.08-6.28L1.87 8.14l6.31-.92L11 1.5z" fill="#FCD34D" stroke="#F59E0B" strokeWidth="0.3" /><path d="M11 3.5l2.12 4.3 4.75.69-3.44 3.35.81 4.72L11 13.9l-4.24 2.23.81-4.72-3.44-3.35 4.75-.69L11 3.5z" fill="url(#starG1)" /><path d="M11 5l1.6 3.24L15.5 8.7l-2.5 2.43.6 3.5L11 12.88l-2.6 1.36.6-3.5L6.5 8.7l2.9-.42L11 5z" fill="white" opacity="0.25" /><defs><linearGradient id="starG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F59E0B" /><stop offset="100%" stopColor="#D97706" /></linearGradient></defs></svg>
+<svg className="w-5 h-5 sm:w-6 sm:h-6 ml-1.5 inline-block -mt-0.5" viewBox="0 0 22 22" fill="none">
+<path d="M11 1.5l2.82 5.72 6.31.92-4.57 4.45 1.08 6.28L11 15.44l-5.64 2.97 1.08-6.28L1.87 8.14l6.31-.92L11 1.5z" fill="#FCD34D" stroke="#F59E0B" strokeWidth="0.3" />
+<path d="M11 3.5l2.12 4.3 4.75.69-3.44 3.35.81 4.72L11 13.9l-4.24 2.23.81-4.72-3.44-3.35 4.75-.69L11 3.5z" fill="url(#starG1)" />
+<path d="M11 5l1.6 3.24L15.5 8.7l-2.5 2.43.6 3.5L11 12.88l-2.6 1.36.6-3.5L6.5 8.7l2.9-.42L11 5z" fill="white" opacity="0.25" />
+<defs><linearGradient id="starG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F59E0B" /><stop offset="100%" stopColor="#D97706" /></linearGradient></defs></svg>
                 </p>
                 <p className="text-primary-light/80 mt-2 text-sm font-medium">
                   Calificación promedio de trabajadores
@@ -740,7 +748,6 @@ export default function Home() {
                 className="btn-ripple group w-full sm:w-auto px-8 py-3.5 text-white font-semibold border-2 border-white/30 rounded-full hover:bg-white/15 transition-all hover:border-white/60"
               >
                 Crear cuenta gratis
-                <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">?</span>
               </a>
               <a
                 href="/auth?screen=login"
