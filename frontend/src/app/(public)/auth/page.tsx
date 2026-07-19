@@ -278,6 +278,9 @@ function AuthPageInner() {
  const [transition, setTransition] = useState("");
  const current = history[history.length - 1];
 
+ const [legalOpen, setLegalOpen] = useState(false);
+ const [legalTab, setLegalTab] = useState<"terms" | "privacy">("terms");
+
  // Form state
  const [regFirstName, setRegFirstName] = useState("");
  const [regLastName, setRegLastName] = useState("");
@@ -466,7 +469,7 @@ function AuthPageInner() {
  <div className="stagger"><button onClick={() => push("register")} className="btn-main" style={{fontSize:17,padding:"18px 28px",marginTop:-16}}>Comenzar</button></div>
  <div className="stagger"><button onClick={() => push("login")} className="ghost-btn">Ya tengo una cuenta</button></div>
  </div>
- <div className="stagger"><p className="legal-text text-center mt-auto">Al continuar aceptas nuestros <a href="#">Términos</a> y <a href="#">Privacidad</a>.</p></div>
+ <div className="stagger"><p className="legal-text text-center mt-auto">Al continuar aceptas nuestros <a href="#" onClick={(e) => { e.preventDefault(); setLegalTab("terms"); setLegalOpen(true); }}>Términos</a> y <a href="#" onClick={(e) => { e.preventDefault(); setLegalTab("privacy"); setLegalOpen(true); }}>Privacidad</a>.</p></div>
  </div>
 
  {/* ═══════ 2. REGISTER ═══════ */}
@@ -664,6 +667,128 @@ function AuthPageInner() {
  </div>
 
  </div>
+ </div>
+
+ {/* ===== LEGAL MODAL ===== */}
+ {legalOpen && (
+ <LegalModal
+ tab={legalTab}
+ onClose={() => setLegalOpen(false)}
+ />
+ )}
+
+ </>
+ );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LEGAL MODAL
+   ══════════════════════════════════════════════════════════════ */
+function LegalModal({ tab, onClose }: { tab: "terms" | "privacy"; onClose: () => void }) {
+ const [active, setActive] = useState<"terms" | "privacy">(tab);
+
+ useEffect(() => {
+ setActive(tab);
+ }, [tab]);
+
+ useEffect(() => {
+ document.body.style.overflow = "hidden";
+ return () => { document.body.style.overflow = ""; };
+ }, []);
+
+ return (
+ <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" onClick={onClose}>
+ <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+ <div className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto bg-white rounded-3xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
+ {/* Close */}
+ <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center z-10">
+ <svg className="w-4 h-4 text-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+ <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+ </svg>
+ </button>
+
+ {/* Header */}
+ <div className="pt-8 px-7 pb-0">
+ <div className="flex gap-2 p-1 bg-gray-100 rounded-xl mb-5">
+ <button
+ onClick={() => setActive("terms")}
+ className={"flex-1 py-2.5 rounded-lg text-sm font-medium transition-all " + (active === "terms" ? "bg-white text-primary shadow-sm" : "text-gray hover:text-dark")}
+ >
+ Términos
+ </button>
+ <button
+ onClick={() => setActive("privacy")}
+ className={"flex-1 py-2.5 rounded-lg text-sm font-medium transition-all " + (active === "privacy" ? "bg-white text-primary shadow-sm" : "text-gray hover:text-dark")}
+ >
+ Privacidad
+ </button>
+ </div>
+ </div>
+
+ {/* Content */}
+ <div className="px-7 pb-6 text-sm text-gray leading-relaxed space-y-4">
+ {active === "terms" ? <TermsContent /> : <PrivacyContent />}
+ </div>
+ </div>
+ </div>
+ );
+}
+
+function TermsContent() {
+ return (
+ <>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">1. Aceptación</h3>
+ <p>Al registrarte y usar TurnoGO aceptas estos términos. La plataforma conecta trabajadores con contratistas, actuando como intermediaria tecnológica.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">2. Obligaciones</h3>
+ <p>Los trabajadores deben cumplir con los servicios contratados. Los contratistas deben pagar el monto acordado. Está prohibido acordar pagos fuera de la plataforma.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">3. Pagos</h3>
+ <p>Los USDT quedan retenidos en escrow hasta que el contratista confirme el trabajo. TurnoGO cobra una comisión por cada trabajo completado.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">4. Conducta prohibida</h3>
+ <p>No crear cuentas falsas, no acosar, no discriminar. El incumplimiento resulta en suspensión permanente de la cuenta.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">5. Modificaciones</h3>
+ <p>TurnoGO puede modificar estos términos. Los cambios serán notificados con anticipación. El uso continuo constituye aceptación.</p>
+ </div>
+ <div className="pt-3 text-xs text-gray-400 border-t border-gray-100">
+ <a href="/terminos" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>Leer términos completos →</a>
+ </div>
+ </>
+ );
+}
+
+function PrivacyContent() {
+ return (
+ <>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">1. Datos recopilados</h3>
+ <p>Recopilamos nombre, email, teléfono, cédula, foto y datos de uso. Tus documentos se comparten con Didit para verificación de identidad.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">2. Uso de datos</h3>
+ <p>Usamos tu información para gestionar tu cuenta, conectarte con trabajos, procesar pagos y mejorar la plataforma. No vendemos datos a terceros.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">3. Protección</h3>
+ <p>Tu cédula se almacena encriptada (hash SHA-256). Usamos conexiones HTTPS. Datos sensibles solo accesibles por personal autorizado.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">4. Retención</h3>
+ <p>Conservamos tus datos mientras tengas cuenta activa. Al eliminar tu cuenta, los datos personales se borran en 30 días.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">5. Tus derechos</h3>
+ <p>Puedes acceder, rectificar o eliminar tus datos desde configuración. Para más información, contáctanos por la plataforma.</p>
+ </div>
+ <div className="pt-3 text-xs text-gray-400 border-t border-gray-100">
+ <a href="/privacidad" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>Leer política completa →</a>
  </div>
  </>
  );
