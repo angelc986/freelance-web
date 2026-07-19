@@ -428,7 +428,7 @@ export default function Home() {
 
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {/* TurnoGO column — PROFESSIONAL BLUE CARD */}
-              <div className="rounded-2xl p-5" style={{background:"linear-gradient(135deg,rgba(37,99,235,0.03),white,rgba(5,150,105,0.08))",border:"1px solid rgba(37,99,235,0.15)"}}>
+              <div className="group rounded-2xl p-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5" style={{background:"linear-gradient(135deg,rgba(37,99,235,0.08),white,rgba(5,150,105,0.12))",border:"1px solid rgba(37,99,235,0.3)"}}>
                   <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-4">
                       <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
@@ -437,7 +437,7 @@ export default function Home() {
                         </svg>
                       </div>
                       <span className="font-bold text-base text-dark">TurnoGO</span>
-                      <span className="ml-auto text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                      <span className="ml-auto text-xs bg-[#2563EB] text-white px-3 py-1 rounded-full font-semibold shadow-sm">
                         Recomendado
                       </span>
                     </div>
@@ -448,23 +448,29 @@ export default function Home() {
                       <BlueStep num={3} title="Pago protegido en USDT" desc="Cada trabajo tiene protección. Depositas los USDT y el pago se libera solo cuando el trabajo esté listo. Así de simple." />
                     </div>
 
-                    <div className="mt-6 pt-4 border-t border-primary/10 flex items-center justify-between">
-                      <span className="inline-flex items-center gap-1.5 text-xs text-gray group-hover:text-primary transition-colors">
+                    <div className="mt-6 pt-4 border-t border-primary/20 flex items-center justify-between">
+                      <button
+                        onClick={() => {
+                          document.getElementById("como-funciona")?.scrollIntoView({ behavior: "smooth" });
+                          setInfoOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1.5 text-xs text-gray hover:text-primary transition-colors cursor-pointer"
+                      >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
                         </svg>
                         Más información
-                      </span>
-                      <a href="/auth?screen=register" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary-dark transition-colors">
+                      </button>
+                      <a href="/auth?screen=register" className="group inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary-dark transition-colors">
                         Empezar ahora
-                        <span className="inline-block group-hover:translate-x-1 transition-transform">→</span>
+                        <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
                       </a>
                     </div>
                   </div>
               </div>
 
               {/* Traditional column */}
-              <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200/60 hover:shadow-md transition-all">
+              <div className="bg-white/60 rounded-2xl p-5 border border-gray-200/50 opacity-85">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-6 h-6 bg-gray-200 rounded-lg flex items-center justify-center">
                     <svg className="w-3.5 h-3.5 text-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -809,7 +815,7 @@ function BlueStep({
 }) {
   return (
     <div className="flex gap-3">
-      <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary-dark text-white flex items-center justify-center text-xs font-bold shadow-sm">
+      <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 via-primary to-primary-dark text-white flex items-center justify-center text-xs font-bold shadow-lg shadow-primary/25">
         {num}
       </div>
       <div className="pt-0.5">
