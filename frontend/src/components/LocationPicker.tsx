@@ -291,7 +291,7 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
 
           {/* Modal panel */}
           <div
-            className="relative w-full max-w-lg max-h-[95vh] md:max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl animate-modal-enter overflow-hidden"
+            className="relative w-full max-w-lg max-h-[95vh] md:max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl animate-modal-enter"
             onClick={(e) => e.stopPropagation()}
           >
             {/* ── Close button ── */}
@@ -334,13 +334,15 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
                   type="text"
                   value={searchText}
                   onChange={handleSearchInput}
+                  onFocus={() => { if (results.length > 0) setShowResults(true); }}
+                  onBlur={() => setTimeout(() => setShowResults(false), 200)}
                   placeholder="Buscar dirección..."
                   className="w-full pl-9 pr-3 py-2.5 text-[13px] bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-[#1E293B] outline-none transition-all placeholder:text-[#94A3B8] focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)]"
                   autoFocus
                 />
                 {/* Search results dropdown */}
                 {showResults && results.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 z-50 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-lg shadow-black/5 max-h-40 overflow-y-auto modal-scroll">
+                  <div className="absolute top-full left-0 right-0 z-[1100] mt-1.5 bg-white border border-gray-200 rounded-xl shadow-lg shadow-black/5 max-h-40 overflow-y-auto modal-scroll">
                     {results.map((item, i) => (
                       <button key={i} type="button" onMouseDown={() => selectResult(item)}
                         className="w-full text-left px-3.5 py-2.5 text-[12px] text-gray-700 hover:bg-primary-lighter hover:text-primary border-b border-gray-50 last:border-0 transition-colors flex items-start gap-2"
