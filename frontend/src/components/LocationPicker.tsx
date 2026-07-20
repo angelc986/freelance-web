@@ -27,9 +27,15 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
   const [gettingLocation, setGettingLocation] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [mapLoading, setMapLoading] = useState(false);
+  const [searching, setSearching] = useState(false); // for autocomplete loading indicator
 
-  const defaultLat = lat || 10.4806;
-  const defaultLng = lng || -66.9036;
+  // ── Refs to avoid closure-staleness & prevent callback churn ──
+  const latRef = useRef(lat);
+  const lngRef = useRef(lng);
+  const onLocationChangeRef = useRef(onLocationChange);
+  latRef.current = lat;
+  lngRef.current = lng;
+  onLocationChangeRef.current = onLocationChange;
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -50,6 +56,8 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
     return () => window.removeEventListener("keydown", handleKey);
   }, [modalOpen]);
 
+  // ── Stable callbacks using refs (never cause re-creation) ──
+
   const reverseGeocode = useCallback(async (lati: number, lngi: number) => {
     try {
       const res = await fetch(
@@ -65,13 +73,16 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
 
   const searchAddress = useCallback(async (query: string) => {
     if (!query.trim() || query.length < 3) return;
+    setSearching(true);
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&accept-language=es`,
         { headers: { "User-Agent": "TurnoGO/1.0" } }
       );
-      return await res.json();
+      const data = await res.json();
+      return data;
     } catch { return []; }
+    finally { setSearching(false); }
   }, []);
 
   const moveMarker = useCallback(async (newLat: number, newLng: number) => {
@@ -79,14 +90,16 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
     if (markerRef.current) markerRef.current.setLatLng([newLat, newLng]);
     const addr = await reverseGeocode(newLat, newLng);
     setSearchText(addr);
-    onLocationChange({ lat: newLat, lng: newLng, address: addr });
-  }, [reverseGeocode, onLocationChange]);
+    onLocationChangeRef.current({ lat: newLat, lng: newLng, address: addr });
+  }, [reverseGeocode]);
 
   const initMap = useCallback(() => {
     if (!mapContainerRef.current || mapRef.current) return;
     setMapLoading(true);
+    const currentLat = latRef.current ?? 10.4806;
+    const currentLng = lngRef.current ?? -66.9036;
     const map = L.map(mapContainerRef.current, {
-      center: [defaultLat, defaultLng],
+      center: [currentLat, currentLng],
       zoom: 14,
       zoomControl: true,
       attributionControl: false,
@@ -95,18 +108,17 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
       maxZoom: 20,
       attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
     }).addTo(map);
-    const marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+    const marker = L.marker([currentLat, currentLng], { draggable: true }).addTo(map);
     marker.on("dragend", async () => {
       const pos = marker.getLatLng();
       await moveMarker(pos.lat, pos.lng);
     });
     mapRef.current = map;
     markerRef.current = marker;
-    // Map tiles loaded → hide skeleton
     map.whenReady(() => setMapLoading(false));
-  }, [defaultLat, defaultLng, moveMarker]);
+  }, [moveMarker]); // Only moveMarker — stable, never churns
 
-  // Init/cleanup map on modal open/close
+  // Init/cleanup map on modal open/close only
   useEffect(() => {
     if (!modalOpen) {
       if (mapRef.current) {
@@ -119,7 +131,25 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
     setMapLoading(true);
     const timer = setTimeout(() => initMap(), 300);
     return () => clearTimeout(timer);
-  }, [modalOpen, initMap]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalOpen]); // <- ONLY modalOpen! No initMap in deps (it's stable via refs)
+
+  // When lat/lng props change while map is loaded -> move the view
+  useEffect(() => {
+    if (modalOpen && mapRef.current && lat != null && lng != null) {
+      mapRef.current.setView([lat, lng], 16);
+      markerRef.current?.setLatLng([lat, lng]);
+    }
+  }, [lat, lng, modalOpen]);
+
+  // Sync search text when address prop changes externally
+  useEffect(() => {
+    if (address !== undefined && address !== searchText) {
+      setSearchText(address);
+    }
+    // Only run when address prop changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address]);
 
   // Get current location
   const getCurrentLocation = useCallback(() => {
@@ -128,10 +158,16 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         setModalOpen(true);
-        setTimeout(async () => {
-          await moveMarker(pos.coords.latitude, pos.coords.longitude);
-          setGettingLocation(false);
-        }, 500);
+        // Wait for map to init, then move
+        const waitForMap = setInterval(() => {
+          if (mapRef.current) {
+            clearInterval(waitForMap);
+            moveMarker(pos.coords.latitude, pos.coords.longitude);
+            setGettingLocation(false);
+          }
+        }, 100);
+        // Safety timeout
+        setTimeout(() => { clearInterval(waitForMap); setGettingLocation(false); }, 8000);
       },
       (err) => {
         setGettingLocation(false);
@@ -155,7 +191,7 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
     searchTimer.current = setTimeout(async () => {
       const data = await searchAddress(val);
       if (data) { setResults(data); setShowResults(data.length > 0); }
-    }, 400);
+    }, 350);
   };
 
   const selectResult = async (item: any) => {
@@ -163,8 +199,24 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
     const newLng = parseFloat(item.lon);
     setSearchText(item.display_name);
     setShowResults(false);
-    setModalOpen(true);
-    setTimeout(async () => { await moveMarker(newLat, newLng); }, 500);
+    const wasOpen = modalOpen;
+    if (!wasOpen) setModalOpen(true);
+    // Wait for map then move
+    const tryMove = () => {
+      if (mapRef.current) {
+        moveMarker(newLat, newLng);
+      } else if (!wasOpen) {
+        // Map is still initializing — retry
+        setTimeout(tryMove, 200);
+      }
+    };
+    if (wasOpen) {
+      // Map already loaded, move immediately
+      moveMarker(newLat, newLng);
+    } else {
+      // Modal just opened, wait for map
+      setTimeout(tryMove, 600);
+    }
   };
 
   const confirmLocation = () => {
@@ -300,6 +352,14 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
                         <span className="line-clamp-2 leading-snug">{item.display_name}</span>
                       </button>
                     ))}
+                  </div>
+                )}
+                {/* Searching indicator */}
+                {searching && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <svg className="w-4 h-4 animate-spin text-primary" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4 31.4" strokeLinecap="round"/>
+                    </svg>
                   </div>
                 )}
               </div>
