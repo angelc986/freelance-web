@@ -39,6 +39,8 @@ def _user_to_response(u: User) -> dict:
         "role": u.role,
         "is_admin": u.is_admin,
         "is_active": u.is_active,
+        "is_verified": u.is_verified,
+        "profile_completed": u.profile_completed,
         "balance": u.balance,
         "rating_avg": u.rating_avg,
         "wallet_address": u.wallet_address,
