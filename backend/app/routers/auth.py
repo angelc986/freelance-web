@@ -129,6 +129,8 @@ def complete_profile(
     user.cedula = data.cedula
     user.address = data.address
     user.profession = data.profession
+    user.latitude = data.latitude
+    user.longitude = data.longitude
     user.cedula_locked = True
     user.profile_completed = True
 

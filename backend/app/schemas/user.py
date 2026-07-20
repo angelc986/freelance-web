@@ -14,6 +14,8 @@ class CompleteProfileRequest(BaseModel):
     cedula: str
     address: str
     profession: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
 
 class UserLogin(BaseModel):
     email: str
@@ -42,6 +44,8 @@ class UserResponse(BaseModel):
     profile_completed: bool = False
     address: str | None = None
     profession: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     avatar_url: str | None = None
     avatar_verified: bool = False
     cedula_locked: bool = False

@@ -22,12 +22,20 @@ def run_migrations():
                 conn.execute(sa_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_completed BOOLEAN DEFAULT FALSE"))
                 conn.execute(sa_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS address VARCHAR"))
                 conn.execute(sa_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profession VARCHAR"))
+                conn.execute(sa_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION"))
+                conn.execute(sa_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION"))
+                conn.execute(sa_text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION"))
+                conn.execute(sa_text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION"))
             elif dialect == "sqlite":
                 cols = [row[1] for row in conn.execute(sa_text("PRAGMA table_info(users)")).fetchall()]
                 if "google_id" not in cols:
                     conn.execute(sa_text("ALTER TABLE users ADD COLUMN google_id VARCHAR"))
                 if "profile_completed" not in cols:
                     conn.execute(sa_text("ALTER TABLE users ADD COLUMN profile_completed BOOLEAN DEFAULT 0"))
+                if "latitude" not in cols:
+                    conn.execute(sa_text("ALTER TABLE users ADD COLUMN latitude FLOAT"))
+                if "longitude" not in cols:
+                    conn.execute(sa_text("ALTER TABLE users ADD COLUMN longitude FLOAT"))
             conn.commit()
             print(f"[migracion] columnas ok ({dialect})")
         except Exception as e:

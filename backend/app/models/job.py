@@ -12,6 +12,8 @@ class Job(Base):
     description = Column(String(2000), nullable=False)
     category = Column(String(100), nullable=False)
     location = Column(String(200), nullable=False)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
     budget = Column(Float, nullable=False)
     duration = Column(String(100), nullable=False)
     status = Column(String(20), default="open")

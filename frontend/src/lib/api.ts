@@ -170,6 +170,8 @@ export function completeProfile(data: {
   cedula: string;
   address: string;
   profession?: string;
+  latitude?: number;
+  longitude?: number;
 }): Promise<User> {
   return request("/auth/complete-profile", {
     method: "PATCH",

@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { completeProfile } from "@/lib/api";
 import Logo from "@/components/Logo";
+import dynamic from "next/dynamic";
+const LocationPicker = dynamic(() => import("@/components/LocationPicker"), { ssr: false });
 import "./auth.css";
 
 /* --------------------------------------------------------------
@@ -381,6 +383,8 @@ function AuthPageInner() {
  const [compPhone, setCompPhone] = useState("");
  const [compCedula, setCompCedula] = useState("");
  const [compAddress, setCompAddress] = useState("");
+ const [compLat, setCompLat] = useState<number | null>(null);
+ const [compLng, setCompLng] = useState<number | null>(null);
  const [compProfession, setCompProfession] = useState("");
 
  const [loginEmail, setLoginEmail] = useState("");
@@ -510,7 +514,7 @@ function AuthPageInner() {
  async function handleCompleteProfile(e: React.FormEvent) {
  e.preventDefault();
  setError("");
- if (!compFirstName || !compLastName || !compPhone || !compCedula || !compAddress) { setError("Completa todos los campos obligatorios"); return; }
+ if (!compFirstName || !compLastName || !compPhone || !compCedula || !compAddress || compLat == null || compLng == null) { setError("Completa todos los campos obligatorios, incluida tu ubicación"); return; }
  if (compPhone.length < 7) { setError("Teléfono inválido"); return; }
  if (!compCedula.trim()) { setError("Ingresa tu cédula"); return; }
  setLoading(true);
@@ -520,6 +524,8 @@ function AuthPageInner() {
  phone: compPhone,
  cedula: compCedula,
  address: compAddress,
+ latitude: compLat,
+ longitude: compLng,
  profession: compProfession || undefined,
  });
  router.push(user.is_admin ? "/admin" : "/dashboard");
@@ -612,8 +618,17 @@ function AuthPageInner() {
  </div>
  </div>
  <div className="mt-2">
- <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Dirección</label>
- <input type="text" className="input-field" placeholder="Av., calle, ciudad" value={compAddress} onChange={e => setCompAddress(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} />
+ <label className="block text-[10px] font-medium text-gray-500 mb-1">Ubicación</label>
+ <LocationPicker
+ lat={compLat}
+ lng={compLng}
+ address={compAddress}
+ onLocationChange={(data) => {
+ setCompLat(data.lat);
+ setCompLng(data.lng);
+ setCompAddress(data.address);
+ }}
+ />
  </div>
  </div>
 
