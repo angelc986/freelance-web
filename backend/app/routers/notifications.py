@@ -95,23 +95,46 @@ def admin_send_test_notification(
     secret: str = Query(None),
     db: Session = Depends(get_db),
 ):
-    """🔧 Envía notificación de prueba a cualquier usuario (requiere secret key)"""
+    """Envía notificación de prueba con diagnóstico completo"""
     if secret != "turnogo-test-2026":
         raise HTTPException(status_code=403, detail="Se requieren permisos")
     target = db.query(User).filter(User.id == user_id).first()
     if not target:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    create_notification(
-        user_id=user_id,
-        event="test_notification",
-        message="🔔 ¡Notificación de prueba de TurnoGO! Tus notificaciones están funcionando correctamente.",
-    )
-    return {
-        "ok": True,
-        "target": target.email,
-        "email_enabled": target.email_notifications,
-        "has_push": target.push_subscription is not None,
-    }
+
+    results = {}
+
+    # 1. Email directo con Resend
+    try:
+        import os, resend
+        key = os.getenv("RESEND_API_KEY", "")
+        resend.api_key = key
+        r = resend.Emails.send({
+            "from": "TurnoGO <onboarding@resend.dev>",
+            "to": target.email,
+            "subject": "🔔 TurnoGO — Notificación de prueba",
+            "html": "<h2>¡Funciona!</h2><p>Notificación de TurnoGO enviada correctamente.</p>",
+        })
+        results["email"] = f"OK (id={r.get('id','?')})"
+    except Exception as e:
+        results["email"] = f"ERROR: {str(e)[:300]}"
+
+    # 2. Push
+    try:
+        if target.push_subscription:
+            from app.services.push_service import send_push
+            ok = send_push(target.push_subscription, "TurnoGO", "¡Notificación de prueba!", "/dashboard")
+            results["push"] = "OK" if ok else "FAIL (ver logs)"
+        else:
+            results["push"] = "NO_SUBSCRIPTION"
+    except Exception as e:
+        results["push"] = f"ERROR: {str(e)[:300]}"
+
+    # 3. BD
+    create_notification(user_id=user_id, event="test_notification",
+                        message="🔔 ¡Notificación de prueba de TurnoGO!")
+
+    return {"target": target.email, **results}
 
 
 @router.get("/notifications", response_model=List[NotificationResponse])
