@@ -399,13 +399,12 @@ function AuthPageInner() {
  // --- Redirect if already logged in with full profile ---
  useEffect(() => {
  if (user) {
- if (user.profile_completed === false) {
- push("complete");
- } else if (user.is_admin) {
+ if (user.is_admin) {
  router.push("/admin");
- } else {
+ } else if (user.profile_completed) {
  router.push("/dashboard");
  }
+ // If profile incomplete: stay on auth flow (don't auto-redirect)
  }
  }, [user, router]);
 
