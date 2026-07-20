@@ -78,10 +78,9 @@ def admin_send_test_notification(
     user_id: int,
     secret: str = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
-    """🔧 Admin o secret: envía notificación de prueba a cualquier usuario"""
-    if secret != "turnogo-test-2026" and not current_user.is_admin:
+    """🔧 Envía notificación de prueba a cualquier usuario (requiere secret key)"""
+    if secret != "turnogo-test-2026":
         raise HTTPException(status_code=403, detail="Se requieren permisos")
     target = db.query(User).filter(User.id == user_id).first()
     if not target:
