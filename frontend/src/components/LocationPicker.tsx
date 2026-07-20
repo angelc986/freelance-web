@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix Leaflet default icon paths (Webpack/web dev)
+// Fix Leaflet default icon paths
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -22,16 +22,15 @@ interface LocationPickerProps {
 export default function LocationPicker({ lat, lng, address, onLocationChange }: LocationPickerProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
-  const [mapReady, setMapReady] = useState(false);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
   const [searchText, setSearchText] = useState(address || "");
   const [gettingLocation, setGettingLocation] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const [mapReady, setMapReady] = useState(false);
 
-  const defaultLat = lat || 10.4806; // Default: Caracas
+  const defaultLat = lat || 10.4806;
   const defaultLng = lng || -66.9036;
 
-  // Reverse geocode: coords → address
   const reverseGeocode = useCallback(async (lat: number, lng: number) => {
     try {
       const res = await fetch(
@@ -45,7 +44,6 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
     }
   }, []);
 
-  // Search address via Nominatim
   const searchAddress = useCallback(async (query: string) => {
     if (!query.trim() || query.length < 3) return;
     try {
@@ -59,7 +57,6 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
     }
   }, []);
 
-  // Move marker to new position
   const moveMarker = useCallback(async (newLat: number, newLng: number) => {
     if (mapRef.current) {
       mapRef.current.setView([newLat, newLng], 16);
@@ -72,7 +69,48 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
     onLocationChange({ lat: newLat, lng: newLng, address: addr });
   }, [reverseGeocode, onLocationChange]);
 
-  // Get user's current location
+  const initMap = useCallback(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
+    const map = L.map(mapContainerRef.current, {
+      center: [defaultLat, defaultLng],
+      zoom: 14,
+      zoomControl: true,
+      attributionControl: false,
+    });
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      maxZoom: 20,
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+    }).addTo(map);
+
+    const marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+    marker.on("dragend", async () => {
+      const pos = marker.getLatLng();
+      await moveMarker(pos.lat, pos.lng);
+    });
+
+    mapRef.current = map;
+    markerRef.current = marker;
+    setMapReady(true);
+  }, [defaultLat, defaultLng, moveMarker]);
+
+  // Init map when picker opens, cleanup when closes
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const timer = setTimeout(() => {
+      initMap();
+    }, 200);
+    return () => {
+      clearTimeout(timer);
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+        markerRef.current = null;
+        setMapReady(false);
+      }
+    };
+  }, [pickerOpen, initMap]);
+
   const getCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
       alert("Tu navegador no soporta geolocalización");
@@ -81,9 +119,12 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
     setGettingLocation(true);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        await moveMarker(pos.coords.latitude, pos.coords.longitude);
-        setGettingLocation(false);
         if (!pickerOpen) setPickerOpen(true);
+        // Wait for map to init if just opened
+        setTimeout(async () => {
+          await moveMarker(pos.coords.latitude, pos.coords.longitude);
+          setGettingLocation(false);
+        }, 400);
       },
       (err) => {
         setGettingLocation(false);
@@ -101,42 +142,7 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
     }
   }, []);
 
-  // Init map
-  useEffect(() => {
-    if (mapContainerRef.current && !mapRef.current) {
-      const map = L.map(mapContainerRef.current, {
-        center: [defaultLat, defaultLng],
-        zoom: 14,
-        zoomControl: true,
-        attributionControl: false,
-      });
-
-      L.tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png", {
-        maxZoom: 20,
-        attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>',
-      }).addTo(map);
-
-      const marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
-      marker.on("dragend", async () => {
-        const pos = marker.getLatLng();
-        await moveMarker(pos.lat, pos.lng);
-      });
-
-      mapRef.current = map;
-      markerRef.current = marker;
-      setMapReady(true);
-    }
-
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-        markerRef.current = null;
-      }
-    };
-  }, []);
-
-  // Search results state
+  // Search state
   const [results, setResults] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
   const searchTimer = useRef<NodeJS.Timeout | null>(null);
@@ -157,13 +163,15 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
     const newLng = parseFloat(item.lon);
     setSearchText(item.display_name);
     setShowResults(false);
-    await moveMarker(newLat, newLng);
-    if (!pickerOpen) setPickerOpen(true);
+    setPickerOpen(true);
+    setTimeout(async () => {
+      await moveMarker(newLat, newLng);
+    }, 400);
   };
 
   return (
-    <div className="space-y-2">
-      {/* Search + GPS button row */}
+    <div className="space-y-1.5">
+      {/* Search + GPS button */}
       <div className="flex gap-2">
         <div className="relative flex-1">
           <input
@@ -195,6 +203,7 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
           onClick={getCurrentLocation}
           disabled={gettingLocation}
           className="px-2.5 py-1.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg text-[#475569] hover:bg-blue-50 hover:border-blue-200 hover:text-primary transition-all shrink-0 disabled:opacity-50"
+          title="Usar mi ubicación"
         >
           {gettingLocation ? (
             <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4 31.4" strokeLinecap="round"/></svg>
@@ -218,7 +227,7 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
         <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
           <div ref={mapContainerRef} className="h-32 w-full" />
           <div className="flex items-center justify-between px-2 py-1 bg-gray-50 border-t border-gray-100">
-            <span className="text-[9px] text-gray-400">Arrastra el pin</span>
+            <span className="text-[9px] text-gray-400">Arrastra el pin para ajustar</span>
             <button
               type="button"
               onClick={() => setPickerOpen(false)}
@@ -229,8 +238,6 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
           </div>
         </div>
       )}
-
-
     </div>
   );
 }
