@@ -30,4 +30,6 @@ class User(Base):
     didit_session_id = Column(String, nullable=True)
     verified_at = Column(DateTime(timezone=True), nullable=True)
     last_login_at = Column(DateTime(timezone=True), nullable=True)
+    email_notifications = Column(Boolean, default=True)  # Preferencia de email
+    push_subscription = Column(String, nullable=True)  # JSON PushSubscription para Web Push
     created_at = Column(DateTime(timezone=True), server_default=func.now())

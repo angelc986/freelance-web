@@ -128,3 +128,44 @@ async function networkFirstWithOffline(request) {
     return caches.match("/offline");
   }
 }
+
+// ─── Push Notifications ───
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+  try {
+    const payload = event.data.json();
+    const { title, body, icon, badge, data } = payload;
+    event.waitUntil(
+      self.registration.showNotification(title, {
+        body,
+        icon: icon || "/icons/icon-192x192.png",
+        badge: badge || "/icons/icon-192x192.png",
+        data: data || {},
+        actions: [
+          { action: "open", title: "Ver" },
+        ],
+        vibrate: [200, 100, 200],
+        requireInteraction: false,
+      })
+    );
+  } catch (e) {
+    console.warn("SW push error:", e);
+  }
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/dashboard";
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(url) && "focus" in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
+  );
+});

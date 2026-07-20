@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateProfile, updateWallet, uploadAvatar, API_BASE } from "@/lib/api";
+import { updateProfile, updateWallet, uploadAvatar, updateNotificationPreferences, API_BASE } from "@/lib/api";
 
 // ─── SVG ICONS ───
 function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
@@ -101,6 +101,21 @@ export default function SettingsPage() {
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Notifications
+  const VAPID_PUBLIC_KEY = "BJnPRCNyyvzo33TPisGKkeuKA8SGkVT6NvBM51NS0kzHRRygAluHE-KMyULfdnFkkyRHIGgkugdmr9ACkeenpes";
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushSupported, setPushSupported] = useState(false);
+  const [emailNotif, setEmailNotif] = useState(true);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [notifMsg, setNotifMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const urlB64ToUint8Array = (base64String: string) => {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const rawData = window.atob(base64);
+    return new Uint8Array([...rawData].map((char) => char.charCodeAt(0)));
+  };
+
   // Detect if cedula is a hash (64 hex chars = stored as hash before the fix)
   const hasCedulaHash = user?.cedula?.length === 64 && /^[a-f0-9]{64}$/i.test(user.cedula);
   const [cedula, setCedula] = useState("");
@@ -117,8 +132,22 @@ export default function SettingsPage() {
       setEmail(user.email);
       setWallet(user.wallet_address || "");
       if (user.avatar_url) setAvatarUrl(resolveAvatarUrl(user.avatar_url));
+      setEmailNotif(user.email_notifications ?? true);
     }
   }, [user]);
+
+  // Check push support + current subscription
+  useEffect(() => {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+      setPushSupported(false);
+      return;
+    }
+    setPushSupported(true);
+    navigator.serviceWorker.ready.then(async (reg) => {
+      const sub = await reg.pushManager.getSubscription();
+      setPushEnabled(!!sub);
+    });
+  }, []);
 
   // Only set initial cedula once on mount, never overwrite while user is typing
   useEffect(() => {
@@ -126,6 +155,48 @@ export default function SettingsPage() {
   }, []);
 
   if (!user) return null;
+
+  const togglePush = async () => {
+    setNotifMsg(null);
+    setNotifLoading(true);
+    try {
+      if (pushEnabled) {
+        // Unsubscribe
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) await sub.unsubscribe();
+        await updateNotificationPreferences({ push_subscription: "" });
+        setPushEnabled(false);
+        setNotifMsg({ ok: true, text: "Notificaciones push desactivadas." });
+      } else {
+        // Subscribe
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+        await updateNotificationPreferences({ push_subscription: JSON.stringify(sub) });
+        setPushEnabled(true);
+        setNotifMsg({ ok: true, text: "¡Notificaciones push activadas!" });
+      }
+    } catch (err: any) {
+      if (err.name === "NotAllowedError") {
+        setNotifMsg({ ok: false, text: "Permiso denegado. Activa las notificaciones en la configuración de tu navegador." });
+      } else {
+        setNotifMsg({ ok: false, text: err.message || "Error al configurar notificaciones" });
+      }
+      setPushEnabled(false);
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
+  const toggleEmail = async (val: boolean) => {
+    setEmailNotif(val);
+    try {
+      await updateNotificationPreferences({ email_notifications: val });
+    } catch { /* silent */ }
+  };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -401,6 +472,67 @@ export default function SettingsPage() {
               {user.is_verified ? "Verificada" : "Pendiente"}
             </span>
           </div>
+        </div>
+      </Card>
+
+      {/* ═══ NOTIFICACIONES ═══ */}
+      <Card icon={
+        <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+        </svg>
+      } title="Notificaciones" desc="Email y notificaciones push">
+        <div className="p-5 space-y-5">
+          {/* Push Notifications */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-dark">Notificaciones Push 🔔</p>
+              <p className="text-xs text-gray mt-0.5">
+                {!pushSupported
+                  ? "Tu navegador no soporta notificaciones push."
+                  : pushEnabled
+                    ? "Recibirás notificaciones aunque no tengas TurnoGO abierto."
+                    : "Actívalas para recibir alertas instantáneas."}
+              </p>
+            </div>
+            {pushSupported && (
+              <button
+                onClick={togglePush}
+                disabled={notifLoading}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
+                  pushEnabled ? "bg-primary" : "bg-gray-300"
+                }`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                  pushEnabled ? "translate-x-5" : "translate-x-0.5"
+                }`} />
+              </button>
+            )}
+          </div>
+
+          {/* Email Notifications */}
+          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+            <div>
+              <p className="text-sm font-medium text-dark">Notificaciones por Email ✉️</p>
+              <p className="text-xs text-gray mt-0.5">Recibe un correo cuando te contraten, paguen o envíen mensajes.</p>
+            </div>
+            <button
+              onClick={() => toggleEmail(!emailNotif)}
+              disabled={notifLoading}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
+                emailNotif ? "bg-primary" : "bg-gray-300"
+              }`}
+            >
+              <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                emailNotif ? "translate-x-5" : "translate-x-0.5"
+              }`} />
+            </button>
+          </div>
+
+          {notifMsg && (
+            <div className={`text-sm px-4 py-3 rounded-xl border ${notifMsg.ok ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-red-50 text-red-600 border-red-200"}`}>
+              {notifMsg.text}
+            </div>
+          )}
         </div>
       </Card>
 

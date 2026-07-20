@@ -17,6 +17,8 @@ export interface User {
   cedula_locked: boolean;
   is_verified: boolean;
   profile_completed?: boolean;
+  email_notifications?: boolean;
+  push_subscription?: string | null;
 }
 
 export interface AuthTokens {
@@ -503,4 +505,14 @@ export function createVerificationSession(): Promise<VerificationSession> {
 
 export function getVerificationStatus(): Promise<{ is_verified: boolean; verified_at: string | null }> {
   return request("/verification/status");
+}
+
+export function updateNotificationPreferences(data: {
+  email_notifications?: boolean;
+  push_subscription?: string | null;
+}): Promise<User> {
+  const params = new URLSearchParams();
+  if (data.email_notifications !== undefined) params.set("email_notifications", String(data.email_notifications));
+  if (data.push_subscription !== undefined) params.set("push_subscription", data.push_subscription ?? "");
+  return request(`/auth/me/notification-preferences?${params}`, { method: "PATCH" });
 }

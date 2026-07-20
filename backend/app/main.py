@@ -76,6 +76,16 @@ try:
             conn.execute(text("ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP WITH TIME ZONE"))
             conn.commit()
             print("✓ Migración: last_login_at agregado a users")
+    if "email_notifications" not in cols:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN email_notifications BOOLEAN DEFAULT TRUE"))
+            conn.commit()
+            print("✓ Migración: email_notifications agregado a users")
+    if "push_subscription" not in cols:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN push_subscription TEXT"))
+            conn.commit()
+            print("✓ Migración: push_subscription agregado a users")
 except Exception as e:
     print(f"⚠️ Migración last_login_at omitida: {e}")
 

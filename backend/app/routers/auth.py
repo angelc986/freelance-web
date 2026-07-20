@@ -422,3 +422,33 @@ def update_wallet(
     db.refresh(user)
     return user
 
+
+@router.patch("/me/notification-preferences", response_model=UserResponse)
+def update_notification_preferences(
+    email_notifications: bool = None,
+    push_subscription: str = None,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    """🔔 Actualizar preferencias de notificación (email + web push)"""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Token inválido")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    if email_notifications is not None:
+        user.email_notifications = email_notifications
+    if push_subscription is not None:
+        user.push_subscription = push_subscription
+
+    db.commit()
+    db.refresh(user)
+    return user
+

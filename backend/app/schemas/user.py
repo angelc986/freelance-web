@@ -53,6 +53,8 @@ class UserResponse(BaseModel):
     is_verified: bool = False
     verified_at: datetime | None = None
     last_login_at: datetime | None = None
+    email_notifications: bool = True
+    push_subscription: str | None = None
 
     class Config:
         from_attributes = True

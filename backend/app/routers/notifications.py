@@ -7,6 +7,8 @@ from app.database import SessionLocal
 from app.models.user import User
 from app.models.notification import Notification
 from app.services.auth import get_current_user
+from app.services.email_service import send_notification_email
+from app.services.push_service import send_push
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/v1", tags=["notifications"])
@@ -30,12 +32,24 @@ def get_db():
         db.close()
 
 def create_notification(user_id: int, event: str, message: str, data: dict | None = None):
-    """Crea una notificacion en la base de datos."""
+    """Crea una notificacion en la base de datos y dispara email + push."""
     db = SessionLocal()
     try:
         n = Notification(user_id=user_id, event=event, message=message, data=data)
         db.add(n)
         db.commit()
+
+        # Obtener datos del usuario para email y push
+        user = db.query(User).filter(User.id == user_id).first()
+        if user:
+            # Email (si tiene preferencia activada)
+            if user.email_notifications:
+                send_notification_email(user.email, event, message)
+
+            # Web Push (si tiene suscripción guardada)
+            if user.push_subscription:
+                send_push(user.push_subscription, "TurnoGO", message, "/dashboard")
+
     except Exception as e:
         print(f"Error creating notification: {e}")
     finally:
