@@ -652,7 +652,7 @@ export default function AdminPage() {
                           <Ico d={icons.shield} c="w-4 h-4" />
                         </button>
                         {!u.is_admin && (
-                          <button onClick={() => { setDeleteConfirmId(u.id); setDeleteStep(1); }}
+                          <button onClick={() => { viewUser(u); setDeleteConfirmId(u.id); setDeleteStep(1); }}
                             className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors" title="Eliminar usuario">
                             <Ico d={icons.x} c="w-4 h-4" />
                           </button>
