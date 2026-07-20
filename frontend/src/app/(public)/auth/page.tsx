@@ -373,7 +373,10 @@ function AuthPageInner() {
  }, [googleClientId]);
 
  // Form state
- const [regEmail, setRegEmail] = useState("");
+ const [regEmail, setRegEmail] = useState(() => {
+ if (typeof window !== "undefined") return localStorage.getItem("saved_email") || "";
+ return "";
+ });
  const [regPassword, setRegPassword] = useState("");
  const [regShowPw, setRegShowPw] = useState(false);
  const [regRole, setRegRole] = useState<"worker" | "contractor">("worker");
@@ -487,6 +490,7 @@ function AuthPageInner() {
  password: regPassword,
  role: regRole,
  });
+ localStorage.setItem("saved_email", regEmail);
  // After partial register, go to complete profile
  push("complete");
  } catch (err: any) {
@@ -723,12 +727,12 @@ function AuthPageInner() {
  <form onSubmit={handleRegister}>
  <div className="stagger"><div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
- <input type="email" className="input-field" placeholder="Correo electrónico" value={regEmail} onChange={e => setRegEmail(e.target.value)} />
+ <input type="email" className="input-field" placeholder="Correo electrónico" value={regEmail} onChange={e => setRegEmail(e.target.value)} autoComplete="email" />
  </div></div>
 
  <div className="stagger"><div className="input-group">
  <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
- <input type={regShowPw ? "text" : "password"} className="input-field" placeholder="Contraseña" value={regPassword} onChange={e => setRegPassword(e.target.value)} />
+ <input type={regShowPw ? "text" : "password"} className="input-field" placeholder="Contraseña" value={regPassword} onChange={e => setRegPassword(e.target.value)} autoComplete="off" />
  <button type="button" onClick={() => setRegShowPw(!regShowPw)} className="pw-toggle">
  {regShowPw
  ? <svg className="w-5 h-5" fill="none" stroke="#475569" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
