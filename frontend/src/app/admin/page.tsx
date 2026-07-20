@@ -14,7 +14,10 @@ interface KpiStats {
 
 interface AdminUser {
   id: number; email: string; phone: string; full_name: string;
-  role: string; is_admin: boolean; is_active: boolean;
+  cedula?: string; role: string; is_admin: boolean; is_active: boolean;
+  is_verified: boolean; profile_completed: boolean;
+  avatar_url?: string | null; avatar_verified?: boolean; cedula_locked?: boolean;
+  address?: string; profession?: string; verified_at?: string | null;
   balance: number; rating_avg: number; wallet_address: string | null;
   created_at: string | null;
 }
