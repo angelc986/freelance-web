@@ -7,18 +7,19 @@ import resend
 from app.config import get_settings
 
 settings = get_settings()
-resend.api_key = os.getenv("RESEND_API_KEY", "")
 
 FROM_EMAIL = "TurnoGO <notificaciones@turnogo.com>"
 
 
 def send_email(to: str, subject: str, html: str) -> bool:
     """Envía un email transaccional. Retorna True si se envió, False si no."""
-    if not resend.api_key:
+    api_key = os.getenv("RESEND_API_KEY", "")
+    if not api_key:
         print(f"[EMAIL] Sin RESEND_API_KEY — email a {to} no enviado")
         return False
 
     try:
+        resend.api_key = api_key
         resend.Emails.send({
             "from": FROM_EMAIL,
             "to": to,

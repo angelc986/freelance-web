@@ -11,26 +11,15 @@ from app.config import get_settings
 
 settings = get_settings()
 
-# VAPID keys — generar con: openssl ecparam -genkey -name prime256v1 -out private.pem
-# Para desarrollo usamos keys del entorno. En producción, generar keys propias.
-VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
-VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")
 VAPID_CLAIMS = {"sub": "mailto:notificaciones@turnogo.com"}
 
 
 def send_push(subscription_json: str, title: str, body: str, url: str = "/dashboard") -> bool:
     """
     Envía una notificación push a un suscriptor.
-    
-    Args:
-        subscription_json: JSON string con la PushSubscription del navegador
-        title: Título de la notificación
-        body: Cuerpo de la notificación  
-        url: URL a abrir al hacer clic
-    
-    Returns: True si se envió, False si no.
     """
-    if not VAPID_PRIVATE_KEY:
+    vapid_private = os.getenv("VAPID_PRIVATE_KEY", "")
+    if not vapid_private:
         print("[PUSH] Sin VAPID_PRIVATE_KEY — push no enviado")
         return False
 
@@ -50,7 +39,7 @@ def send_push(subscription_json: str, title: str, body: str, url: str = "/dashbo
         webpush(
             subscription_info=subscription,
             data=data,
-            vapid_private_key=VAPID_PRIVATE_KEY,
+            vapid_private_key=vapid_private,
             vapid_claims=VAPID_CLAIMS,
             timeout=10,
         )
