@@ -55,6 +55,7 @@ def _user_to_response(u: User) -> dict:
         "latitude": u.latitude,
         "longitude": u.longitude,
         "verified_at": u.verified_at.isoformat() if u.verified_at else None,
+        "last_login_at": u.last_login_at.isoformat() if u.last_login_at else None,
         "balance": u.balance,
         "rating_avg": u.rating_avg,
         "wallet_address": u.wallet_address,

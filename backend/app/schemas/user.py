@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+from datetime import datetime
 
 class UserCreate(BaseModel):
     """For initial registration - only needs email, password, role"""
@@ -50,6 +51,8 @@ class UserResponse(BaseModel):
     avatar_verified: bool = False
     cedula_locked: bool = False
     is_verified: bool = False
+    verified_at: datetime | None = None
+    last_login_at: datetime | None = None
 
     class Config:
         from_attributes = True

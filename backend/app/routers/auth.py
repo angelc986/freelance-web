@@ -220,6 +220,10 @@ def google_login(request: Request, body: GoogleLoginRequest, db: Session = Depen
         db.refresh(user)
 
     # Generar JWT tokens
+    user.last_login_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(user)
+
     access_token = create_access_token({"sub": str(user.id)})
     refresh_token = create_refresh_token({"sub": str(user.id)}, db)
 
@@ -251,6 +255,10 @@ def login(request: Request, user: UserLogin, db: Session = Depends(get_db)):
     access_token = create_access_token({"sub": str(db_user.id)})
     refresh_token = create_refresh_token({"sub": str(db_user.id)}, db)
 
+    # Track last login
+    db_user.last_login_at = datetime.now(timezone.utc)
+    db.commit()
+
     log_action(db_user.id, "login_success", ip=request.client.host)
 
     return {
@@ -275,6 +283,10 @@ def token_login(request: Request, form: OAuth2PasswordRequestForm = Depends(), d
 
     access_token = create_access_token({"sub": str(db_user.id)})
     refresh_token = create_refresh_token({"sub": str(db_user.id)}, db)
+
+    # Track last login
+    db_user.last_login_at = datetime.now(timezone.utc)
+    db.commit()
 
     log_action(db_user.id, "login_success", ip=request.client.host)
 
