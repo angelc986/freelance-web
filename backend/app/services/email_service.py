@@ -4,7 +4,7 @@ Servicio de envío de emails con Resend.
 import os
 import resend
 
-FROM_EMAIL = "TurnoGO <notificaciones@turnogo.com>"
+FROM_EMAIL = "TurnoGO <onboarding@resend.dev>"
 
 
 def send_email(to: str, subject: str, html: str) -> bool:
