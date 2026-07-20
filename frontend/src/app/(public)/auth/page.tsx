@@ -568,7 +568,7 @@ function AuthPageInner() {
  <Particles />
 
  {/* ------- 5. COMPLETE PROFILE ------- */}
- <div className={screenClass("complete") + " screen-scroll"} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 8px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 4px)"} }>
+ <div className={screenClass("complete") + " screen-scroll"} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 8px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 24px)"} }>
  <div className="top-row top-bar">
  <TopRowLogo onBack={pop} />
  </div>

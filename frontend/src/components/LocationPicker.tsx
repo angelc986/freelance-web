@@ -232,7 +232,7 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
            ══════════════════════════════════════════ */}
       {modalOpen && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 safe-top"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
           onClick={() => setModalOpen(false)}
         >
           {/* Backdrop with blur */}
@@ -240,37 +240,35 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
 
           {/* Modal panel */}
           <div
-            className="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl shadow-black/10 border border-white/20 animate-modal-enter overflow-hidden"
+            className="relative w-full max-w-lg max-h-[95vh] md:max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl animate-modal-enter overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* ── Close button ── */}
             <button
               type="button"
               onClick={() => setModalOpen(false)}
-              className="absolute top-3.5 right-3.5 z-20 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm border border-gray-200/60 shadow-sm hover:bg-gray-100 hover:border-gray-300 transition-all flex items-center justify-center group"
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center z-10"
               aria-label="Cerrar"
             >
-              <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
 
             {/* ── Header ── */}
             <div className="pt-5 pb-0 px-5 shrink-0">
-              <div className="flex items-center gap-2.5 mb-1">
-                <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shrink-0 shadow-sm shadow-primary/20">
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
                   </svg>
-                  {/* Inner dot decoration */}
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-secondary rounded-full border-2 border-white shadow-sm" />
                 </div>
                 <div>
-                  <span className="font-bold text-sm text-[#1E293B] block leading-tight">
+                  <span className="font-bold text-sm text-dark block leading-tight">
                     Selecciona tu ubicación
                   </span>
-                  <span className="text-[11px] text-gray-500/80">
+                  <span className="text-[11px] text-gray">
                     Busca o arrastra el pin en el mapa
                   </span>
                 </div>
@@ -362,13 +360,11 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
               <button
                 type="button"
                 onClick={confirmLocation}
-                className="relative w-full py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold text-sm text-center rounded-xl hover:from-primary-dark hover:to-primary-darker active:scale-[0.98] transition-all shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/30 overflow-hidden group"
+                className="w-full py-2.5 bg-primary text-white font-semibold text-sm text-center rounded-xl hover:bg-primary-dark transition-all shadow-sm shadow-primary/20"
               >
-                <span className="relative z-10">Confirmar ubicación</span>
-                {/* Shine effect on hover */}
-                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+                Confirmar ubicación
               </button>
-              <p className="text-center text-[10px] text-gray-400 mt-1.5 flex items-center justify-center gap-1">
+              <p className="text-center text-[10px] text-gray mt-1.5 flex items-center justify-center gap-1">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M7 11.5l3-3 3 3 4-4" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
