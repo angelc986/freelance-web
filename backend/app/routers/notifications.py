@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from typing import List
@@ -76,7 +76,7 @@ def send_test_notification(current_user: User = Depends(get_current_user)):
 @router.post("/notifications/test/{user_id}")
 def admin_send_test_notification(
     user_id: int,
-    secret: str = None,
+    secret: str = Query(None),
     db: Session = Depends(get_db),
 ):
     """🔧 Envía notificación de prueba a cualquier usuario (requiere secret key)"""
