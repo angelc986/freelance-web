@@ -556,8 +556,16 @@ def admin_user_detail(
     jobs_completed = db.query(Job).filter(Job.worker_id == user_id, Job.status == "completed").count()
     ratings_received = db.query(Rating).filter(Rating.rated_id == user_id).all()
 
+    # Last login from audit logs (fallback for users who haven't logged in since last_login_at was added)
+    last_login = db.query(AuditLog.created_at).filter(
+        AuditLog.user_id == user_id,
+        AuditLog.action == "login_success"
+    ).order_by(AuditLog.created_at.desc()).first()
+    last_login_at = user.last_login_at or (last_login[0] if last_login else None)
+
     return {
         "user": _user_to_response(user),
+        "last_login_at": last_login_at.isoformat() if last_login_at else None,
         "stats": {
             "total_earned": float(total_earned),
             "total_spent": float(total_spent),

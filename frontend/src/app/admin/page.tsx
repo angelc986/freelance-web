@@ -35,7 +35,8 @@ interface UserDetailFull {
     profession?: string; latitude?: number; longitude?: number;
     avatar_url?: string | null; avatar_verified?: boolean; cedula_locked?: boolean;
     is_verified: boolean; verified_at?: string | null; profile_completed: boolean;
-    last_login_at?: string | null;
+  };
+  last_login_at?: string | null;
   };
   stats: { total_earned: number; total_spent: number; jobs_posted: number; jobs_completed: number; jobs_assigned: number; ratings_count: number };
   jobs_as_client: Job[];
@@ -947,7 +948,7 @@ export default function AdminPage() {
                 <InfoCell label="Cédula bloqueada" value={selectedUserFull.user.cedula_locked ? "Sí" : "No"} />
                 <InfoCell label="Avatar verificado" value={selectedUserFull.user.avatar_verified ? "Sí" : "No"} />
                 <InfoCell label="Registro" value={since(selectedUserFull.user.created_at)} />
-                <InfoCell label="Ultimo login" value={selectedUserFull.user.last_login_at ? since(selectedUserFull.user.last_login_at) : "Nunca"} />
+                <InfoCell label="Ultimo login" value={selectedUserFull.last_login_at ? since(selectedUserFull.last_login_at) : "Nunca"} />
                 {selectedUserFull.user.verified_at && <InfoCell label="Verificado el" value={new Date(selectedUserFull.user.verified_at).toLocaleDateString()} />}
               </div>
             </div>
