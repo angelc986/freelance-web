@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import Portal from "./Portal";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -227,10 +228,8 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
         )}
       </div>
 
-      {/* ══════════════════════════════════════════
-           MAP MODAL — polished, modern, professional
-           ══════════════════════════════════════════ */}
       {modalOpen && (
+        <Portal>
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
           onClick={() => setModalOpen(false)}
@@ -374,6 +373,7 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
             </div>
           </div>
         </div>
+        </Portal>
       )}
     </div>
   );
