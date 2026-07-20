@@ -56,6 +56,22 @@ def create_notification(user_id: int, event: str, message: str, data: dict | Non
         db.close()
 
 
+@router.get("/notifications/debug")
+def debug_notifications():
+    """Diagnóstico de configuración de notificaciones"""
+    import os
+    rk = os.getenv("RESEND_API_KEY", "")
+    vp = os.getenv("VAPID_PRIVATE_KEY", "")
+    vu = os.getenv("VAPID_PUBLIC_KEY", "")
+    return {
+        "resend_ok": bool(rk),
+        "resend_len": len(rk),
+        "vapid_ok": bool(vp and vu),
+        "vapid_priv_len": len(vp),
+        "vapid_pub_len": len(vu),
+    }
+
+
 @router.get("/notifications/test", response_model=dict)
 def send_test_notification(current_user: User = Depends(get_current_user)):
     """🧪 Envía notificación de prueba al usuario autenticado"""
