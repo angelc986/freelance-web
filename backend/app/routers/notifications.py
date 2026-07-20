@@ -55,6 +55,49 @@ def create_notification(user_id: int, event: str, message: str, data: dict | Non
     finally:
         db.close()
 
+
+@router.get("/notifications/test", response_model=dict)
+def send_test_notification(current_user: User = Depends(get_current_user)):
+    """🧪 Envía notificación de prueba al usuario autenticado"""
+    create_notification(
+        user_id=current_user.id,
+        event="test_notification",
+        message="🔔 ¡Notificación de prueba de TurnoGO! Si estás viendo esto, tus notificaciones están funcionando correctamente.",
+    )
+    return {
+        "ok": True,
+        "message": "Notificación de prueba enviada",
+        "email": current_user.email,
+        "email_enabled": current_user.email_notifications,
+        "has_push": current_user.push_subscription is not None,
+    }
+
+
+@router.post("/notifications/test/{user_id}")
+def admin_send_test_notification(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """🔧 Admin: envía notificación de prueba a cualquier usuario"""
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Solo administradores")
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    create_notification(
+        user_id=user_id,
+        event="test_notification",
+        message="🔔 ¡Notificación de prueba de TurnoGO! Tus notificaciones están funcionando correctamente.",
+    )
+    return {
+        "ok": True,
+        "target": target.email,
+        "email_enabled": target.email_notifications,
+        "has_push": target.push_subscription is not None,
+    }
+
+
 @router.get("/notifications", response_model=List[NotificationResponse])
 def get_notifications(
     limit: int = 20,
