@@ -574,7 +574,7 @@ function AuthPageInner() {
  </div>
 
  <div className="stagger text-center">
- <span className="inline-flex items-center gap-1 bg-blue-50 border border-blue-100 rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-primary mb-1.5">{regRole === "worker" ? "Trabajador" : "Contratista"}</span>
+ <span className="inline-flex items-center gap-1 bg-blue-50 border border-blue-100 rounded-full px-2.5 py-0.5 text-[11px] sm:text-[10px] font-semibold text-primary mb-1.5">{regRole === "worker" ? "Trabajador" : "Contratista"}</span>
  <h2 className="text-[20px] sm:text-[18px] font-bold tracking-tight text-gray-900 leading-tight">Completa tu perfil</h2>
  <p className="text-gray-500 text-[13px] sm:text-[11px] mt-0">Cuéntanos un poco sobre ti</p>
  </div>

@@ -212,10 +212,16 @@
   .input-profile{padding:7px 10px;font-size:12px;border-radius:6px}
 }
 
-/* ── Complete screen: mobile top padding ── */
-.complete-screen{padding-top:16px!important}
+/* ── Complete screen: mobile optimizations ── */
+.complete-screen{padding-top:16px!important;padding-left:16px!important;padding-right:16px!important}
+.complete-screen form{width:100%!important;display:flex!important;flex-direction:column!important}
+.complete-screen .stagger.bg-white{padding-left:12px!important;padding-right:12px!important}
+/* Keep LocationPicker contained */
+.complete-screen .stagger.bg-white input[type="text"],
+.complete-screen .stagger.bg-white input[type="tel"]{max-width:100%!important;box-sizing:border-box!important}
 @media(min-width:480px){
-  .complete-screen{padding-top:0!important}
+  .complete-screen{padding-top:0!important;padding-left:20px!important;padding-right:20px!important}
+  .complete-screen .stagger.bg-white{padding-left:14px!important;padding-right:14px!important}
 }
 
 /* Fix for Tailwind preflight overriding button backgrounds */
