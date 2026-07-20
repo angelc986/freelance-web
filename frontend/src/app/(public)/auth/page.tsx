@@ -458,7 +458,11 @@ function AuthPageInner() {
  setLoading(true);
  try {
  const u = await login(loginEmail, loginPassword);
+ if (!u.profile_completed) {
+ push("complete");
+ } else {
  router.push(u.is_admin ? "/admin" : "/dashboard");
+ }
  } catch (err: any) {
  setError(err.message || "Error al iniciar sesión");
  } finally { setLoading(false); }
