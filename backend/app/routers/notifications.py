@@ -109,18 +109,12 @@ def admin_send_test_notification(
 
     results = {}
 
-    # 1. Email directo con Resend
+    # 1. Email via email_service (SendGrid → SMTP → Resend)
     try:
-        import os, resend
-        key = os.getenv("RESEND_API_KEY", "")
-        resend.api_key = key
-        r = resend.Emails.send({
-            "from": "TurnoGO <onboarding@resend.dev>",
-            "to": target.email,
-            "subject": "🔔 TurnoGO — Notificación de prueba",
-            "html": "<h2>¡Funciona!</h2><p>Notificación de TurnoGO enviada correctamente.</p>",
-        })
-        results["email"] = f"OK (id={r.get('id','?')})"
+        from app.services.email_service import send_notification_email
+        ok = send_notification_email(target.email, "test_notification",
+            "🔔 ¡Notificación de prueba de TurnoGO! Tus notificaciones están funcionando.")
+        results["email"] = "OK" if ok else "FAIL (todos los métodos fallaron)"
     except Exception as e:
         results["email"] = f"ERROR: {str(e)[:300]}"
 
