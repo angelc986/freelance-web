@@ -1,1 +1,989 @@
-"use client";import { useState, useEffect, useRef, useCallback, Suspense } from "react";import { useRouter, useSearchParams } from "next/navigation";import { useAuth } from "@/contexts/AuthContext";import { completeProfile } from "@/lib/api";import Logo from "@/components/Logo";import dynamic from "next/dynamic";const LocationPicker = dynamic(() => import("@/components/LocationPicker"), { ssr: false });import "./auth.css";/* --------------------------------------------------------------   SCREENS: welcome | register | login | reset | email   -------------------------------------------------------------- */type Screen = "welcome" | "register" | "login" | "reset" | "email" | "complete";/* --------------------------------------------------------------   MESH GRADIENT (Canvas)   -------------------------------------------------------------- */function useMeshGradient(canvasRef: React.RefObject<HTMLCanvasElement | null>) { useEffect(() => { const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext("2d"); if (!ctx) return; let nodes: { x: number; y: number; dx: number; dy: number; color: { r: number; g: number; b: number } }[] = []; let frame = 0; let animId = 0; function init() { const w = canvas!.clientWidth; const h = canvas!.clientHeight; canvas!.width = w; canvas!.height = h; nodes = [ { x: 0.15, y: 0.20, dx: 0.010, dy: 0.007, color: { r: 37, g: 99, b: 235 } }, { x: 0.78, y: 0.18, dx: -0.008, dy: 0.009, color: { r: 59, g: 130, b: 246 } }, { x: 0.82, y: 0.75, dx: 0.007, dy: -0.010, color: { r: 96, g: 165, b: 250 } }, { x: 0.18, y: 0.78, dx: -0.011, dy: -0.006, color: { r: 147, g: 197, b: 253 } }, { x: 0.50, y: 0.50, dx: 0.006, dy: 0.008, color: { r: 29, g: 78, b: 216 } }, ]; } function draw() { const w = canvas!.width; const h = canvas!.height; const imageData = ctx!.createImageData(w, h); const data = imageData.data; for (const n of nodes) { n.x += n.dx; n.y += n.dy; if (n.x < -0.15 || n.x > 1.15) n.dx *= -1; if (n.y < -0.15 || n.y > 1.15) n.dy *= -1; } const step = 2; for (let py = 0; py < h; py += step) { for (let px = 0; px < w; px += step) { const xn = px / w; const yn = py / h; let r = 0, g = 0, b = 0, tw = 0; for (const n of nodes) { const ds = (xn - n.x) * (xn - n.x) + (yn - n.y) * (yn - n.y); const wgt = 1 / (ds * ds + 0.0002); r += n.color.r * wgt; g += n.color.g * wgt; b += n.color.b * wgt; tw += wgt; } r = Math.min(255, Math.round(r / tw * 1.1)); g = Math.min(255, Math.round(g / tw * 1.1)); b = Math.min(255, Math.round(b / tw * 1.1)); const idx = (py * w + px) * 4; for (let dy = 0; dy < step && py + dy < h; dy++) { for (let dx = 0; dx < step && px + dx < w; dx++) { const i = idx + (dy * w + dx) * 4; data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = 255; } } } } ctx!.putImageData(imageData, 0, 0); frame++; animId = window.setTimeout(() => requestAnimationFrame(draw), 40); } init(); draw(); const handleResize = () => { init(); }; window.addEventListener("resize", handleResize); return () => { window.removeEventListener("resize", handleResize); cancelAnimationFrame(animId); clearTimeout(animId); }; }, [canvasRef]);}/* --------------------------------------------------------------   PARTICLES (Canvas)   -------------------------------------------------------------- */function useParticles(canvasRef: React.RefObject<HTMLCanvasElement | null>) { useEffect(() => { const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext("2d"); if (!ctx) return; interface Particle { x: number; y: number; size: number; speedX: number; speedY: number; opacity: number; hue: string; } let particles: Particle[] = []; let animId = 0; function reset() { const w = canvas!.clientWidth; const h = canvas!.clientHeight; canvas!.width = w; canvas!.height = h; particles = Array.from({ length: 12 }, () => ({ x: Math.random() * w, y: Math.random() * h, size: Math.random() * 3 + 1, speedX: (Math.random() - 0.5) * 0.1, speedY: (Math.random() - 0.5) * 0.1, opacity: Math.random() * 0.12 + 0.02, hue: Math.random() > 0.3 ? "37,99,235" : "59,130,246", })); } function animate() { const w = canvas!.width; const h = canvas!.height; ctx!.clearRect(0, 0, w, h); for (const p of particles) { p.x += p.speedX; p.y += p.speedY; if (p.x < -10) p.x = w + 10; if (p.x > w + 10) p.x = -10; if (p.y < -10) p.y = h + 10; if (p.y > h + 10) p.y = -10; ctx!.beginPath(); ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx!.fillStyle = `rgba(${p.hue},${p.opacity})`; ctx!.fill(); } animId = requestAnimationFrame(animate); } reset(); animate(); const handleResize = () => reset(); window.addEventListener("resize", handleResize); return () => { window.removeEventListener("resize", handleResize); cancelAnimationFrame(animId); }; }, [canvasRef]);}/* --------------------------------------------------------------   RIPPLE HOOK   -------------------------------------------------------------- */function useRipple() { useEffect(() => { const handler = (e: MouseEvent) => { const btn = (e.target as HTMLElement).closest(".btn-main") as HTMLElement; if (!btn) return; const ripple = document.createElement("span"); ripple.className = "ripple"; const rect = btn.getBoundingClientRect(); const size = Math.max(rect.width, rect.height); ripple.style.width = ripple.style.height = `${size}px`; ripple.style.left = `${e.clientX - rect.left - size / 2}px`; ripple.style.top = `${e.clientY - rect.top - size / 2}px`; btn.appendChild(ripple); ripple.addEventListener("animationend", () => ripple.remove()); }; document.addEventListener("click", handler); return () => document.removeEventListener("click", handler); }, []);}/* --------------------------------------------------------------   FLOATING PARTICLES (burbujas azules)   -------------------------------------------------------------- */function Particles({ count = 15 }: { count?: number }) { const particles = Array.from({ length: count }, (_, i) => ({ id: i, size: Math.random() * 4 + 2, left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, delay: `${Math.random() * 5}s`, duration: `${6 + Math.random() * 6}s`, })); return ( <> {particles.map((p) => ( <div key={p.id} className="particle" style={{ width: p.size, height: p.size, left: p.left, top: p.top, animationDelay: p.delay, animationDuration: p.duration, animationName: "float-particle", animationTimingFunction: "ease-in-out", animationIterationCount: "infinite", }} /> ))} </> );}/* --------------------------------------------------------------   TOP ROW (logo + separator + back button)   Desktop: logo SVG + TurnoGO + | + ?   Mobile: solo ?   -------------------------------------------------------------- */function TopRowLogo({ onBack }: { onBack: () => void }) {  return (    <div className="flex items-center gap-2">      {/* Logo + texto: solo visible en desktop (md+) — enlace al inicio */}      <a href="/" className="hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity">        <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">          <defs><linearGradient id="tlg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#2563EB"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs>          <circle cx="24" cy="24" r="22" fill="url(#tlg)"/>          <path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round"/>          <path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.8"/>          <circle cx="36.5" cy="19" r="1.5" fill="white" opacity="0.8"/>          <circle cx="24" cy="24" r="3" fill="white" opacity="0.6"/>        </svg>        <span className="logo-text font-bold tracking-tight">Turno<span style={{color:"#2563EB"}}>GO</span></span>        <div className="w-px h-4 bg-gray-300 mx-1"></div>      </a>      <button onClick={onBack} className="btn-back" style={{marginLeft:0,width:32,height:32,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",color:"#475569",border:"none",background:"none",cursor:"pointer"}}>        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>      </button>    </div>  );}/* --------------------------------------------------------------   MAIN COMPONENT   -------------------------------------------------------------- */export default function AuthPage() { return ( <Suspense fallback={ <div className="flex-1 flex items-center justify-center min-h-screen"> <div className="animate-pulse text-gray-400 text-sm">Cargando...</div> </div> }> <AuthPageInner /> </Suspense> );}function AuthPageInner() { const router = useRouter(); const searchParams = useSearchParams(); const { user, login, register } = useAuth(); const meshRef = useRef<HTMLCanvasElement>(null); const particlesRef = useRef<HTMLCanvasElement>(null); useMeshGradient(meshRef); useParticles(particlesRef); useRipple(); // Bloquear scroll del body/html cuando el auth está montado useEffect(() => {   const prevBodyOverflow = document.body.style.overflow;   const prevHtmlOverflow = document.documentElement.style.overflow;   const prevHtmlHeight = document.documentElement.style.height;   const prevBodyHeight = document.body.style.height;   document.body.style.overflow = "hidden";   document.body.style.height = "100dvh";   document.documentElement.style.overflow = "hidden";   document.documentElement.style.height = "100dvh";   return () => {     document.body.style.overflow = prevBodyOverflow;     document.body.style.height = prevBodyHeight;     document.documentElement.style.overflow = prevHtmlOverflow;     document.documentElement.style.height = prevHtmlHeight;   }; }, []); const [history, setHistory] = useState<Screen[]>(["welcome"]); const [transition, setTransition] = useState(""); const current = history[history.length - 1]; const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID; // --- Cargar Google Identity Services --- useEffect(() => {   if (!googleClientId) return;   const script = document.createElement("script");   script.src = "https://accounts.google.com/gsi/client";   script.async = true;   script.defer = true;   document.head.appendChild(script); }, [googleClientId]); // --- Sincronizar URL con la pantalla actual --- useEffect(() => {   if (current === "welcome") {     router.replace("/auth", { scroll: false });   } else {     router.replace(`/auth?screen=${current}`, { scroll: false });   } }, [current, router]); const [legalOpen, setLegalOpen] = useState(false); const [legalTab, setLegalTab] = useState<"terms" | "privacy">("terms"); const [googleLoading, setGoogleLoading] = useState(false);  // --- Google OAuth (popup, sin FedCM) --- const handleGoogleLogin = useCallback(async () => {   if (!googleClientId) {     setError("Google OAuth no configurado. Contacta al administrador.");     return;   }   setGoogleLoading(true);   setError("");   const google = (window as any).google;   if (!google?.accounts?.oauth2) {     setError("Google Identity Services no cargo. Recarga la pagina.");     setGoogleLoading(false);     return;   }   const client = google.accounts.oauth2.initTokenClient({     client_id: googleClientId,     scope: "openid email profile",     callback: async (response: { access_token: string }) => {       try {         const res = await fetch(           `/api/v1/auth/google`,           {             method: "POST",             headers: { "Content-Type": "application/json" },             body: JSON.stringify({ access_token: response.access_token }),           }         );         if (!res.ok) {           const err = await res.json().catch(() => ({ detail: "Error desconocido" }));           throw new Error(err.detail || "Error al autenticar con Google");         }         const data = await res.json();         localStorage.setItem("access_token", data.access_token);         localStorage.setItem("refresh_token", data.refresh_token);         if (data.needs_profile) {           push("complete");         } else {           window.location.href = "/dashboard";         }       } catch (err: any) {         console.error("Google token error:", err);         setError(err.message || "Error al iniciar sesion con Google");         setGoogleLoading(false);       }     },     error_callback: (error: any) => {       console.error("Google popup error:", error);       setError("Se cancelo o no se pudo completar el inicio con Google");       setGoogleLoading(false);     },   });   client.requestAccessToken(); }, [googleClientId]); // Form state const [regEmail, setRegEmail] = useState(""); const [regPassword, setRegPassword] = useState(""); const [regShowPw, setRegShowPw] = useState(false); const [regRole, setRegRole] = useState<"worker" | "contractor">("worker"); const [compFirstName, setCompFirstName] = useState(""); const [compLastName, setCompLastName] = useState(""); const [compPhone, setCompPhone] = useState(""); const [compCedula, setCompCedula] = useState(""); const [compAddress, setCompAddress] = useState(""); const [compLat, setCompLat] = useState<number | null>(null); const [compLng, setCompLng] = useState<number | null>(null); const [compProfession, setCompProfession] = useState(""); const [loginEmail, setLoginEmail] = useState(""); const [loginPassword, setLoginPassword] = useState(""); const [loginShowPw, setLoginShowPw] = useState(false); const [resetEmail, setResetEmail] = useState(""); const [loading, setLoading] = useState(false); const [error, setError] = useState(""); const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null); // --- Redirect if already logged in with full profile --- useEffect(() => { if (user) { if (user.profile_completed === false) { push("complete"); } else if (user.is_admin) { router.push("/admin"); } else { router.push("/dashboard"); } } }, [user, router]); // --- Auto-navigate from ?screen= param --- useEffect(() => { const screen = searchParams.get("screen"); if (screen === "login" || screen === "register" || screen === "reset" || screen === "complete") { setHistory(["welcome", screen]); } }, [searchParams]); // --- Navigation --- const push = useCallback((screen: Screen) => { const last = history[history.length - 1]; if (last === screen) return; setTransition("push"); setHistory(prev => [...prev, screen]); }, [history]); const pop = useCallback(() => { if (history.length <= 1) return; setTransition("pop"); setHistory(prev => prev.slice(0, -1)); }, [history]); const replace = useCallback((screen: Screen) => { setTransition(""); setHistory(prev => [...prev.slice(0, -1), screen]); }, []); const popTo = useCallback((screen: Screen) => { setTransition("pop"); setHistory(prev => { const idx = prev.lastIndexOf(screen); return idx >= 0 ? prev.slice(0, idx + 1) : prev.slice(0, 1); }); }, []); // --- Screen class --- function screenClass(s: Screen) { const idx = history.indexOf(s); if (idx === -1) return "screen screen-hidden"; if (idx === history.length - 1 && transition === "pop") return "screen screen-active"; if (s === current) return "screen screen-active"; if (idx < history.length - 1) return "screen screen-left"; return "screen screen-right"; } // --- Handlers --- async function handleLogin(e: React.FormEvent) { e.preventDefault(); setError(""); if (!loginEmail || !loginPassword) { setError("Completa todos los campos"); return; } setLoading(true); try { const u = await login(loginEmail, loginPassword); if (!u.profile_completed) { push("complete"); } else { router.push(u.is_admin ? "/admin" : "/dashboard"); } } catch (err: any) { setError(err.message || "Error al iniciar sesión"); } finally { setLoading(false); } } async function handleRegister(e: React.FormEvent) { e.preventDefault(); setError(""); if (!regEmail || !regPassword) { setError("Completa todos los campos"); return; } if (regPassword.length < 6) { setError("La contraseña debe tener al menos 6 caracteres"); return; } setLoading(true); try { const u = await register({ email: regEmail, password: regPassword, role: regRole, }); // After partial register, go to complete profile push("complete"); } catch (err: any) { setError(err.message || "Error al registrarse"); } finally { setLoading(false); } } function simulateReset() { const btn = document.getElementById("send-link-btn"); if (!btn) return; const label = btn.textContent || ""; btn.textContent = "Enviando..."; btn.style.opacity = "0.7"; setTimeout(() => { btn.textContent = "¡Enviado! ?"; btn.classList.add("done"); btn.style.opacity = "1"; setTimeout(() => { push("email"); btn.textContent = label; btn.classList.remove("done"); btn.style.opacity = "1"; }, 800); }, 1200); }  async function handleCompleteProfile(e: React.FormEvent) { e.preventDefault(); setError(""); if (!compFirstName || !compLastName || !compPhone || !compCedula || !compAddress || compLat == null || compLng == null) { setError("Completa todos los campos obligatorios, incluida tu ubicación"); return; } if (compPhone.length < 7) { setError("Teléfono inválido"); return; } if (!compCedula.trim()) { setError("Ingresa tu cédula"); return; } setLoading(true); try { const user = await completeProfile({ full_name: `${compFirstName} ${compLastName}`, phone: compPhone, cedula: compCedula, address: compAddress, latitude: compLat, longitude: compLng, profession: compProfession || undefined, }); router.push(user.is_admin ? "/admin" : "/dashboard"); } catch (err: any) { setError(err.message || "Error al completar perfil"); } finally { setLoading(false); } }// --- Stagger animation trigger --- useEffect(() => { const timers: NodeJS.Timeout[] = []; const items = document.querySelectorAll('.stagger'); items.forEach((el, i) => { (el as HTMLElement).classList.remove('in'); const timer = setTimeout(() => (el as HTMLElement).classList.add('in'), i * 60); timers.push(timer); }); return () => timers.forEach(clearTimeout); }, [current, transition]); return ( <> {/* ------- CONTAINER ------- */} <div className="phone-frame auth-page"> <canvas ref={meshRef} className="mesh-canvas" /> <div className="blob-layer"> <div className="blob blob-1" /><div className="blob blob-2" /> <div className="blob blob-3" /><div className="blob blob-4" /><div className="blob blob-5" /> </div> <div className="aurora" /> <canvas ref={particlesRef} className="particle-canvas" /> <div className="glass-container">            {/* --- Logo flotante: visible en mobile (todas las pantallas), oculto en desktop --- */}            <a href="/" className="absolute left-4 z-30 md:hidden" style={{top:"calc(env(safe-area-inset-top,0px) + 14px)"}}>              <Logo size="sm" />            </a> {/* --- Partículas flotantes --- */} <Particles /> {/* ------- 5. COMPLETE PROFILE ------- */} <div className={screenClass("complete") + " screen-scroll"} style={{paddingTop:"0px",paddingBottom:"120px"} }> <div className="top-row top-bar"> <TopRowLogo onBack={pop} /> </div> <div className="stagger text-center"> <span className="inline-flex items-center gap-1 bg-blue-50 border border-blue-100 rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-primary mb-1">{regRole === "worker" ? "Trabajador" : "Contratista"}</span> <h2 className="text-[18px] font-bold tracking-tight text-gray-900 leading-tight">Completa tu perfil</h2> <p className="text-gray-500 text-[11px] mt-0">Cuéntanos un poco sobre ti</p> </div> {error && <div className="error-msg">{error}</div>} <form onSubmit={handleCompleteProfile}> {/*** Card: Datos personales ***/} <div className="stagger bg-white rounded-xl border border-gray-100 shadow-sm px-3.5 py-2.5 mt-1.5"> <div className="flex items-center gap-1.5 mb-2"> <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center"><svg className="w-2.5 h-2.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg></div> <span className="text-[12px] font-semibold text-gray-800">Datos personales</span> </div> <div className="grid grid-cols-2 gap-2"> <div> <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Nombre</label> <input type="text" className="input-field" placeholder="Tu nombre" value={compFirstName} onChange={e => setCompFirstName(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} /> </div> <div> <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Apellido</label> <input type="text" className="input-field" placeholder="Tu apellido" value={compLastName} onChange={e => setCompLastName(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} /> </div> </div> </div> {/*** Card: Contacto ***/} <div className="stagger bg-white rounded-xl border border-gray-100 shadow-sm px-3.5 py-2.5 mt-1.5"> <div className="flex items-center gap-1.5 mb-1.5"> <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center"><svg className="w-2.5 h-2.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg></div> <span className="text-[12px] font-semibold text-gray-800">Contacto</span> </div> <div className="grid grid-cols-2 gap-2"> <div> <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Teléfono</label> <input type="tel" className="input-field" placeholder="+58 414..." value={compPhone} onChange={e => setCompPhone(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} /> </div> <div> <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Cédula</label> <input type="text" className="input-field" placeholder="V-12345678" value={compCedula} onChange={e => setCompCedula(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} /> </div> </div> <div className="mt-2"> <label className="block text-[10px] font-medium text-gray-500 mb-1">Ubicación</label> <LocationPicker lat={compLat} lng={compLng} address={compAddress} onLocationChange={(data) => { setCompLat(data.lat); setCompLng(data.lng); setCompAddress(data.address); }} /> </div> </div> {/*** Card: Profesión ***/} <div className="stagger bg-white rounded-xl border border-gray-100 shadow-sm px-3.5 py-2.5 mt-1.5"> <div className="flex items-center gap-1.5 mb-1.5"> <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center"><svg className="w-2.5 h-2.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z"/></svg></div> <span className="text-[12px] font-semibold text-gray-800">Profesión</span> <span className="text-[9px] text-gray-400 font-medium ml-auto">Opcional</span> </div> <input type="text" className="input-field" placeholder="Ej: Electricista, Diseñador, Programador..." value={compProfession} onChange={e => setCompProfession(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} /> </div> <div className="stagger mt-2"> <button type="submit" disabled={loading} className="btn-main">{loading ? "Guardando..." : "Guardar y Continuar"}</button> </div> </form> </div>{/* ------- 1. WELCOME ------- */} <div className={screenClass("welcome")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>            {/* Top row: logo + back — uniforme en las 5 pantallas (desktop) */}            <div className="top-row top-bar">              <TopRowLogo onBack={() => router.push('/')} />            </div> <div className="flex-1 flex flex-col justify-center items-center text-center"> <div className="stagger"> <div className="logo-container mx-auto mb-6"> <div className="logo-mark"> <svg viewBox="0 0 48 48" fill="none" style={{width:"100%",height:"100%"}}> <defs><linearGradient id="logoGradWelcome" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#2563EB"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs> <circle cx="24" cy="24" r="22" fill="url(#logoGradWelcome)"/> <path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/> <path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round"/> <circle cx="36.5" cy="19" r="1.5" fill="white"/> <circle cx="24" cy="24" r="3" fill="white"/> </svg> </div> <span className="logo-text">Turno<span style={{color:"#2563EB"}}>GO</span></span> </div> </div> <h1 className="text-[30px] font-extrabold mb-2 tracking-tight text-gray-900 stagger">Bienvenido</h1> <p className="text-gray-500 text-[15px] max-w-[260px] mx-auto leading-relaxed stagger">Encuentra trabajos, conecta y crece. Tu oportunidad empieza aquí.</p> </div> <div className="space-y-3 pb-2"> <div className="stagger"><button onClick={() => push("register")} className="btn-main" style={{fontSize:17,padding:"18px 28px",marginTop:-16}}>Comenzar</button></div> <div className="stagger"><button onClick={() => push("login")} className="ghost-btn">Ya tengo una cuenta</button></div> </div> <div className="stagger"><p className="legal-text text-center mt-auto">Al continuar aceptas nuestros <a href="#" onClick={(e) => { e.preventDefault(); setLegalTab("terms"); setLegalOpen(true); }}>Términos</a> y <a href="#" onClick={(e) => { e.preventDefault(); setLegalTab("privacy"); setLegalOpen(true); }}>Privacidad</a>.</p></div> </div> {/* ------- 2. REGISTER ------- */} <div className={screenClass("register")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}> <div className="top-row top-bar"> <TopRowLogo onBack={pop} /> <div className="pill-toggle"> <div className={`pill-slider${current === "register" && transition !== "pop" ? " right" : ""}`}></div> <button className={`pill-btn${current === "login" ? " active" : ""}`} onClick={() => replace("login")}>Iniciar</button> <button className={`pill-btn${current === "register" ? " active" : ""}`} onClick={() => replace("register")}>Registro</button> </div> </div> <div className="stagger"> <h2 className="text-[22px] font-bold mb-0.5 tracking-tight text-gray-900">Crear cuenta</h2> <p className="text-gray-500 text-[13px] mb-2">Únete hoy — es gratis</p> </div>          <div className="stagger">            <div className="flex items-center gap-1 bg-slate-100 rounded-full p-0.5 w-fit mx-auto mb-4">              <button                type="button"                onClick={() => setRegRole("worker")}                className={"px-2.5 py-1 text-[11px] font-medium rounded-full transition-all duration-200 " + (regRole === "worker" ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-700")}              >                Trabajador              </button>              <button                type="button"                onClick={() => setRegRole("contractor")}                className={"px-2.5 py-1 text-[11px] font-medium rounded-full transition-all duration-200 " + (regRole === "contractor" ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-700")}              >                Contratista              </button>            </div>          </div> {error && <div className="error-msg">{error}</div>} <form onSubmit={handleRegister}> <div className="stagger"><div className="input-group"> <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg> <input type="email" className="input-field" placeholder="Correo electrónico" value={regEmail} onChange={e => setRegEmail(e.target.value)} /> </div></div> <div className="stagger"><div className="input-group"> <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg> <input type={regShowPw ? "text" : "password"} className="input-field" placeholder="Contraseña" value={regPassword} onChange={e => setRegPassword(e.target.value)} /> <button type="button" onClick={() => setRegShowPw(!regShowPw)} className="pw-toggle"> {regShowPw ? <svg className="w-5 h-5" fill="none" stroke="#475569" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg> : <svg className="w-5 h-5" fill="none" stroke="#475569" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>} </button> </div></div> <div className="stagger"> <button type="submit" disabled={loading} className="btn-main mt-0 mb-2">{loading ? "Creando cuenta..." : "Crear Cuenta"}</button> </div> </form> <div className="stagger"> <div className="flex items-center gap-3 mb-2"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-600 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div> <div className="flex justify-center"> <button onClick={handleGoogleLogin} disabled={googleLoading} className="btn-social">   {googleLoading     ? <span className="inline-block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />     : <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0124 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>}   Google  </button> </div> </div> </div> {/* ------- 3. LOGIN ------- */} <div className={screenClass("login")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}> <div className="top-row top-bar"> <TopRowLogo onBack={pop} /> <div className="pill-toggle"> <div className={`pill-slider${current === "login" && transition !== "pop" ? "" : " right"}`}></div> <button className={`pill-btn${current === "login" ? " active" : ""}`} onClick={() => replace("login")}>Iniciar</button> <button className={`pill-btn${current === "register" ? " active" : ""}`} onClick={() => replace("register")}>Registro</button> </div> </div> <div className="stagger"> <h2 className="text-[22px] font-bold mb-0.5 tracking-tight text-gray-900">Bienvenido de nuevo</h2> <p className="text-gray-500 text-[14px] mb-6">Inicia sesión para continuar</p> </div> {error && <div className="error-msg">{error}</div>} <form onSubmit={handleLogin}> <div className="stagger"><div className="input-group"> <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg> <input type="email" className="input-field" placeholder="Correo electrónico" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} /> </div></div> <div className="stagger"><div className="input-group mb-1"> <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg> <input type={loginShowPw ? "text" : "password"} className="input-field" placeholder="Contraseña" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} /> <button type="button" onClick={() => setLoginShowPw(!loginShowPw)} className="pw-toggle"> {loginShowPw ? <svg className="w-5 h-5" fill="none" stroke="#475569" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg> : <svg className="w-5 h-5" fill="none" stroke="#475569" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>} </button> </div></div> <div className="stagger"> <div className="flex justify-end mb-5"> <button type="button" onClick={() => push("reset")} className="text-[#2563EB] text-[13px] font-semibold hover:underline">¿Olvidaste tu contraseña?</button> </div> <button type="submit" disabled={loading} className="btn-main mb-2">{loading ? "Iniciando sesión..." : "Iniciar Sesión"}</button> </div> </form> <div className="stagger"> <div className="flex items-center gap-3 mb-2"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-600 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div> <div className="flex justify-center"> <button onClick={handleGoogleLogin} disabled={googleLoading} className="btn-social">   {googleLoading     ? <span className="inline-block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />     : <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0124 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>}   Google  </button> </div> </div> </div> {/* ------- 4. RESET PASSWORD ------- */} <div className={screenClass("reset")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}> <div className="top-row top-bar"> <TopRowLogo onBack={pop} /> </div> <div className="stagger"> <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Restablecer contraseña</h2> <p className="text-gray-500 text-[14px] leading-relaxed mb-6">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p> </div> <div className="stagger"><div className="input-group mb-6"> <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg> <input type="email" className="input-field" placeholder="Correo electrónico" value={resetEmail} onChange={e => setResetEmail(e.target.value)} /> </div></div> <div className="stagger"> <button onClick={simulateReset} className="btn-main mb-5" id="send-link-btn">Enviar Enlace</button> <button onClick={() => popTo("login")} className="link-btn w-full py-2"> <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg> Volver a iniciar sesión </button> </div> </div> {/* ------- 5. CHECK EMAIL ------- */} <div className={screenClass("email")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}> <div className="top-row top-bar"> <TopRowLogo onBack={() => popTo("reset")} /> <div></div> </div> <div className="flex-1 flex flex-col form-area justify-center items-center text-center" style={{paddingTop:0}}> <div className="pop-in"> <div className="email-icon mx-auto mb-6"> <svg fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg> </div> </div> <div className="stagger"> <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Revisa tu correo</h2> <p className="text-gray-500 text-[14px] max-w-[260px] mx-auto leading-relaxed mb-8">Te enviamos un enlace para restablecer tu contraseña.</p> </div> <div className="stagger space-y-3"> <button className="btn-main">Abrir Correo</button> <button className="ghost-btn">Reenviar enlace</button> </div> <div className="stagger"> <button onClick={() => popTo("login")} className="link-btn w-full py-2 mt-4"> <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg> Volver a iniciar sesión </button> </div> </div> </div> </div> </div> {/* ===== LEGAL MODAL ===== */} {legalOpen && ( <LegalModal tab={legalTab} onClose={() => setLegalOpen(false)} /> )} </> );}/* --------------------------------------------------------------   LEGAL MODAL   -------------------------------------------------------------- */function LegalModal({ tab, onClose }: { tab: "terms" | "privacy"; onClose: () => void }) { const [active, setActive] = useState<"terms" | "privacy">(tab); useEffect(() => { setActive(tab); }, [tab]); useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []); return ( <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" onClick={onClose}> <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" /> <div className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto bg-white rounded-3xl shadow-2xl" onClick={(e) => e.stopPropagation()}> {/* Close */} <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center z-10"> <svg className="w-4 h-4 text-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}> <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg> </button> {/* Header */} <div className="pt-8 px-7 pb-0"> <div className="flex gap-2 p-1 bg-gray-100 rounded-xl mb-5"> <button onClick={() => setActive("terms")} className={"flex-1 py-2.5 rounded-lg text-sm font-medium transition-all " + (active === "terms" ? "bg-white text-primary shadow-sm" : "text-gray hover:text-dark")} > Términos </button> <button onClick={() => setActive("privacy")} className={"flex-1 py-2.5 rounded-lg text-sm font-medium transition-all " + (active === "privacy" ? "bg-white text-primary shadow-sm" : "text-gray hover:text-dark")} > Privacidad </button> </div> </div> {/* Content */} <div className="px-7 pb-6 text-sm text-gray leading-relaxed space-y-4"> {active === "terms" ? <TermsContent /> : <PrivacyContent />} </div> </div> </div> );}function TermsContent() { return ( <> <div> <h3 className="font-semibold text-dark text-base mb-2">1. Aceptación</h3> <p>Al registrarte y usar TurnoGO aceptas estos términos. La plataforma conecta trabajadores con contratistas, actuando como intermediaria tecnológica.</p> </div> <div> <h3 className="font-semibold text-dark text-base mb-2">2. Obligaciones</h3> <p>Los trabajadores deben cumplir con los servicios contratados. Los contratistas deben pagar el monto acordado. Está prohibido acordar pagos fuera de la plataforma.</p> </div> <div> <h3 className="font-semibold text-dark text-base mb-2">3. Pagos</h3> <p>Los USDT quedan retenidos en escrow hasta que el contratista confirme el trabajo. TurnoGO cobra una comisión por cada trabajo completado.</p> </div> <div> <h3 className="font-semibold text-dark text-base mb-2">4. Conducta prohibida</h3> <p>No crear cuentas falsas, no acosar, no discriminar. El incumplimiento resulta en suspensión permanente de la cuenta.</p> </div> <div> <h3 className="font-semibold text-dark text-base mb-2">5. Modificaciones</h3> <p>TurnoGO puede modificar estos términos. Los cambios serán notificados con anticipación. El uso continuo constituye aceptación.</p> </div> <div className="pt-3 text-xs text-gray-400 border-t border-gray-100"> <a href="/terminos" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>Leer términos completos ?</a> </div> </> );}function PrivacyContent() { return ( <> <div> <h3 className="font-semibold text-dark text-base mb-2">1. Datos recopilados</h3> <p>Recopilamos nombre, email, teléfono, cédula, foto y datos de uso. Tus documentos se comparten con Didit para verificación de identidad.</p> </div> <div> <h3 className="font-semibold text-dark text-base mb-2">2. Uso de datos</h3> <p>Usamos tu información para gestionar tu cuenta, conectarte con trabajos, procesar pagos y mejorar la plataforma. No vendemos datos a terceros.</p> </div> <div> <h3 className="font-semibold text-dark text-base mb-2">3. Protección</h3> <p>Tu cédula se almacena encriptada (hash SHA-256). Usamos conexiones HTTPS. Datos sensibles solo accesibles por personal autorizado.</p> </div> <div> <h3 className="font-semibold text-dark text-base mb-2">4. Retención</h3> <p>Conservamos tus datos mientras tengas cuenta activa. Al eliminar tu cuenta, los datos personales se borran en 30 días.</p> </div> <div> <h3 className="font-semibold text-dark text-base mb-2">5. Tus derechos</h3> <p>Puedes acceder, rectificar o eliminar tus datos desde configuración. Para más información, contáctanos por la plataforma.</p> </div> <div className="pt-3 text-xs text-gray-400 border-t border-gray-100"> <a href="/privacidad" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>Leer política completa ?</a> </div> </> );}
+"use client";
+
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { completeProfile } from "@/lib/api";
+import Logo from "@/components/Logo";
+import dynamic from "next/dynamic";
+const LocationPicker = dynamic(() => import("@/components/LocationPicker"), { ssr: false });
+import "./auth.css";
+
+/* --------------------------------------------------------------
+   SCREENS: welcome | register | login | reset | email
+   -------------------------------------------------------------- */
+type Screen = "welcome" | "register" | "login" | "reset" | "email" | "complete";
+
+/* --------------------------------------------------------------
+   MESH GRADIENT (Canvas)
+   -------------------------------------------------------------- */
+function useMeshGradient(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
+ useEffect(() => {
+ const canvas = canvasRef.current;
+ if (!canvas) return;
+ const ctx = canvas.getContext("2d");
+ if (!ctx) return;
+
+ let nodes: { x: number; y: number; dx: number; dy: number; color: { r: number; g: number; b: number } }[] = [];
+ let frame = 0;
+ let animId = 0;
+
+ function init() {
+ const w = canvas!.clientWidth;
+ const h = canvas!.clientHeight;
+ canvas!.width = w;
+ canvas!.height = h;
+ nodes = [
+ { x: 0.15, y: 0.20, dx: 0.010, dy: 0.007, color: { r: 37, g: 99, b: 235 } },
+ { x: 0.78, y: 0.18, dx: -0.008, dy: 0.009, color: { r: 59, g: 130, b: 246 } },
+ { x: 0.82, y: 0.75, dx: 0.007, dy: -0.010, color: { r: 96, g: 165, b: 250 } },
+ { x: 0.18, y: 0.78, dx: -0.011, dy: -0.006, color: { r: 147, g: 197, b: 253 } },
+ { x: 0.50, y: 0.50, dx: 0.006, dy: 0.008, color: { r: 29, g: 78, b: 216 } },
+ ];
+ }
+
+ function draw() {
+ const w = canvas!.width;
+ const h = canvas!.height;
+ const imageData = ctx!.createImageData(w, h);
+ const data = imageData.data;
+
+ for (const n of nodes) {
+ n.x += n.dx; n.y += n.dy;
+ if (n.x < -0.15 || n.x > 1.15) n.dx *= -1;
+ if (n.y < -0.15 || n.y > 1.15) n.dy *= -1;
+ }
+
+ const step = 2;
+ for (let py = 0; py < h; py += step) {
+ for (let px = 0; px < w; px += step) {
+ const xn = px / w;
+ const yn = py / h;
+ let r = 0, g = 0, b = 0, tw = 0;
+ for (const n of nodes) {
+ const ds = (xn - n.x) * (xn - n.x) + (yn - n.y) * (yn - n.y);
+ const wgt = 1 / (ds * ds + 0.0002);
+ r += n.color.r * wgt; g += n.color.g * wgt; b += n.color.b * wgt; tw += wgt;
+ }
+ r = Math.min(255, Math.round(r / tw * 1.1));
+ g = Math.min(255, Math.round(g / tw * 1.1));
+ b = Math.min(255, Math.round(b / tw * 1.1));
+ const idx = (py * w + px) * 4;
+ for (let dy = 0; dy < step && py + dy < h; dy++) {
+ for (let dx = 0; dx < step && px + dx < w; dx++) {
+ const i = idx + (dy * w + dx) * 4;
+ data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = 255;
+ }
+ }
+ }
+ }
+
+ ctx!.putImageData(imageData, 0, 0);
+ frame++;
+ animId = window.setTimeout(() => requestAnimationFrame(draw), 40);
+ }
+
+ init();
+ draw();
+
+ const handleResize = () => { init(); };
+ window.addEventListener("resize", handleResize);
+
+ return () => {
+ window.removeEventListener("resize", handleResize);
+ cancelAnimationFrame(animId);
+ clearTimeout(animId);
+ };
+ }, [canvasRef]);
+}
+
+/* --------------------------------------------------------------
+   PARTICLES (Canvas)
+   -------------------------------------------------------------- */
+function useParticles(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
+ useEffect(() => {
+ const canvas = canvasRef.current;
+ if (!canvas) return;
+ const ctx = canvas.getContext("2d");
+ if (!ctx) return;
+
+ interface Particle {
+ x: number; y: number; size: number;
+ speedX: number; speedY: number; opacity: number; hue: string;
+ }
+ let particles: Particle[] = [];
+ let animId = 0;
+
+ function reset() {
+ const w = canvas!.clientWidth;
+ const h = canvas!.clientHeight;
+ canvas!.width = w;
+ canvas!.height = h;
+ particles = Array.from({ length: 12 }, () => ({
+ x: Math.random() * w,
+ y: Math.random() * h,
+ size: Math.random() * 3 + 1,
+ speedX: (Math.random() - 0.5) * 0.1,
+ speedY: (Math.random() - 0.5) * 0.1,
+ opacity: Math.random() * 0.12 + 0.02,
+ hue: Math.random() > 0.3 ? "37,99,235" : "59,130,246",
+ }));
+ }
+
+ function animate() {
+ const w = canvas!.width;
+ const h = canvas!.height;
+ ctx!.clearRect(0, 0, w, h);
+ for (const p of particles) {
+ p.x += p.speedX; p.y += p.speedY;
+ if (p.x < -10) p.x = w + 10; if (p.x > w + 10) p.x = -10;
+ if (p.y < -10) p.y = h + 10; if (p.y > h + 10) p.y = -10;
+ ctx!.beginPath();
+ ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+ ctx!.fillStyle = `rgba(${p.hue},${p.opacity})`;
+ ctx!.fill();
+ }
+ animId = requestAnimationFrame(animate);
+ }
+
+ reset();
+ animate();
+
+ const handleResize = () => reset();
+ window.addEventListener("resize", handleResize);
+ return () => {
+ window.removeEventListener("resize", handleResize);
+ cancelAnimationFrame(animId);
+ };
+ }, [canvasRef]);
+}
+
+/* --------------------------------------------------------------
+   RIPPLE HOOK
+   -------------------------------------------------------------- */
+function useRipple() {
+ useEffect(() => {
+ const handler = (e: MouseEvent) => {
+ const btn = (e.target as HTMLElement).closest(".btn-main") as HTMLElement;
+ if (!btn) return;
+ const ripple = document.createElement("span");
+ ripple.className = "ripple";
+ const rect = btn.getBoundingClientRect();
+ const size = Math.max(rect.width, rect.height);
+ ripple.style.width = ripple.style.height = `${size}px`;
+ ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+ ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+ btn.appendChild(ripple);
+ ripple.addEventListener("animationend", () => ripple.remove());
+ };
+ document.addEventListener("click", handler);
+ return () => document.removeEventListener("click", handler);
+ }, []);
+}
+
+/* --------------------------------------------------------------
+   FLOATING PARTICLES (burbujas azules)
+   -------------------------------------------------------------- */
+function Particles({ count = 15 }: { count?: number }) {
+ const particles = Array.from({ length: count }, (_, i) => ({
+ id: i,
+ size: Math.random() * 4 + 2,
+ left: `${Math.random() * 100}%`,
+ top: `${Math.random() * 100}%`,
+ delay: `${Math.random() * 5}s`,
+ duration: `${6 + Math.random() * 6}s`,
+ }));
+
+ return (
+ <>
+ {particles.map((p) => (
+ <div
+ key={p.id}
+ className="particle"
+ style={{
+ width: p.size,
+ height: p.size,
+ left: p.left,
+ top: p.top,
+ animationDelay: p.delay,
+ animationDuration: p.duration,
+ animationName: "float-particle",
+ animationTimingFunction: "ease-in-out",
+ animationIterationCount: "infinite",
+ }}
+ />
+ ))}
+ </>
+ );
+}
+
+/* --------------------------------------------------------------
+   TOP ROW (logo + separator + back button)
+   Desktop: logo SVG + TurnoGO + | + ?
+   Mobile: solo ?
+   -------------------------------------------------------------- */
+function TopRowLogo({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="flex items-center gap-2">
+      {/* Logo + texto: solo visible en desktop (md+) — enlace al inicio */}
+      <a href="/" className="hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="tlg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#2563EB"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs>
+          <circle cx="24" cy="24" r="22" fill="url(#tlg)"/>
+          <path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round"/>
+          <path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.8"/>
+          <circle cx="36.5" cy="19" r="1.5" fill="white" opacity="0.8"/>
+          <circle cx="24" cy="24" r="3" fill="white" opacity="0.6"/>
+        </svg>
+        <span className="logo-text font-bold tracking-tight">Turno<span style={{color:"#2563EB"}}>GO</span></span>
+        <div className="w-px h-4 bg-gray-300 mx-1"></div>
+      </a>
+      <button onClick={onBack} className="btn-back" style={{marginLeft:0,width:32,height:32,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",color:"#475569",border:"none",background:"none",cursor:"pointer"}}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+  );
+}
+
+/* --------------------------------------------------------------
+   MAIN COMPONENT
+   -------------------------------------------------------------- */
+export default function AuthPage() {
+ return (
+ <Suspense fallback={
+ <div className="flex-1 flex items-center justify-center min-h-screen">
+ <div className="animate-pulse text-gray-400 text-sm">Cargando...</div>
+ </div>
+ }>
+ <AuthPageInner />
+ </Suspense>
+ );
+}
+
+function AuthPageInner() {
+ const router = useRouter();
+ const searchParams = useSearchParams();
+ const { user, login, register } = useAuth();
+ const meshRef = useRef<HTMLCanvasElement>(null);
+ const particlesRef = useRef<HTMLCanvasElement>(null);
+
+ useMeshGradient(meshRef);
+ useParticles(particlesRef);
+ useRipple();
+
+ // Bloquear scroll del body/html cuando el auth está montado
+ useEffect(() => {
+   const prevBodyOverflow = document.body.style.overflow;
+   const prevHtmlOverflow = document.documentElement.style.overflow;
+   const prevHtmlHeight = document.documentElement.style.height;
+   const prevBodyHeight = document.body.style.height;
+   document.body.style.overflow = "hidden";
+   document.body.style.height = "100dvh";
+   document.documentElement.style.overflow = "hidden";
+   document.documentElement.style.height = "100dvh";
+   return () => {
+     document.body.style.overflow = prevBodyOverflow;
+     document.body.style.height = prevBodyHeight;
+     document.documentElement.style.overflow = prevHtmlOverflow;
+     document.documentElement.style.height = prevHtmlHeight;
+   };
+ }, []);
+
+ const [history, setHistory] = useState<Screen[]>(["welcome"]);
+ const [transition, setTransition] = useState("");
+ const current = history[history.length - 1];
+
+ const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+ // --- Cargar Google Identity Services ---
+ useEffect(() => {
+   if (!googleClientId) return;
+   const script = document.createElement("script");
+   script.src = "https://accounts.google.com/gsi/client";
+   script.async = true;
+   script.defer = true;
+   document.head.appendChild(script);
+ }, [googleClientId]);
+
+ // --- Sincronizar URL con la pantalla actual ---
+ useEffect(() => {
+   if (current === "welcome") {
+     router.replace("/auth", { scroll: false });
+   } else {
+     router.replace(`/auth?screen=${current}`, { scroll: false });
+   }
+ }, [current, router]);
+
+ const [legalOpen, setLegalOpen] = useState(false);
+ const [legalTab, setLegalTab] = useState<"terms" | "privacy">("terms");
+ const [googleLoading, setGoogleLoading] = useState(false);
+
+  // --- Google OAuth (popup, sin FedCM) ---
+ const handleGoogleLogin = useCallback(async () => {
+   if (!googleClientId) {
+     setError("Google OAuth no configurado. Contacta al administrador.");
+     return;
+   }
+   setGoogleLoading(true);
+   setError("");
+   const google = (window as any).google;
+   if (!google?.accounts?.oauth2) {
+     setError("Google Identity Services no cargo. Recarga la pagina.");
+     setGoogleLoading(false);
+     return;
+   }
+   const client = google.accounts.oauth2.initTokenClient({
+     client_id: googleClientId,
+     scope: "openid email profile",
+     callback: async (response: { access_token: string }) => {
+       try {
+         const res = await fetch(
+           `/api/v1/auth/google`,
+           {
+             method: "POST",
+             headers: { "Content-Type": "application/json" },
+             body: JSON.stringify({ access_token: response.access_token }),
+           }
+         );
+         if (!res.ok) {
+           const err = await res.json().catch(() => ({ detail: "Error desconocido" }));
+           throw new Error(err.detail || "Error al autenticar con Google");
+         }
+         const data = await res.json();
+         localStorage.setItem("access_token", data.access_token);
+         localStorage.setItem("refresh_token", data.refresh_token);
+         if (data.needs_profile) {
+           push("complete");
+         } else {
+           window.location.href = "/dashboard";
+         }
+       } catch (err: any) {
+         console.error("Google token error:", err);
+         setError(err.message || "Error al iniciar sesion con Google");
+         setGoogleLoading(false);
+       }
+     },
+     error_callback: (error: any) => {
+       console.error("Google popup error:", error);
+       setError("Se cancelo o no se pudo completar el inicio con Google");
+       setGoogleLoading(false);
+     },
+   });
+   client.requestAccessToken();
+ }, [googleClientId]);
+
+ // Form state
+ const [regEmail, setRegEmail] = useState("");
+ const [regPassword, setRegPassword] = useState("");
+ const [regShowPw, setRegShowPw] = useState(false);
+ const [regRole, setRegRole] = useState<"worker" | "contractor">("worker");
+
+ const [compFirstName, setCompFirstName] = useState("");
+ const [compLastName, setCompLastName] = useState("");
+ const [compPhone, setCompPhone] = useState("");
+ const [compCedula, setCompCedula] = useState("");
+ const [compAddress, setCompAddress] = useState("");
+ const [compLat, setCompLat] = useState<number | null>(null);
+ const [compLng, setCompLng] = useState<number | null>(null);
+ const [compProfession, setCompProfession] = useState("");
+
+ const [loginEmail, setLoginEmail] = useState("");
+ const [loginPassword, setLoginPassword] = useState("");
+ const [loginShowPw, setLoginShowPw] = useState(false);
+
+ const [resetEmail, setResetEmail] = useState("");
+ const [loading, setLoading] = useState(false);
+ const [error, setError] = useState("");
+ const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+
+ // --- Redirect if already logged in with full profile ---
+ useEffect(() => {
+ if (user) {
+ if (user.profile_completed === false) {
+ push("complete");
+ } else if (user.is_admin) {
+ router.push("/admin");
+ } else {
+ router.push("/dashboard");
+ }
+ }
+ }, [user, router]);
+
+ // --- Auto-navigate from ?screen= param ---
+ useEffect(() => {
+ const screen = searchParams.get("screen");
+ if (screen === "login" || screen === "register" || screen === "reset" || screen === "complete") {
+ setHistory(["welcome", screen]);
+ }
+ }, [searchParams]);
+
+ // --- Navigation ---
+ const push = useCallback((screen: Screen) => {
+ const last = history[history.length - 1];
+ if (last === screen) return;
+ setTransition("push");
+ setHistory(prev => [...prev, screen]);
+ }, [history]);
+
+ const pop = useCallback(() => {
+ if (history.length <= 1) return;
+ setTransition("pop");
+ setHistory(prev => prev.slice(0, -1));
+ }, [history]);
+
+ const replace = useCallback((screen: Screen) => {
+ setTransition("");
+ setHistory(prev => [...prev.slice(0, -1), screen]);
+ }, []);
+
+ const popTo = useCallback((screen: Screen) => {
+ setTransition("pop");
+ setHistory(prev => {
+ const idx = prev.lastIndexOf(screen);
+ return idx >= 0 ? prev.slice(0, idx + 1) : prev.slice(0, 1);
+ });
+ }, []);
+
+ // --- Screen class ---
+ function screenClass(s: Screen) {
+ const idx = history.indexOf(s);
+ if (idx === -1) return "screen screen-hidden";
+ if (idx === history.length - 1 && transition === "pop") return "screen screen-active";
+ if (s === current) return "screen screen-active";
+ if (idx < history.length - 1) return "screen screen-left";
+ return "screen screen-right";
+ }
+
+ // --- Handlers ---
+ async function handleLogin(e: React.FormEvent) {
+ e.preventDefault();
+ setError("");
+ if (!loginEmail || !loginPassword) { setError("Completa todos los campos"); return; }
+ setLoading(true);
+ try {
+ const u = await login(loginEmail, loginPassword);
+ if (!u.profile_completed) {
+ push("complete");
+ } else {
+ router.push(u.is_admin ? "/admin" : "/dashboard");
+ }
+ } catch (err: any) {
+ setError(err.message || "Error al iniciar sesión");
+ } finally { setLoading(false); }
+ }
+
+ async function handleRegister(e: React.FormEvent) {
+ e.preventDefault();
+ setError("");
+ if (!regEmail || !regPassword) { setError("Completa todos los campos"); return; }
+ if (regPassword.length < 6) { setError("La contraseña debe tener al menos 6 caracteres"); return; }
+ setLoading(true);
+ try {
+ const u = await register({
+ email: regEmail,
+ password: regPassword,
+ role: regRole,
+ });
+ // After partial register, go to complete profile
+ push("complete");
+ } catch (err: any) {
+ setError(err.message || "Error al registrarse");
+ } finally { setLoading(false); }
+ }
+
+ function simulateReset() {
+ const btn = document.getElementById("send-link-btn");
+ if (!btn) return;
+ const label = btn.textContent || "";
+ btn.textContent = "Enviando...";
+ btn.style.opacity = "0.7";
+ setTimeout(() => {
+ btn.textContent = "¡Enviado! ?";
+ btn.classList.add("done");
+ btn.style.opacity = "1";
+ setTimeout(() => {
+ push("email");
+ btn.textContent = label;
+ btn.classList.remove("done");
+ btn.style.opacity = "1";
+ }, 800);
+ }, 1200);
+ }
+
+ 
+ async function handleCompleteProfile(e: React.FormEvent) {
+ e.preventDefault();
+ setError("");
+ if (!compFirstName || !compLastName || !compPhone || !compCedula || !compAddress || compLat == null || compLng == null) { setError("Completa todos los campos obligatorios, incluida tu ubicación"); return; }
+ if (compPhone.length < 7) { setError("Teléfono inválido"); return; }
+ if (!compCedula.trim()) { setError("Ingresa tu cédula"); return; }
+ setLoading(true);
+ try {
+ const user = await completeProfile({
+ full_name: `${compFirstName} ${compLastName}`,
+ phone: compPhone,
+ cedula: compCedula,
+ address: compAddress,
+ latitude: compLat,
+ longitude: compLng,
+ profession: compProfession || undefined,
+ });
+ router.push(user.is_admin ? "/admin" : "/dashboard");
+ } catch (err: any) {
+ setError(err.message || "Error al completar perfil");
+ } finally { setLoading(false); }
+ }
+
+// --- Stagger animation trigger ---
+ useEffect(() => {
+ const timers: NodeJS.Timeout[] = [];
+ const items = document.querySelectorAll('.stagger');
+ items.forEach((el, i) => {
+ (el as HTMLElement).classList.remove('in');
+ const timer = setTimeout(() => (el as HTMLElement).classList.add('in'), i * 60);
+ timers.push(timer);
+ });
+ return () => timers.forEach(clearTimeout);
+ }, [current, transition]);
+
+ return (
+ <>
+ {/* ------- CONTAINER ------- */}
+ <div className="phone-frame auth-page">
+ <canvas ref={meshRef} className="mesh-canvas" />
+ <div className="blob-layer">
+ <div className="blob blob-1" /><div className="blob blob-2" />
+ <div className="blob blob-3" /><div className="blob blob-4" /><div className="blob blob-5" />
+ </div>
+ <div className="aurora" />
+ <canvas ref={particlesRef} className="particle-canvas" />
+
+ <div className="glass-container">
+            {/* --- Logo flotante: visible en mobile (todas las pantallas), oculto en desktop --- */}
+            <a href="/" className="absolute left-4 z-30 md:hidden" style={{top:"calc(env(safe-area-inset-top,0px) + 14px)"}}>
+              <Logo size="sm" />
+            </a>
+
+ {/* --- Partículas flotantes --- */}
+ <Particles />
+
+ {/* ------- 5. COMPLETE PROFILE ------- */}
+ <div className={screenClass("complete") + " screen-scroll"} style={{paddingTop:"0px",paddingBottom:"120px"} }>
+ <div className="top-row top-bar">
+ <TopRowLogo onBack={pop} />
+ </div>
+
+ <div className="stagger text-center">
+ <span className="inline-flex items-center gap-1 bg-blue-50 border border-blue-100 rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-primary mb-1.5">{regRole === "worker" ? "Trabajador" : "Contratista"}</span>
+ <h2 className="text-[18px] font-bold tracking-tight text-gray-900 leading-tight">Completa tu perfil</h2>
+ <p className="text-gray-500 text-[11px] mt-0">Cuéntanos un poco sobre ti</p>
+ </div>
+
+ {error && <div className="error-msg">{error}</div>}
+
+ <form onSubmit={handleCompleteProfile}>
+
+ {/*** Card: Datos personales ***/}
+ <div className="stagger bg-white rounded-xl border border-gray-100 shadow-sm px-3.5 py-2.5 mt-1.5">
+ <div className="flex items-center gap-1.5 mb-2">
+ <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center"><svg className="w-2.5 h-2.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg></div>
+ <span className="text-[12px] font-semibold text-gray-800">Datos personales</span>
+ </div>
+ <div className="grid grid-cols-2 gap-2">
+ <div>
+ <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Nombre</label>
+ <input type="text" className="input-field" placeholder="Tu nombre" value={compFirstName} onChange={e => setCompFirstName(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} />
+ </div>
+ <div>
+ <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Apellido</label>
+ <input type="text" className="input-field" placeholder="Tu apellido" value={compLastName} onChange={e => setCompLastName(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} />
+ </div>
+ </div>
+ </div>
+
+ {/*** Card: Contacto ***/}
+ <div className="stagger bg-white rounded-xl border border-gray-100 shadow-sm px-3.5 py-2.5 mt-1.5">
+ <div className="flex items-center gap-1.5 mb-1.5">
+ <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center"><svg className="w-2.5 h-2.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg></div>
+ <span className="text-[12px] font-semibold text-gray-800">Contacto</span>
+ </div>
+ <div className="grid grid-cols-2 gap-2">
+ <div>
+ <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Teléfono</label>
+ <input type="tel" className="input-field" placeholder="+58 414..." value={compPhone} onChange={e => setCompPhone(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} />
+ </div>
+ <div>
+ <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Cédula</label>
+ <input type="text" className="input-field" placeholder="V-12345678" value={compCedula} onChange={e => setCompCedula(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} />
+ </div>
+ </div>
+ <div className="mt-2">
+ <label className="block text-[10px] font-medium text-gray-500 mb-1">Ubicación</label>
+ <LocationPicker
+ lat={compLat}
+ lng={compLng}
+ address={compAddress}
+ onLocationChange={(data) => {
+ setCompLat(data.lat);
+ setCompLng(data.lng);
+ setCompAddress(data.address);
+ }}
+ />
+ </div>
+ </div>
+
+ {/*** Card: Profesión ***/}
+ <div className="stagger bg-white rounded-xl border border-gray-100 shadow-sm px-3.5 py-2.5 mt-1.5">
+ <div className="flex items-center gap-1.5 mb-1.5">
+ <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center"><svg className="w-2.5 h-2.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z"/></svg></div>
+ <span className="text-[12px] font-semibold text-gray-800">Profesión</span>
+ <span className="text-[9px] text-gray-400 font-medium ml-auto">Opcional</span>
+ </div>
+ <input type="text" className="input-field" placeholder="Ej: Electricista, Diseñador, Programador..." value={compProfession} onChange={e => setCompProfession(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} />
+ </div>
+
+ <div className="stagger mt-2">
+ <button type="submit" disabled={loading} className="btn-main">{loading ? "Guardando..." : "Guardar y Continuar"}</button>
+ </div>
+ </form>
+ </div>
+
+{/* ------- 1. WELCOME ------- */}
+ <div className={screenClass("welcome")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
+            {/* Top row: logo + back — uniforme en las 5 pantallas (desktop) */}
+            <div className="top-row top-bar">
+              <TopRowLogo onBack={() => router.push('/')} />
+            </div>
+ <div className="flex-1 flex flex-col justify-center items-center text-center">
+ <div className="stagger">
+ <div className="logo-container mx-auto mb-6">
+ <div className="logo-mark">
+ <svg viewBox="0 0 48 48" fill="none" style={{width:"100%",height:"100%"}}>
+ <defs><linearGradient id="logoGradWelcome" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#2563EB"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs>
+ <circle cx="24" cy="24" r="22" fill="url(#logoGradWelcome)"/>
+ <path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
+ <path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+ <circle cx="36.5" cy="19" r="1.5" fill="white"/>
+ <circle cx="24" cy="24" r="3" fill="white"/>
+ </svg>
+ </div>
+ <span className="logo-text">Turno<span style={{color:"#2563EB"}}>GO</span></span>
+ </div>
+ </div>
+ <h1 className="text-[30px] font-extrabold mb-2 tracking-tight text-gray-900 stagger">Bienvenido</h1>
+ <p className="text-gray-500 text-[15px] max-w-[260px] mx-auto leading-relaxed stagger">Encuentra trabajos, conecta y crece. Tu oportunidad empieza aquí.</p>
+ </div>
+ <div className="space-y-3 pb-2">
+ <div className="stagger"><button onClick={() => push("register")} className="btn-main" style={{fontSize:17,padding:"18px 28px",marginTop:-16}}>Comenzar</button></div>
+ <div className="stagger"><button onClick={() => push("login")} className="ghost-btn">Ya tengo una cuenta</button></div>
+ </div>
+ <div className="stagger"><p className="legal-text text-center mt-auto">Al continuar aceptas nuestros <a href="#" onClick={(e) => { e.preventDefault(); setLegalTab("terms"); setLegalOpen(true); }}>Términos</a> y <a href="#" onClick={(e) => { e.preventDefault(); setLegalTab("privacy"); setLegalOpen(true); }}>Privacidad</a>.</p></div>
+ </div>
+
+ {/* ------- 2. REGISTER ------- */}
+ <div className={screenClass("register")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
+ <div className="top-row top-bar">
+ <TopRowLogo onBack={pop} />
+ <div className="pill-toggle">
+ <div className={`pill-slider${current === "register" && transition !== "pop" ? " right" : ""}`}></div>
+ <button className={`pill-btn${current === "login" ? " active" : ""}`} onClick={() => replace("login")}>Iniciar</button>
+ <button className={`pill-btn${current === "register" ? " active" : ""}`} onClick={() => replace("register")}>Registro</button>
+ </div>
+ </div>
+
+ <div className="stagger">
+ <h2 className="text-[22px] font-bold mb-0.5 tracking-tight text-gray-900">Crear cuenta</h2>
+ <p className="text-gray-500 text-[13px] mb-2">Únete hoy — es gratis</p>
+ </div>
+
+          <div className="stagger">
+            <div className="flex items-center gap-1 bg-slate-100 rounded-full p-0.5 w-fit mx-auto mb-4">
+              <button
+                type="button"
+                onClick={() => setRegRole("worker")}
+                className={"px-2.5 py-1 text-[11px] font-medium rounded-full transition-all duration-200 " + (regRole === "worker" ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-700")}
+              >
+                Trabajador
+              </button>
+              <button
+                type="button"
+                onClick={() => setRegRole("contractor")}
+                className={"px-2.5 py-1 text-[11px] font-medium rounded-full transition-all duration-200 " + (regRole === "contractor" ? "bg-primary text-white shadow-sm" : "text-slate-500 hover:text-slate-700")}
+              >
+                Contratista
+              </button>
+            </div>
+          </div>
+
+ {error && <div className="error-msg">{error}</div>}
+
+ <form onSubmit={handleRegister}>
+ <div className="stagger"><div className="input-group">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+ <input type="email" className="input-field" placeholder="Correo electrónico" value={regEmail} onChange={e => setRegEmail(e.target.value)} />
+ </div></div>
+
+ <div className="stagger"><div className="input-group">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+ <input type={regShowPw ? "text" : "password"} className="input-field" placeholder="Contraseña" value={regPassword} onChange={e => setRegPassword(e.target.value)} />
+ <button type="button" onClick={() => setRegShowPw(!regShowPw)} className="pw-toggle">
+ {regShowPw
+ ? <svg className="w-5 h-5" fill="none" stroke="#475569" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+ : <svg className="w-5 h-5" fill="none" stroke="#475569" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>}
+ </button>
+ </div></div>
+
+ <div className="stagger">
+ <button type="submit" disabled={loading} className="btn-main mt-0 mb-2">{loading ? "Creando cuenta..." : "Crear Cuenta"}</button>
+ </div>
+ </form>
+
+ <div className="stagger">
+ <div className="flex items-center gap-3 mb-2"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-600 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
+ <div className="flex justify-center">
+ <button onClick={handleGoogleLogin} disabled={googleLoading} className="btn-social">
+   {googleLoading
+     ? <span className="inline-block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+     : <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0124 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>}
+   Google
+  </button>
+ </div>
+ </div>
+ </div>
+
+ {/* ------- 3. LOGIN ------- */}
+ <div className={screenClass("login")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
+ <div className="top-row top-bar">
+ <TopRowLogo onBack={pop} />
+ <div className="pill-toggle">
+ <div className={`pill-slider${current === "login" && transition !== "pop" ? "" : " right"}`}></div>
+ <button className={`pill-btn${current === "login" ? " active" : ""}`} onClick={() => replace("login")}>Iniciar</button>
+ <button className={`pill-btn${current === "register" ? " active" : ""}`} onClick={() => replace("register")}>Registro</button>
+ </div>
+ </div>
+
+ <div className="stagger">
+ <h2 className="text-[22px] font-bold mb-0.5 tracking-tight text-gray-900">Bienvenido de nuevo</h2>
+ <p className="text-gray-500 text-[14px] mb-6">Inicia sesión para continuar</p>
+ </div>
+
+ {error && <div className="error-msg">{error}</div>}
+
+ <form onSubmit={handleLogin}>
+ <div className="stagger"><div className="input-group">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+ <input type="email" className="input-field" placeholder="Correo electrónico" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} />
+ </div></div>
+
+ <div className="stagger"><div className="input-group mb-1">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+ <input type={loginShowPw ? "text" : "password"} className="input-field" placeholder="Contraseña" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
+ <button type="button" onClick={() => setLoginShowPw(!loginShowPw)} className="pw-toggle">
+ {loginShowPw
+ ? <svg className="w-5 h-5" fill="none" stroke="#475569" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+ : <svg className="w-5 h-5" fill="none" stroke="#475569" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>}
+ </button>
+ </div></div>
+
+ <div className="stagger">
+ <div className="flex justify-end mb-5">
+ <button type="button" onClick={() => push("reset")} className="text-[#2563EB] text-[13px] font-semibold hover:underline">¿Olvidaste tu contraseña?</button>
+ </div>
+ <button type="submit" disabled={loading} className="btn-main mb-2">{loading ? "Iniciando sesión..." : "Iniciar Sesión"}</button>
+ </div>
+ </form>
+
+ <div className="stagger">
+ <div className="flex items-center gap-3 mb-2"><div className="flex-1 h-px bg-gray-200"></div><span className="text-gray-600 text-xs font-medium">O continúa con</span><div className="flex-1 h-px bg-gray-200"></div></div>
+ <div className="flex justify-center">
+ <button onClick={handleGoogleLogin} disabled={googleLoading} className="btn-social">
+   {googleLoading
+     ? <span className="inline-block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+     : <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0124 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>}
+   Google
+  </button>
+ </div>
+ </div>
+ </div>
+
+ {/* ------- 4. RESET PASSWORD ------- */}
+ <div className={screenClass("reset")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
+ <div className="top-row top-bar">
+ <TopRowLogo onBack={pop} />
+ </div>
+
+ <div className="stagger">
+ <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Restablecer contraseña</h2>
+ <p className="text-gray-500 text-[14px] leading-relaxed mb-6">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+ </div>
+
+ <div className="stagger"><div className="input-group mb-6">
+ <svg className="input-icon" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+ <input type="email" className="input-field" placeholder="Correo electrónico" value={resetEmail} onChange={e => setResetEmail(e.target.value)} />
+ </div></div>
+
+ <div className="stagger">
+ <button onClick={simulateReset} className="btn-main mb-5" id="send-link-btn">Enviar Enlace</button>
+ <button onClick={() => popTo("login")} className="link-btn w-full py-2">
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+ Volver a iniciar sesión
+ </button>
+ </div>
+ </div>
+
+ {/* ------- 5. CHECK EMAIL ------- */}
+ <div className={screenClass("email")} style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
+ <div className="top-row top-bar">
+ <TopRowLogo onBack={() => popTo("reset")} />
+ <div></div>
+ </div>
+ <div className="flex-1 flex flex-col form-area justify-center items-center text-center" style={{paddingTop:0}}>
+ <div className="pop-in">
+ <div className="email-icon mx-auto mb-6">
+ <svg fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+ </div>
+ </div>
+ <div className="stagger">
+ <h2 className="text-[26px] font-bold mb-1 tracking-tight text-gray-900">Revisa tu correo</h2>
+ <p className="text-gray-500 text-[14px] max-w-[260px] mx-auto leading-relaxed mb-8">Te enviamos un enlace para restablecer tu contraseña.</p>
+ </div>
+ <div className="stagger space-y-3">
+ <button className="btn-main">Abrir Correo</button>
+ <button className="ghost-btn">Reenviar enlace</button>
+ </div>
+ <div className="stagger">
+ <button onClick={() => popTo("login")} className="link-btn w-full py-2 mt-4">
+ <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+ Volver a iniciar sesión
+ </button>
+ </div>
+ </div>
+ </div>
+
+ </div>
+ </div>
+
+ {/* ===== LEGAL MODAL ===== */}
+ {legalOpen && (
+ <LegalModal
+ tab={legalTab}
+ onClose={() => setLegalOpen(false)}
+ />
+ )}
+
+ </>
+ );
+}
+
+/* --------------------------------------------------------------
+   LEGAL MODAL
+   -------------------------------------------------------------- */
+function LegalModal({ tab, onClose }: { tab: "terms" | "privacy"; onClose: () => void }) {
+ const [active, setActive] = useState<"terms" | "privacy">(tab);
+
+ useEffect(() => {
+ setActive(tab);
+ }, [tab]);
+
+ useEffect(() => {
+ document.body.style.overflow = "hidden";
+ return () => { document.body.style.overflow = ""; };
+ }, []);
+
+ return (
+ <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" onClick={onClose}>
+ <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+ <div className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto bg-white rounded-3xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
+ {/* Close */}
+ <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center z-10">
+ <svg className="w-4 h-4 text-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+ <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+ </svg>
+ </button>
+
+ {/* Header */}
+ <div className="pt-8 px-7 pb-0">
+ <div className="flex gap-2 p-1 bg-gray-100 rounded-xl mb-5">
+ <button
+ onClick={() => setActive("terms")}
+ className={"flex-1 py-2.5 rounded-lg text-sm font-medium transition-all " + (active === "terms" ? "bg-white text-primary shadow-sm" : "text-gray hover:text-dark")}
+ >
+ Términos
+ </button>
+ <button
+ onClick={() => setActive("privacy")}
+ className={"flex-1 py-2.5 rounded-lg text-sm font-medium transition-all " + (active === "privacy" ? "bg-white text-primary shadow-sm" : "text-gray hover:text-dark")}
+ >
+ Privacidad
+ </button>
+ </div>
+ </div>
+
+ {/* Content */}
+ <div className="px-7 pb-6 text-sm text-gray leading-relaxed space-y-4">
+ {active === "terms" ? <TermsContent /> : <PrivacyContent />}
+ </div>
+ </div>
+ </div>
+ );
+}
+
+function TermsContent() {
+ return (
+ <>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">1. Aceptación</h3>
+ <p>Al registrarte y usar TurnoGO aceptas estos términos. La plataforma conecta trabajadores con contratistas, actuando como intermediaria tecnológica.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">2. Obligaciones</h3>
+ <p>Los trabajadores deben cumplir con los servicios contratados. Los contratistas deben pagar el monto acordado. Está prohibido acordar pagos fuera de la plataforma.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">3. Pagos</h3>
+ <p>Los USDT quedan retenidos en escrow hasta que el contratista confirme el trabajo. TurnoGO cobra una comisión por cada trabajo completado.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">4. Conducta prohibida</h3>
+ <p>No crear cuentas falsas, no acosar, no discriminar. El incumplimiento resulta en suspensión permanente de la cuenta.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">5. Modificaciones</h3>
+ <p>TurnoGO puede modificar estos términos. Los cambios serán notificados con anticipación. El uso continuo constituye aceptación.</p>
+ </div>
+ <div className="pt-3 text-xs text-gray-400 border-t border-gray-100">
+ <a href="/terminos" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>Leer términos completos ?</a>
+ </div>
+ </>
+ );
+}
+
+function PrivacyContent() {
+ return (
+ <>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">1. Datos recopilados</h3>
+ <p>Recopilamos nombre, email, teléfono, cédula, foto y datos de uso. Tus documentos se comparten con Didit para verificación de identidad.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">2. Uso de datos</h3>
+ <p>Usamos tu información para gestionar tu cuenta, conectarte con trabajos, procesar pagos y mejorar la plataforma. No vendemos datos a terceros.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">3. Protección</h3>
+ <p>Tu cédula se almacena encriptada (hash SHA-256). Usamos conexiones HTTPS. Datos sensibles solo accesibles por personal autorizado.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">4. Retención</h3>
+ <p>Conservamos tus datos mientras tengas cuenta activa. Al eliminar tu cuenta, los datos personales se borran en 30 días.</p>
+ </div>
+ <div>
+ <h3 className="font-semibold text-dark text-base mb-2">5. Tus derechos</h3>
+ <p>Puedes acceder, rectificar o eliminar tus datos desde configuración. Para más información, contáctanos por la plataforma.</p>
+ </div>
+ <div className="pt-3 text-xs text-gray-400 border-t border-gray-100">
+ <a href="/privacidad" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>Leer política completa ?</a>
+ </div>
+ </>
+ );
+}
