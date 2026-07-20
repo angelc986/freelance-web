@@ -110,11 +110,35 @@ def admin_send_test_notification(
     results = {}
 
     # 1. Email via email_service (SendGrid → SMTP → Resend)
+    import os
+    from app.services.email_service import send_notification_email, send_email
+    
+    # Probar SendGrid directo
     try:
-        from app.services.email_service import send_notification_email
+        from urllib.request import Request, urlopen
+        from urllib.error import HTTPError
+        import json
+        sg_key = os.getenv("SENDGRID_API_KEY", "")
+        data = json.dumps({
+            "personalizations": [{"to": [{"email": target.email}]}],
+            "from": {"email": "instaworkve@gmail.com", "name": "TurnoGO"},
+            "subject": "🔔 TurnoGO — Prueba",
+            "content": [{"type": "text/html", "value": "<p>Test desde SendGrid</p>"}],
+        }).encode()
+        req = Request("https://api.sendgrid.com/v3/mail/send", data=data,
+            headers={"Authorization": f"Bearer {sg_key}", "Content-Type": "application/json"})
+        with urlopen(req, timeout=15) as resp:
+            results["sendgrid"] = f"HTTP {resp.status}"
+    except Exception as e:
+        results["sendgrid"] = str(e)[:300]
+    
+    # También probar el servicio completo
+    try:
         ok = send_notification_email(target.email, "test_notification",
-            "🔔 ¡Notificación de prueba de TurnoGO! Tus notificaciones están funcionando.")
-        results["email"] = "OK" if ok else "FAIL (todos los métodos fallaron)"
+            "🔔 ¡Notificación de prueba de TurnoGO!")
+        results["servicio"] = "OK" if ok else "FAIL"
+    except Exception as e:
+        results["servicio"] = str(e)[:200]
     except Exception as e:
         results["email"] = f"ERROR: {str(e)[:300]}"
 
