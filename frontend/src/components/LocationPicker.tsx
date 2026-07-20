@@ -29,16 +29,35 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
   const defaultLat = lat || 10.4806;
   const defaultLng = lng || -66.9036;
 
-  const reverseGeocode = useCallback(async (lat: number, lng: number) => {
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (modalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [modalOpen]);
+
+  // ESC to close
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setModalOpen(false);
+    };
+    if (modalOpen) window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [modalOpen]);
+
+  const reverseGeocode = useCallback(async (lati: number, lngi: number) => {
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=es`,
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lati}&lon=${lngi}&addressdetails=1&accept-language=es`,
         { headers: { "User-Agent": "TurnoGO/1.0" } }
       );
       const data = await res.json();
-      return data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      return data.display_name || `${lati.toFixed(4)}, ${lngi.toFixed(4)}`;
     } catch {
-      return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      return `${lati.toFixed(4)}, ${lngi.toFixed(4)}`;
     }
   }, []);
 
@@ -117,7 +136,7 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
     );
   }, [moveMarker]);
 
-  // Auto-get location on first mount
+  // Auto-get location on first mount if no coords set yet
   useEffect(() => {
     if (!lat && !lng && navigator.geolocation) getCurrentLocation();
   }, []);
@@ -200,7 +219,6 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
           Ajustar en mapa
         </button>
-        {/* Show small preview badge when location is set */}
         {lat != null && lng != null && (
           <div className="flex items-center gap-1 text-[9px] text-gray-400 shrink-0">
             <svg className="w-2.5 h-2.5 text-green-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/></svg>
@@ -209,50 +227,65 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
         )}
       </div>
 
-      {/* ===== MAP MODAL ===== */}
+      {/* ===== MAP MODAL (like InfoModal style) ===== */}
       {modalOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          onClick={() => setModalOpen(false)}
+        >
+          {/* Backdrop with blur */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" />
 
           {/* Modal panel */}
-          <div className="relative w-full sm:max-w-lg sm:mx-4 bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden"
-            style={{ height: "85vh", maxHeight: "600px" }}
+          <div
+            className="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl animate-modal-enter overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
           >
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={() => setModalOpen(false)}
+              className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center"
+              aria-label="Cerrar"
+            >
+              <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center">
-                  <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <div className="pt-4 pb-0 px-5 shrink-0">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
                 </div>
-                <span className="text-[13px] font-semibold text-gray-800">Selecciona tu ubicación</span>
+                <span className="font-bold text-sm text-[#1E293B]">Selecciona tu ubicación</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setModalOpen(false)}
-                className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-              >
-                <svg className="w-3.5 h-3.5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-              </button>
+              <p className="text-[11px] text-gray-500 leading-normal">
+                Busca una dirección o arrastra el pin en el mapa.
+              </p>
             </div>
 
-            {/* Search inside modal */}
-            <div className="px-4 py-2 border-b border-gray-50 shrink-0">
+            {/* Search */}
+            <div className="px-5 py-2 shrink-0">
               <div className="relative">
-                <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
                 <input
                   type="text"
                   value={searchText}
                   onChange={handleSearchInput}
                   placeholder="Buscar dirección..."
-                  className="w-full pl-8 pr-3 py-2 text-[13px] bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg text-[#1E293B] outline-none focus:border-primary focus:bg-white transition-all placeholder:text-[#94A3B8]"
+                  className="w-full pl-9 pr-3 py-2.5 text-[13px] bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-[#1E293B] outline-none focus:border-primary focus:bg-white transition-all placeholder:text-[#94A3B8]"
                   autoFocus
                 />
                 {showResults && results.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-40 overflow-y-auto">
                     {results.map((item, i) => (
                       <button key={i} type="button" onMouseDown={() => selectResult(item)}
-                        className="w-full text-left px-3 py-2 text-[12px] text-gray-700 hover:bg-blue-50 hover:text-primary border-b border-gray-50 last:border-0"
+                        className="w-full text-left px-3 py-2.5 text-[12px] text-gray-700 hover:bg-blue-50 hover:text-primary border-b border-gray-50 last:border-0"
                       >
                         <span className="line-clamp-2">{item.display_name}</span>
                       </button>
@@ -263,9 +296,9 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
             </div>
 
             {/* Map */}
-            <div className="flex-1 relative min-h-0">
+            <div className="flex-1 relative min-h-[250px] mx-5 mb-2 rounded-2xl overflow-hidden border border-gray-100">
               <div ref={mapContainerRef} className="absolute inset-0" />
-              {/* GPS button floating on map */}
+              {/* GPS floating button */}
               <button
                 type="button"
                 onClick={getCurrentLocation}
@@ -282,15 +315,15 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-3 border-t border-gray-100 shrink-0 flex items-center justify-between bg-white">
-              <span className="text-[10px] text-gray-400">Arrastra el pin para ajustar la ubicación</span>
+            <div className="px-5 pb-4 pt-0 shrink-0">
               <button
                 type="button"
                 onClick={confirmLocation}
-                className="px-5 py-2 text-[12px] font-semibold text-white bg-primary hover:bg-blue-700 rounded-lg transition-all shadow-sm"
+                className="block w-full py-2.5 bg-primary text-white font-semibold text-sm text-center rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-primary/20"
               >
                 Confirmar ubicación
               </button>
+              <p className="text-center text-[10px] text-gray-400 mt-1">Arrastra el pin para ajustar con precisión</p>
             </div>
           </div>
         </div>
