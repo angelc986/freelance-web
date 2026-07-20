@@ -62,6 +62,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       balance: 580,
       is_verified: false,
     },
+    "admin@turnogo.com": {
+      id: 1,
+      email: "admin@turnogo.com",
+      full_name: "Admin TurnoGO",
+      phone: "+584140000000",
+      cedula: "V-00000000",
+      role: "contractor",
+      profile_completed: true,
+      avatar_url: null,
+      avatar_verified: false,
+      cedula_locked: true,
+      rating_avg: 5.0,
+      is_admin: true,
+      is_active: true,
+      wallet_address: null,
+      balance: 0,
+      is_verified: true,
+    },
   };
 
   // Restore session on mount
