@@ -37,7 +37,6 @@ interface UserDetailFull {
     is_verified: boolean; verified_at?: string | null; profile_completed: boolean;
   };
   last_login_at?: string | null;
-  };
   stats: { total_earned: number; total_spent: number; jobs_posted: number; jobs_completed: number; jobs_assigned: number; ratings_count: number };
   jobs_as_client: Job[];
   jobs_as_worker: Job[];
