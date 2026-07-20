@@ -575,8 +575,8 @@ function AuthPageInner() {
 
  <div className="stagger text-center">
  <span className="inline-flex items-center gap-1 bg-blue-50 border border-blue-100 rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-primary mb-1.5">{regRole === "worker" ? "Trabajador" : "Contratista"}</span>
- <h2 className="text-[18px] font-bold tracking-tight text-gray-900 leading-tight">Completa tu perfil</h2>
- <p className="text-gray-500 text-[11px] mt-0">Cuéntanos un poco sobre ti</p>
+ <h2 className="text-[20px] font-bold tracking-tight text-gray-900 leading-tight">Completa tu perfil</h2>
+ <p className="text-gray-500 text-[13px] mt-0">Cuéntanos un poco sobre ti</p>
  </div>
 
  {error && <div className="error-msg">{error}</div>}
@@ -587,16 +587,16 @@ function AuthPageInner() {
  <div className="stagger bg-white rounded-xl border border-gray-100 shadow-sm px-3.5 py-2.5 mt-1.5">
  <div className="flex items-center gap-1.5 mb-2">
  <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center"><svg className="w-2.5 h-2.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg></div>
- <span className="text-[12px] font-semibold text-gray-800">Datos personales</span>
+ <span className="text-[13px] font-semibold text-gray-800">Datos personales</span>
  </div>
  <div className="grid grid-cols-2 gap-2">
  <div>
- <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Nombre</label>
- <input type="text" className="input-field" placeholder="Tu nombre" value={compFirstName} onChange={e => setCompFirstName(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} />
+ <label className="block text-[11px] font-medium text-gray-500 mb-0.5">Nombre</label>
+ <input type="text" className="input-field" placeholder="Tu nombre" value={compFirstName} onChange={e => setCompFirstName(e.target.value)} style={{padding:"10px 12px",fontSize:"14px",borderRadius:"8px"}} />
  </div>
  <div>
- <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Apellido</label>
- <input type="text" className="input-field" placeholder="Tu apellido" value={compLastName} onChange={e => setCompLastName(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} />
+ <label className="block text-[11px] font-medium text-gray-500 mb-0.5">Apellido</label>
+ <input type="text" className="input-field" placeholder="Tu apellido" value={compLastName} onChange={e => setCompLastName(e.target.value)} style={{padding:"10px 12px",fontSize:"14px",borderRadius:"8px"}} />
  </div>
  </div>
  </div>
@@ -605,16 +605,16 @@ function AuthPageInner() {
  <div className="stagger bg-white rounded-xl border border-gray-100 shadow-sm px-3.5 py-2.5 mt-1.5">
  <div className="flex items-center gap-1.5 mb-1.5">
  <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center"><svg className="w-2.5 h-2.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg></div>
- <span className="text-[12px] font-semibold text-gray-800">Contacto</span>
+ <span className="text-[13px] font-semibold text-gray-800">Contacto</span>
  </div>
  <div className="grid grid-cols-2 gap-2">
  <div>
- <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Teléfono</label>
- <input type="tel" className="input-field" placeholder="+58 414..." value={compPhone} onChange={e => setCompPhone(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} />
+ <label className="block text-[11px] font-medium text-gray-500 mb-0.5">Teléfono</label>
+ <input type="tel" className="input-field" placeholder="+58 414..." value={compPhone} onChange={e => setCompPhone(e.target.value)} style={{padding:"10px 12px",fontSize:"14px",borderRadius:"8px"}} />
  </div>
  <div>
- <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Cédula</label>
- <input type="text" className="input-field" placeholder="V-12345678" value={compCedula} onChange={e => setCompCedula(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} />
+ <label className="block text-[11px] font-medium text-gray-500 mb-0.5">Cédula</label>
+ <input type="text" className="input-field" placeholder="V-12345678" value={compCedula} onChange={e => setCompCedula(e.target.value)} style={{padding:"10px 12px",fontSize:"14px",borderRadius:"8px"}} />
  </div>
  </div>
  <div className="mt-2">
@@ -636,10 +636,10 @@ function AuthPageInner() {
  <div className="stagger bg-white rounded-xl border border-gray-100 shadow-sm px-3.5 py-2.5 mt-1.5">
  <div className="flex items-center gap-1.5 mb-1.5">
  <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center"><svg className="w-2.5 h-2.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z"/></svg></div>
- <span className="text-[12px] font-semibold text-gray-800">Profesión</span>
+ <span className="text-[13px] font-semibold text-gray-800">Profesión</span>
  <span className="text-[9px] text-gray-400 font-medium ml-auto">Opcional</span>
  </div>
- <input type="text" className="input-field" placeholder="Ej: Electricista, Diseñador, Programador..." value={compProfession} onChange={e => setCompProfession(e.target.value)} style={{padding:"7px 10px",fontSize:"12px",borderRadius:"6px"}} />
+ <input type="text" className="input-field" placeholder="Ej: Electricista, Diseñador, Programador..." value={compProfession} onChange={e => setCompProfession(e.target.value)} style={{padding:"10px 12px",fontSize:"14px",borderRadius:"8px"}} />
  </div>
 
  <div className="stagger mt-2">
