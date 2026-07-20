@@ -224,6 +224,11 @@
   .complete-screen .stagger.bg-white{padding-left:14px!important;padding-right:14px!important}
 }
 
+/* ── PWA / Web App: respect safe-area-inset ── */
+@media (display-mode: standalone) and (max-width:479px){
+  .complete-screen{padding-top:calc(env(safe-area-inset-top,0px) + 16px)!important}
+}
+
 /* Fix for Tailwind preflight overriding button backgrounds */
 button {
  background-image: none !important;
