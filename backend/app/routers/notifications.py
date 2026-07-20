@@ -63,12 +63,17 @@ def debug_notifications():
     rk = os.getenv("RESEND_API_KEY", "")
     vp = os.getenv("VAPID_PRIVATE_KEY", "")
     vu = os.getenv("VAPID_PUBLIC_KEY", "")
+    sg = os.getenv("SENDGRID_API_KEY", "")
+    smtp_u = os.getenv("SMTP_USER", "")
     return {
         "resend_ok": bool(rk),
         "resend_len": len(rk),
         "vapid_ok": bool(vp and vu),
         "vapid_priv_len": len(vp),
         "vapid_pub_len": len(vu),
+        "sendgrid_ok": bool(sg),
+        "sendgrid_len": len(sg),
+        "smtp_ok": bool(smtp_u),
     }
 
 
