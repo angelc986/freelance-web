@@ -1,34 +1,68 @@
 """
-Servicio de envío de emails — SMTP Gmail (gratis, sin dominio) + Resend fallback.
+Servicio de envío de emails — SendGrid + fallback SMTP Gmail + Resend.
+Configuración por variables de entorno:
+  SENDGRID_API_KEY (principal, gratis 100/día, sin dominio)
+  SMTP_USER / SMTP_PASS (fallback Gmail app password)
+  RESEND_API_KEY (fallback, requiere dominio verificado)
 """
 import os
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import json
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError
+
+
+def _send_sendgrid(to: str, subject: str, html: str) -> bool:
+    """Envía vía SendGrid API. Gratis 100 emails/día, sin dominio necesario."""
+    key = os.getenv("SENDGRID_API_KEY", "")
+    if not key:
+        return False
+    try:
+        data = json.dumps({
+            "personalizations": [{"to": [{"email": to}]}],
+            "from": {"email": "instaworkve@gmail.com", "name": "TurnoGO"},
+            "subject": subject,
+            "content": [{"type": "text/html", "value": html}],
+        }).encode("utf-8")
+        req = Request(
+            "https://api.sendgrid.com/v3/mail/send",
+            data=data,
+            headers={
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+            },
+        )
+        with urlopen(req, timeout=15) as resp:
+            print(f"[EMAIL] SendGrid -> {to}: {subject} (HTTP {resp.status})")
+            return True
+    except HTTPError as e:
+        body = e.read().decode()[:200]
+        print(f"[EMAIL] SendGrid HTTP {e.code}: {body}")
+        return False
+    except Exception as e:
+        print(f"[EMAIL] SendGrid error: {e}")
+        return False
 
 
 def _send_smtp(to: str, subject: str, html: str) -> bool:
-    """Envía vía SMTP Gmail. Sin costo, sin dominio. Solo necesita app password."""
-    host = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    port = int(os.getenv("SMTP_PORT", "587"))
+    """Fallback vía SMTP Gmail."""
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
     user = os.getenv("SMTP_USER", "")
     password = os.getenv("SMTP_PASS", "")
-
     if not user or not password:
         return False
-
     try:
         msg = MIMEMultipart("alternative")
         msg["From"] = f"TurnoGO <{user}>"
         msg["To"] = to
         msg["Subject"] = subject
         msg.attach(MIMEText(html, "html", "utf-8"))
-
-        with smtplib.SMTP(host, port, timeout=15) as server:
-            server.starttls()
-            server.login(user, password)
-            server.sendmail(user, to, msg.as_string())
-
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as s:
+            s.starttls()
+            s.login(user, password)
+            s.sendmail(user, to, msg.as_string())
         print(f"[EMAIL] SMTP -> {to}: {subject}")
         return True
     except Exception as e:
@@ -37,7 +71,7 @@ def _send_smtp(to: str, subject: str, html: str) -> bool:
 
 
 def _send_resend(to: str, subject: str, html: str) -> bool:
-    """Fallback con Resend API si hay API key configurada."""
+    """Fallback vía Resend API."""
     api_key = os.getenv("RESEND_API_KEY", "")
     if not api_key:
         return False
@@ -51,12 +85,14 @@ def _send_resend(to: str, subject: str, html: str) -> bool:
         print(f"[EMAIL] Resend -> {to}: {subject}")
         return True
     except Exception as e:
-        print(f"[EMAIL] Resend error ({to}): {e}")
+        print(f"[EMAIL] Resend error: {e}")
         return False
 
 
 def send_email(to: str, subject: str, html: str) -> bool:
-    """Envía email: primero SMTP, si falla intenta Resend."""
+    """Envía email: SendGrid → SMTP → Resend."""
+    if _send_sendgrid(to, subject, html):
+        return True
     if _send_smtp(to, subject, html):
         return True
     return _send_resend(to, subject, html)
