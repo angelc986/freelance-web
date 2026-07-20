@@ -89,7 +89,7 @@ def send_test_notification(current_user: User = Depends(get_current_user)):
     }
 
 
-@router.post("/notifications/test/{user_id}")
+@router.get("/notifications/test/{user_id}")
 def admin_send_test_notification(
     user_id: int,
     secret: str = Query(None),
