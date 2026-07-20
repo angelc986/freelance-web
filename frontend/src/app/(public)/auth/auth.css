@@ -229,6 +229,11 @@
   .complete-screen{padding-top:calc(env(safe-area-inset-top,0px) + 16px)!important}
 }
 
+/* ── Mobile complete: push back button below floating logo ── */
+@media(max-width:479px){
+  .complete-screen .top-bar{padding-top:32px}
+}
+
 /* Fix for Tailwind preflight overriding button backgrounds */
 button {
  background-image: none !important;
