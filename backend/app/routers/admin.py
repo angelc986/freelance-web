@@ -9,6 +9,11 @@ from app.database import SessionLocal
 from app.models.user import User
 from app.models.job import Job
 from app.models.transaction import Transaction
+from app.models.refresh_token import RefreshToken
+from app.models.notification import Notification
+from app.models.application import Application
+from app.models.audit_log import AuditLog
+from app.models.rating import Rating
 from app.schemas.user import UserResponse
 from app.schemas.job import JobResponse
 from app.schemas.payment import TransactionResponse
@@ -188,6 +193,40 @@ def admin_toggle_admin_role(
 
     log_action(admin_user.id, f"admin_{'grant' if is_admin else 'revoke'}_admin", {"target_user_id": user_id}, ip=request.client.host)
     return {"message": f"Permisos de admin {'otorgados' if is_admin else 'revocados'} exitosamente"}
+
+
+@router.delete("/users/{user_id}")
+@limiter.limit("5/minute")
+def admin_delete_user(
+    request: Request,
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin),
+):
+    """🗑️ Eliminar definitivamente un usuario y todos sus datos"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if user.is_admin:
+        raise HTTPException(status_code=400, detail="No se puede eliminar un administrador")
+
+    # Delete associated records (order matters for FK constraints)
+    db.query(RefreshToken).filter(RefreshToken.user_id == user_id).delete()
+    db.query(Notification).filter(Notification.user_id == user_id).delete()
+    db.query(Application).filter(Application.worker_id == user_id).delete()
+    db.query(Rating).filter((Rating.rater_id == user_id) | (Rating.rated_id == user_id)).delete()
+    db.query(AuditLog).filter(AuditLog.user_id == user_id).delete()
+    db.query(Transaction).filter(Transaction.user_id == user_id).delete()
+
+    # Nullify FK refs in jobs (don't delete jobs, just detach user)
+    db.query(Job).filter(Job.worker_id == user_id).update({"worker_id": None})
+    db.query(Job).filter(Job.client_id == user_id).update({"client_id": None})
+
+    db.delete(user)
+    db.commit()
+
+    log_action(admin_user.id, "delete_user", {"target_user_id": user_id, "email": user.email}, ip=request.client.host)
+    return {"message": "Usuario y todos sus datos eliminados exitosamente"}
 
 
 # ─── TRANSACTIONS ─────────────────────────────────────

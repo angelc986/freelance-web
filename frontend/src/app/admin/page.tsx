@@ -24,6 +24,22 @@ interface Job { id: number; title: string; status: string; budget: number; clien
 interface Tx { id: number; user_id: number; job_id: number | null; type: string; amount: number; status: string; created_at: string | null; }
 interface Wallet { system_wallet: string; balance: number; total_deposits: number; total_withdrawals: number; pending_confirmation: number; }
 
+interface UserDetailFull {
+  user: {
+    id: number; email: string; phone: string; full_name: string; cedula?: string;
+    role: string; is_admin: boolean; is_active: boolean; balance: number; rating_avg: number;
+    wallet_address: string | null; created_at: string | null; address?: string;
+    profession?: string; latitude?: number; longitude?: number;
+    avatar_url?: string | null; avatar_verified?: boolean; cedula_locked?: boolean;
+    is_verified: boolean; verified_at?: string | null; profile_completed: boolean;
+  };
+  stats: { total_earned: number; total_spent: number; jobs_posted: number; jobs_completed: number; jobs_assigned: number; ratings_count: number };
+  jobs_as_client: Job[];
+  jobs_as_worker: Job[];
+  transactions: Tx[];
+  ratings: { id: number; rater_name: string; rating: number; comment: string }[];
+}
+
 /* ═══════════════════════════════════════ API ═══════════════════════════════════════ */
 
 const API = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
@@ -139,12 +155,26 @@ const Avatar = ({ name, w = 8 }: { name: string; w?: number }) => (
   </div>
 );
 
-const Modal = ({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) => {
+const InfoCell = ({ label, value, mono, className }: { label: string; value: string; mono?: boolean; className?: string }) => (
+  <div className={`p-3 bg-gray-50 rounded-xl ${className || ""}`}>
+    <div className="text-[10px] text-gray-400 uppercase tracking-wider">{label}</div>
+    <div className={`font-medium text-gray-900 mt-0.5 truncate text-xs ${mono ? "font-mono" : ""}`}>{value}</div>
+  </div>
+);
+
+const StatCell = ({ label, value, accent }: { label: string; value: string; accent: string }) => (
+  <div className="p-3 bg-gray-50 rounded-xl text-center">
+    <div className={`text-base font-bold ${accent}`}>{value}</div>
+    <div className="text-[10px] text-gray-400 mt-0.5">{label}</div>
+  </div>
+);
+
+const Modal = ({ open, onClose, title, children, wide }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; wide?: boolean }) => {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto animate-scale-in">
+      <div className={`relative bg-white rounded-2xl shadow-2xl w-full ${wide ? "max-w-2xl" : "max-w-lg"} max-h-[85vh] overflow-y-auto animate-scale-in`}>
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
           <h3 className="font-bold text-gray-900">{title}</h3>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
@@ -185,7 +215,11 @@ export default function AdminPage() {
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [selectedUserFull, setSelectedUserFull] = useState<UserDetailFull | null>(null);
   const [userDetailModal, setUserDetailModal] = useState(false);
+  const [userDetailLoading, setUserDetailLoading] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
   const perPage = 20;
 
   // ── Data Loading
@@ -251,7 +285,25 @@ export default function AdminPage() {
     action(() => adm(`/users/${u.id}/admin?is_admin=${!u.is_admin}`, { method: "PATCH" }),
       `Admin ${u.is_admin ? "revocado" : "otorgado"}`);
 
-  const viewUser = async (u: AdminUser) => { setSelectedUser(u); setUserDetailModal(true); };
+  const viewUser = async (u: AdminUser) => {
+    setSelectedUser(u); setSelectedUserFull(null); setUserDetailLoading(true); setUserDetailModal(true);
+    try {
+      const detail = await adm<UserDetailFull>(`/users/${u.id}/full`);
+      setSelectedUserFull(detail);
+    } catch { setToast({ msg: "Error al cargar detalles del usuario", type: "error" }); }
+    finally { setUserDetailLoading(false); }
+  };
+
+  const deleteUser = async (userId: number) => {
+    setLoading(true);
+    try {
+      await adm(`/users/${userId}`, { method: "DELETE" });
+      setToast({ msg: "Usuario eliminado exitosamente", type: "success" });
+      setUserDetailModal(false); setDeleteConfirmId(null); setDeleteStep(1);
+      loadUsers(); loadStats();
+    } catch (e: any) { setToast({ msg: e.message || "Error al eliminar", type: "error" }); }
+    finally { setLoading(false); }
+  };
 
   const exportCSV = () => {
     if (tab === "users" && users.length) {
@@ -596,6 +648,12 @@ export default function AdminPage() {
                           className={`p-1.5 rounded-lg hover:bg-indigo-50 transition-colors ${u.is_admin ? "text-indigo-500 hover:text-indigo-700" : "text-gray-400 hover:text-indigo-600"}`} title={u.is_admin ? "Quitar admin" : "Hacer admin"}>
                           <Ico d={icons.shield} c="w-4 h-4" />
                         </button>
+                        {!u.is_admin && (
+                          <button onClick={() => { setDeleteConfirmId(u.id); setDeleteStep(1); }}
+                            className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors" title="Eliminar usuario">
+                            <Ico d={icons.x} c="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -840,35 +898,196 @@ export default function AdminPage() {
       {/* Mobile Bottom Tab */}
       <MobileTab />
 
-      {/* User Detail Modal */}
-      <Modal open={userDetailModal} onClose={() => setUserDetailModal(false)} title="Detalle de Usuario">
-        {selectedUser && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-              <Avatar name={selectedUser.full_name} w={12} />
-              <div>
-                <div className="font-bold text-gray-900">{selectedUser.full_name}</div>
-                <div className="text-sm text-gray-500">{selectedUser.email}</div>
-                <div className="text-xs text-gray-400">{selectedUser.phone}</div>
+      {/* User Detail Modal — Full */}
+      <Modal open={userDetailModal} onClose={() => { setUserDetailModal(false); setSelectedUserFull(null); setDeleteConfirmId(null); setDeleteStep(1); }} title="Detalle de Usuario" wide>
+        {userDetailLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <span className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : selectedUserFull ? (
+          <div className="space-y-5">
+            {/* Header — avatar + name + badges */}
+            <div className="flex items-start gap-4 p-4 bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl">
+              {selectedUserFull.user.avatar_url ? (
+                <img src={selectedUserFull.user.avatar_url} alt="" className="w-16 h-16 rounded-full object-cover border-2 border-white shadow" />
+              ) : (
+                <Avatar name={selectedUserFull.user.full_name} w={14} />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-gray-900 text-lg">{selectedUserFull.user.full_name}</span>
+                  {selectedUserFull.user.is_admin && <span className="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded font-medium">ADMIN</span>}
+                  {selectedUserFull.user.is_verified && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-medium">✓ Verificado</span>}
+                  {!selectedUserFull.user.is_verified && <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-medium">No verificado</span>}
+                  {selectedUserFull.user.profile_completed && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-medium">Perfil completo</span>}
+                  {!selectedUserFull.user.profile_completed && <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-medium">Perfil incompleto</span>}
+                </div>
+                <div className="text-sm text-gray-500 mt-0.5">{selectedUserFull.user.email}</div>
+                <div className="text-sm text-gray-400">{selectedUserFull.user.phone}</div>
+                {selectedUserFull.user.is_active ? (
+                  <span className="inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200">Activo</span>
+                ) : (
+                  <span className="inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full border bg-red-50 text-red-700 border-red-200">Suspendido</span>
+                )}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              {[
-                ["Rol", selectedUser.role],
-                ["Admin", selectedUser.is_admin ? "Sí" : "No"],
-                ["Estado", selectedUser.is_active ? "Activo" : "Suspendido"],
-                ["Balance", usd(selectedUser.balance)],
-                ["Rating", selectedUser.rating_avg.toFixed(1) + " ★"],
-                ["Wallet", selectedUser.wallet_address || "No registrada"],
-                ["Registro", since(selectedUser.created_at)],
-              ].map(([k, v]) => (
-                <div key={k} className="p-3 bg-gray-50 rounded-xl">
-                  <div className="text-[10px] text-gray-400 uppercase tracking-wider">{k}</div>
-                  <div className="font-medium text-gray-900 mt-0.5 truncate">{v}</div>
-                </div>
-              ))}
+
+            {/* Info Grid */}
+            <div>
+              <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Información Personal</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <InfoCell label="Cédula" value={selectedUserFull.user.cedula || "—"} mono />
+                <InfoCell label="Rol" value={selectedUserFull.user.role === "worker" ? "Trabajador" : selectedUserFull.user.role === "contractor" ? "Contratista" : selectedUserFull.user.role} />
+                <InfoCell label="Profesión" value={selectedUserFull.user.profession || "—"} />
+                <InfoCell label="Dirección" value={selectedUserFull.user.address || "—"} />
+                <InfoCell label="Cédula bloqueada" value={selectedUserFull.user.cedula_locked ? "Sí" : "No"} />
+                <InfoCell label="Avatar verificado" value={selectedUserFull.user.avatar_verified ? "Sí" : "No"} />
+                <InfoCell label="Registro" value={since(selectedUserFull.user.created_at)} />
+                {selectedUserFull.user.verified_at && <InfoCell label="Verificado el" value={new Date(selectedUserFull.user.verified_at).toLocaleDateString()} />}
+              </div>
             </div>
+
+            {/* Wallet */}
+            <div>
+              <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Wallet</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <InfoCell label="Balance" value={usd(selectedUserFull.user.balance)} />
+                <InfoCell label="Rating" value={selectedUserFull.user.rating_avg.toFixed(1) + " ★"} />
+                <InfoCell label="Wallet Address" value={selectedUserFull.user.wallet_address || "No registrada"} mono className="col-span-2" />
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div>
+              <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Métricas</h4>
+              <div className="grid grid-cols-3 gap-2">
+                <StatCell label="Ganado" value={usd(selectedUserFull.stats.total_earned)} accent="text-emerald-600" />
+                <StatCell label="Gastado" value={usd(selectedUserFull.stats.total_spent)} accent="text-amber-600" />
+                <StatCell label="Publicados" value={fmt(selectedUserFull.stats.jobs_posted)} accent="text-blue-600" />
+                <StatCell label="Completados" value={fmt(selectedUserFull.stats.jobs_completed)} accent="text-purple-600" />
+                <StatCell label="Asignados" value={fmt(selectedUserFull.stats.jobs_assigned)} accent="text-indigo-600" />
+                <StatCell label="Calificaciones" value={fmt(selectedUserFull.stats.ratings_count)} accent="text-orange-600" />
+              </div>
+            </div>
+
+            {/* Jobs */}
+            {selectedUserFull.jobs_as_client.length > 0 && (
+              <div>
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Trabajos como Cliente ({selectedUserFull.jobs_as_client.length})</h4>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                  {selectedUserFull.jobs_as_client.map(j => (
+                    <div key={j.id} className="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-2">
+                      <div className="min-w-0 flex-1">
+                        <span className="font-medium text-gray-800 truncate block">{j.title}</span>
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${clsStatus[j.status] || ""}`}>{stLabel[j.status] || j.status}</span>
+                      </div>
+                      <span className="font-semibold text-gray-700 ml-2 shrink-0">{usd(j.budget)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {selectedUserFull.jobs_as_worker.length > 0 && (
+              <div>
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Trabajos como Trabajador ({selectedUserFull.jobs_as_worker.length})</h4>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                  {selectedUserFull.jobs_as_worker.map(j => (
+                    <div key={j.id} className="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-2">
+                      <div className="min-w-0 flex-1">
+                        <span className="font-medium text-gray-800 truncate block">{j.title}</span>
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${clsStatus[j.status] || ""}`}>{stLabel[j.status] || j.status}</span>
+                      </div>
+                      <span className="font-semibold text-gray-700 ml-2 shrink-0">{usd(j.budget)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Ratings */}
+            {selectedUserFull.ratings.length > 0 && (
+              <div>
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Calificaciones ({selectedUserFull.ratings.length})</h4>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                  {selectedUserFull.ratings.map(r => (
+                    <div key={r.id} className="text-xs bg-gray-50 rounded-lg px-3 py-2 flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <span className="font-medium text-gray-800">{r.rater_name}</span>
+                        {r.comment && <span className="text-gray-500 ml-2">— {r.comment}</span>}
+                      </div>
+                      <span className="text-amber-500 font-semibold ml-2 shrink-0">{r.rating} ★</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Transactions */}
+            {selectedUserFull.transactions.length > 0 && (
+              <div>
+                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Últimas Transacciones</h4>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {selectedUserFull.transactions.slice(0, 10).map(t => (
+                    <div key={t.id} className="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-gray-400">#{t.id}</span>
+                        <span className="capitalize text-gray-600">{t.type}</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${t.status === "confirmed" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>{t.status}</span>
+                      </div>
+                      <span className="font-semibold text-gray-800">{usd(t.amount)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Delete Action */}
+            {!selectedUserFull.user.is_admin && (
+              <div className="border-t border-gray-100 pt-4 mt-2">
+                {deleteConfirmId === selectedUserFull.user.id ? (
+                  deleteStep === 1 ? (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                      <p className="text-sm font-medium text-red-800 mb-1">¿Eliminar a {selectedUserFull.user.full_name}?</p>
+                      <p className="text-xs text-red-600 mb-3">Esta acción es irreversible. Se eliminarán todos los datos asociados.</p>
+                      <div className="flex gap-2">
+                        <button onClick={() => setDeleteStep(2)}
+                          className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-xl transition-colors">
+                          Sí, eliminar
+                        </button>
+                        <button onClick={() => { setDeleteConfirmId(null); setDeleteStep(1); }}
+                          className="flex-1 px-4 py-2 bg-white border border-gray-200 text-gray-600 text-xs font-medium rounded-xl hover:bg-gray-50 transition-colors">
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-red-100 border-2 border-red-400 rounded-xl p-4">
+                      <p className="text-sm font-bold text-red-900 mb-1">⚠️ Confirmación final</p>
+                      <p className="text-xs text-red-800 mb-3">Se perderán para siempre: perfil, trabajos asociados, transacciones, calificaciones y tokens de sesión de <strong>{selectedUserFull.user.full_name}</strong>.</p>
+                      <div className="flex gap-2">
+                        <button onClick={() => deleteUser(selectedUserFull.user.id)} disabled={loading}
+                          className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50">
+                          {loading && <Spinner />}
+                          {loading ? "Eliminando..." : "Confirmar eliminación definitiva"}
+                        </button>
+                        <button onClick={() => { setDeleteConfirmId(null); setDeleteStep(1); }}
+                          className="flex-1 px-4 py-2 bg-white border border-gray-200 text-gray-600 text-xs font-medium rounded-xl hover:bg-gray-50 transition-colors">
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  <button onClick={() => { setDeleteConfirmId(selectedUserFull.user.id); setDeleteStep(1); }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold transition-colors">
+                    <Ico d={icons.x} c="w-3.5 h-3.5" /> Eliminar cuenta
+                  </button>
+                )}
+              </div>
+            )}
           </div>
+        ) : (
+          <div className="text-center py-8 text-gray-400 text-sm">No se pudo cargar la información del usuario.</div>
         )}
       </Modal>
 
