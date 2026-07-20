@@ -66,6 +66,19 @@ if sentry_dsn:
 # Crear tablas
 Base.metadata.create_all(bind=engine)
 
+# Migración manual: agregar last_login_at si no existe (PostgreSQL)
+from sqlalchemy import text, inspect
+try:
+    inspector = inspect(engine)
+    cols = [c["name"] for c in inspector.get_columns("users")]
+    if "last_login_at" not in cols:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP WITH TIME ZONE"))
+            conn.commit()
+            print("✓ Migración: last_login_at agregado a users")
+except Exception as e:
+    print(f"⚠️ Migración last_login_at omitida: {e}")
+
 app = FastAPI(
     title="TurnoGO API",
     version="1.0.1",  # test persistencia PostgreSQL
