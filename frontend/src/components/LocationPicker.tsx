@@ -25,6 +25,7 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
   const [searchText, setSearchText] = useState(address || "");
   const [gettingLocation, setGettingLocation] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [mapLoading, setMapLoading] = useState(false);
 
   const defaultLat = lat || 10.4806;
   const defaultLng = lng || -66.9036;
@@ -82,6 +83,7 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
 
   const initMap = useCallback(() => {
     if (!mapContainerRef.current || mapRef.current) return;
+    setMapLoading(true);
     const map = L.map(mapContainerRef.current, {
       center: [defaultLat, defaultLng],
       zoom: 14,
@@ -99,6 +101,8 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
     });
     mapRef.current = map;
     markerRef.current = marker;
+    // Map tiles loaded → hide skeleton
+    map.whenReady(() => setMapLoading(false));
   }, [defaultLat, defaultLng, moveMarker]);
 
   // Init/cleanup map on modal open/close
@@ -111,6 +115,7 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
       }
       return;
     }
+    setMapLoading(true);
     const timer = setTimeout(() => initMap(), 300);
     return () => clearTimeout(timer);
   }, [modalOpen, initMap]);
@@ -135,11 +140,6 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }, [moveMarker]);
-
-  // Auto-get location on first mount if no coords set yet
-  useEffect(() => {
-    if (!lat && !lng && navigator.geolocation) getCurrentLocation();
-  }, []);
 
   // Search state
   const [results, setResults] = useState<any[]>([]);
@@ -172,7 +172,7 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
 
   return (
     <div className="space-y-1.5">
-      {/* Search + GPS row */}
+      {/* ─── Search + GPS row ─── */}
       <div className="flex gap-2">
         <div className="relative flex-1">
           <input
@@ -182,7 +182,7 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
             onFocus={() => { if (results.length > 0) setShowResults(true); }}
             onBlur={() => setTimeout(() => setShowResults(false), 200)}
             placeholder="Buscar dirección..."
-            className="w-full px-2.5 py-1.5 text-[11px] bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg text-[#1E293B] font-medium outline-none transition-all placeholder:text-[#94A3B8]"
+            className="w-full px-2.5 py-1.5 text-[11px] bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg text-[#1E293B] font-medium outline-none transition-all placeholder:text-[#94A3B8] focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)]"
           />
           {showResults && results.length > 0 && (
             <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
@@ -209,7 +209,7 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
         </button>
       </div>
 
-      {/* Open map button */}
+      {/* ─── Open map button ─── */}
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -227,10 +227,12 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
         )}
       </div>
 
-      {/* ===== MAP MODAL (like InfoModal style) ===== */}
+      {/* ══════════════════════════════════════════
+           MAP MODAL — polished, modern, professional
+           ══════════════════════════════════════════ */}
       {modalOpen && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 safe-top"
           onClick={() => setModalOpen(false)}
         >
           {/* Backdrop with blur */}
@@ -238,56 +240,67 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
 
           {/* Modal panel */}
           <div
-            className="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl animate-modal-enter overflow-hidden"
+            className="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl shadow-black/10 border border-white/20 animate-modal-enter overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close button */}
+            {/* ── Close button ── */}
             <button
               type="button"
               onClick={() => setModalOpen(false)}
-              className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center"
+              className="absolute top-3.5 right-3.5 z-20 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm border border-gray-200/60 shadow-sm hover:bg-gray-100 hover:border-gray-300 transition-all flex items-center justify-center group"
               aria-label="Cerrar"
             >
-              <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
 
-            {/* Header */}
-            <div className="pt-4 pb-0 px-5 shrink-0">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            {/* ── Header ── */}
+            <div className="pt-5 pb-0 px-5 shrink-0">
+              <div className="flex items-center gap-2.5 mb-1">
+                <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shrink-0 shadow-sm shadow-primary/20">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                   </svg>
+                  {/* Inner dot decoration */}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-secondary rounded-full border-2 border-white shadow-sm" />
                 </div>
-                <span className="font-bold text-sm text-[#1E293B]">Selecciona tu ubicación</span>
+                <div>
+                  <span className="font-bold text-sm text-[#1E293B] block leading-tight">
+                    Selecciona tu ubicación
+                  </span>
+                  <span className="text-[11px] text-gray-500/80">
+                    Busca o arrastra el pin en el mapa
+                  </span>
+                </div>
               </div>
-              <p className="text-[11px] text-gray-500 leading-normal">
-                Busca una dirección o arrastra el pin en el mapa.
-              </p>
             </div>
 
-            {/* Search */}
-            <div className="px-5 py-2 shrink-0">
+            {/* ── Search ── */}
+            <div className="px-5 pt-3 pb-2 shrink-0">
               <div className="relative">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
                 <input
                   type="text"
                   value={searchText}
                   onChange={handleSearchInput}
                   placeholder="Buscar dirección..."
-                  className="w-full pl-9 pr-3 py-2.5 text-[13px] bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-[#1E293B] outline-none focus:border-primary focus:bg-white transition-all placeholder:text-[#94A3B8]"
+                  className="w-full pl-9 pr-3 py-2.5 text-[13px] bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-[#1E293B] outline-none transition-all placeholder:text-[#94A3B8] focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)]"
                   autoFocus
                 />
+                {/* Search results dropdown */}
                 {showResults && results.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-40 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-lg shadow-black/5 max-h-40 overflow-y-auto modal-scroll">
                     {results.map((item, i) => (
                       <button key={i} type="button" onMouseDown={() => selectResult(item)}
-                        className="w-full text-left px-3 py-2.5 text-[12px] text-gray-700 hover:bg-blue-50 hover:text-primary border-b border-gray-50 last:border-0"
+                        className="w-full text-left px-3.5 py-2.5 text-[12px] text-gray-700 hover:bg-primary-lighter hover:text-primary border-b border-gray-50 last:border-0 transition-colors flex items-start gap-2"
                       >
-                        <span className="line-clamp-2">{item.display_name}</span>
+                        <svg className="w-3.5 h-3.5 mt-0.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <span className="line-clamp-2 leading-snug">{item.display_name}</span>
                       </button>
                     ))}
                   </div>
@@ -295,35 +308,73 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
               </div>
             </div>
 
-            {/* Map */}
-            <div className="flex-1 relative min-h-[250px] mx-5 mb-2 rounded-2xl overflow-hidden border border-gray-100">
+            {/* ── Map area ── */}
+            <div className="flex-1 relative min-h-[280px] mx-5 mb-2 rounded-2xl overflow-hidden border border-gray-100 shadow-inner">
+              {/* Loading skeleton */}
+              {mapLoading && (
+                <div className="absolute inset-0 z-[500] flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                  <div className="skeleton w-12 h-12 rounded-full mb-3" />
+                  <div className="skeleton w-32 h-3 rounded mb-2" />
+                  <div className="skeleton w-24 h-2.5 rounded" />
+                </div>
+              )}
+
+              {/* Map container */}
               <div ref={mapContainerRef} className="absolute inset-0" />
+
+              {/* Centered pin indicator (visual hint) */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[500] pointer-events-none drop-shadow-md">
+                <svg className="w-8 h-8 text-primary -mt-8" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                  <circle cx="12" cy="9" r="3" fill="white" />
+                </svg>
+              </div>
+
               {/* GPS floating button */}
               <button
                 type="button"
                 onClick={getCurrentLocation}
                 disabled={gettingLocation}
-                className="absolute bottom-3 right-3 z-[1000] w-9 h-9 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-blue-50 transition-all disabled:opacity-50"
+                className="absolute bottom-3 right-3 z-[1000] w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full shadow-lg shadow-black/10 border border-gray-200/80 flex items-center justify-center hover:bg-primary-lighter hover:border-primary/30 hover:shadow-primary/10 transition-all disabled:opacity-50 group"
                 title="Mi ubicación"
               >
                 {gettingLocation ? (
                   <svg className="w-4 h-4 animate-spin text-primary" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4 31.4" strokeLinecap="round"/></svg>
                 ) : (
-                  <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  <svg className="w-4 h-4 text-gray-500 group-hover:text-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
                 )}
               </button>
+
+              {/* Zoom hint badge */}
+              <div className="absolute top-3 left-3 z-[1000] bg-white/80 backdrop-blur-sm rounded-lg px-2 py-1 text-[9px] font-medium text-gray-500 shadow-sm border border-gray-100/50 flex items-center gap-1 pointer-events-none">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
+                </svg>
+                Arrastra el pin
+              </div>
             </div>
 
-            {/* Footer */}
-            <div className="px-5 pb-4 pt-0 shrink-0">
+            {/* ── Footer ── */}
+            <div className="px-5 pb-4 pt-1 shrink-0">
               <button
                 type="button"
                 onClick={confirmLocation}
-                className="block w-full py-2.5 bg-primary text-white font-semibold text-sm text-center rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-primary/20"
+                className="relative w-full py-2.5 bg-gradient-to-r from-primary to-primary-dark text-white font-semibold text-sm text-center rounded-xl hover:from-primary-dark hover:to-primary-darker active:scale-[0.98] transition-all shadow-md shadow-primary/25 hover:shadow-lg hover:shadow-primary/30 overflow-hidden group"
               >
-                Confirmar ubicación
+                <span className="relative z-10">Confirmar ubicación</span>
+                {/* Shine effect on hover */}
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
               </button>
-              <p className="text-center text-[10px] text-gray-400 mt-1">Arrastra el pin para ajustar con precisión</p>
+              <p className="text-center text-[10px] text-gray-400 mt-1.5 flex items-center justify-center gap-1">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 11.5l3-3 3 3 4-4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                </svg>
+                Arrastra el pin para ajustar con precisión
+              </p>
             </div>
           </div>
         </div>
