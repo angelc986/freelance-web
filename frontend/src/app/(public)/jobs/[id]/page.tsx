@@ -690,7 +690,7 @@ export default function JobDetailPage() {
                     {isAssigned && job.status === "checked_in" && (
                       <button
                         onClick={() => handleAction(() => completeRequest(jobId), () => setShowVerifyModal(true))}
-                        className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-secondary text-white font-semibold rounded-xl hover:brightness-110 transition-all shadow-sm"
+                        className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-md shadow-primary/20"
                       >
                         <IconCheck className="w-5 h-5" />
                         Solicitar finalización
@@ -871,7 +871,7 @@ export default function JobDetailPage() {
                         <button
                           onClick={handleRate}
                           disabled={ratingLoading}
-                          className="btn-ripple w-full sm:w-auto px-6 py-2.5 bg-accent text-white font-semibold rounded-xl hover:brightness-110 transition-all disabled:opacity-50 shadow-sm"
+                          className="btn-ripple w-full sm:w-auto px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all disabled:opacity-50 shadow-md shadow-primary/20"
                         >
                           {ratingLoading ? (
                             <span className="flex items-center justify-center gap-2">
@@ -929,7 +929,7 @@ export default function JobDetailPage() {
                             {app.status === "pending" && job.status === "open" && (
                               <button
                                 onClick={() => handleAction(() => acceptApplication(jobId, app.id), loadApps)}
-                                className="btn-ripple mt-2 w-full px-3 py-1.5 bg-secondary text-white text-xs font-medium rounded-lg hover:brightness-110 transition-colors flex items-center justify-center gap-1"
+                                className="btn-ripple mt-2 w-full px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-1"
                               >
                                 <IconCheck className="w-3.5 h-3.5" />
                                 Aceptar trabajador
