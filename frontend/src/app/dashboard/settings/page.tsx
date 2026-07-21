@@ -688,18 +688,26 @@ export default function SettingsPage() {
 
       {/* ═══ MODAL VERIFICACIÓN ═══ */}
       {showVerifyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-sm mx-4 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-5 py-4">
-              <h3 className="text-white font-semibold text-base">🔐 Verificar cambios</h3>
-            </div>
-            <div className="p-5 space-y-4">
-              <p className="text-sm text-gray-600">
-                Te enviamos un código de 6 dígitos a <strong>{user.email}</strong>.
-                Revísalo e ingrésalo abajo para confirmar los cambios.
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4" onClick={() => setShowVerifyModal(false)}>
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 w-full max-w-sm mx-auto overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* Header sutil */}
+            <div className="px-6 pt-6 pb-2 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-dark">Verificar cambios</h3>
+              <p className="text-sm text-gray mt-1.5 leading-relaxed">
+                Enviamos un c&oacute;digo de 6 d&iacute;gitos a <strong className="text-dark">{user.email}</strong>.
+                Ingresa el c&oacute;digo para confirmar los cambios.
               </p>
+            </div>
+
+            <div className="px-6 py-5 space-y-5">
+              {/* Input con diseño mejorado */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1.5">Código de verificación</label>
+                <label className="block text-xs font-medium text-gray-500 mb-2">C&oacute;digo de verificaci&oacute;n</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -707,31 +715,59 @@ export default function SettingsPage() {
                   value={verifyCode}
                   onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ""))}
                   placeholder="000000"
-                  className="w-full px-4 py-3 text-center text-2xl font-bold tracking-[8px] border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  className="w-full px-4 py-3.5 text-center text-3xl font-mono font-bold tracking-[10px] border border-gray-200 rounded-2xl bg-white focus:ring-2 focus:ring-primary/15 focus:border-primary/50 outline-none transition-all placeholder:text-gray-300"
                   autoFocus
                 />
+                {/* Barra de progreso de llenado */}
+                <div className="flex gap-1 mt-2 justify-center">
+                  {[0,1,2,3,4,5].map((i) => (
+                    <div key={i} className={`h-1.5 w-6 rounded-full transition-all duration-200 ${verifyCode.length > i ? "bg-primary" : "bg-gray-200"}`} />
+                  ))}
+                </div>
               </div>
+
               {verifyMsg && (
-                <div className={`text-sm px-4 py-3 rounded-xl border ${verifyMsg.ok ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-600 border-red-200"}`}>
-                  {verifyMsg.text}
+                <div className={`text-sm px-4 py-3 rounded-2xl border ${verifyMsg.ok ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-600 border-red-200"}`}>
+                  <div className="flex items-start gap-2.5">
+                    {verifyMsg.ok ? (
+                      <svg className="w-4 h-4 mt-0.5 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4 mt-0.5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                      </svg>
+                    )}
+                    <span>{verifyMsg.text}</span>
+                  </div>
                 </div>
               )}
+
               <div className="flex gap-3 pt-1">
                 <button
                   onClick={() => setShowVerifyModal(false)}
-                  className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all"
+                  className="flex-1 px-4 py-3 border border-gray-200 rounded-2xl text-sm font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 active:scale-[0.98] transition-all"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleConfirmChange}
                   disabled={verifying || verifyCode.length < 6}
-                  className="flex-1 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-3 bg-primary text-white rounded-2xl text-sm font-semibold hover:bg-primary-dark active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 shadow-sm shadow-primary/20"
                 >
-                  {verifying ? "Verificando..." : "Confirmar"}
+                  {verifying ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+                        <path d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" fill="currentColor" className="opacity-75" />
+                      </svg>
+                      Verificando
+                    </span>
+                  ) : "Confirmar cambios"}
                 </button>
               </div>
-              <p className="text-xs text-gray-400 text-center">El código expira en 15 minutos</p>
+
+              <p className="text-xs text-gray-300 text-center pt-0.5">El c&oacute;digo expira en 15 minutos</p>
             </div>
           </div>
         </div>
