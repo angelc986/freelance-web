@@ -612,3 +612,49 @@ def admin_list_jobs(
         "total": total, "page": page, "per_page": per_page,
         "jobs": [_job_to_response(j) for j in jobs],
     }
+
+
+# ─── TEST: Añadir saldo de prueba ───────────────────
+
+from pydantic import BaseModel
+
+class AddTestBalanceRequest(BaseModel):
+    user_id: int
+    amount: float  # USDT a añadir
+
+@router.post("/add-test-balance")
+def add_test_balance(
+    request: Request,
+    body: AddTestBalanceRequest,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    """🧪 Añadir saldo de prueba a un usuario (solo admin)"""
+    from app.models.transaction import Transaction
+
+    user = db.query(User).filter(User.id == body.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    user.balance += body.amount
+
+    # Registrar transacción de prueba
+    tx = Transaction(
+        user_id=user.id,
+        type="deposit",
+        amount=body.amount,
+        network="polygon",
+        tx_hash=f"TEST_DEPOSIT_{body.user_id}_{body.amount}",
+        status="confirmed",
+        confirmed_at=datetime.now(timezone.utc),
+    )
+    db.add(tx)
+    db.commit()
+
+    return {
+        "ok": True,
+        "user_id": user.id,
+        "email": user.email,
+        "new_balance": user.balance,
+        "added": body.amount,
+    }
