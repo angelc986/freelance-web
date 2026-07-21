@@ -108,6 +108,200 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   cancelled:     { label: "Cancelado",      color: "bg-red-50 text-red-500 border-red-200" },
 };
 
+// ─── HAVERSINE DISTANCE (meters) ───
+function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000; // Earth radius in meters
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+const CHECKIN_RADIUS_M = 100; // must be within 100m of job location
+
+// ─── CHECKIN MODAL ───
+function CheckinModal({
+  jobLat,
+  jobLng,
+  jobLocation,
+  onClose,
+  onCheckin,
+}: {
+  jobLat: number | null;
+  jobLng: number | null;
+  jobLocation: string;
+  onClose: () => void;
+  onCheckin: () => void;
+}) {
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState("");
+  const [gpsStatus, setGpsStatus] = useState<"idle" | "locating" | "denied" | "success" | "too-far">("idle");
+  const [distance, setDistance] = useState<number | null>(null);
+
+  const handleCheckin = () => {
+    setError("");
+
+    if (jobLat == null || jobLng == null) {
+      setError("Este trabajo no tiene coordenadas de ubicaci\u00f3n. Contacta al empleador.");
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      setError("Tu dispositivo no soporta geolocalizaci\u00f3n.");
+      return;
+    }
+
+    setChecking(true);
+    setGpsStatus("locating");
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const dist = haversineDistance(
+          pos.coords.latitude,
+          pos.coords.longitude,
+          jobLat,
+          jobLng
+        );
+        setDistance(Math.round(dist));
+
+        if (dist <= CHECKIN_RADIUS_M) {
+          setGpsStatus("success");
+          setChecking(false);
+          onCheckin();
+        } else {
+          setGpsStatus("too-far");
+          setChecking(false);
+        }
+      },
+      (err) => {
+        setChecking(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          setGpsStatus("denied");
+          setError("Permiso de ubicaci\u00f3n denegado. Activa el GPS y permite el acceso a la ubicaci\u00f3n en tu navegador.");
+        } else {
+          setError("No se pudo obtener tu ubicaci\u00f3n. Verifica que el GPS est\u00e9 activado.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+    );
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" />
+      <div
+        className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl animate-modal-enter p-7"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center"
+          aria-label="Cerrar"
+        >
+          <svg className="w-4 h-4 text-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* Icon */}
+        <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors ${
+          gpsStatus === "too-far" ? "bg-red-50" :
+          gpsStatus === "locating" ? "bg-amber-50" :
+          "bg-primary/10"
+        }`}>
+          {gpsStatus === "locating" ? (
+            <span className="w-7 h-7 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+          ) : gpsStatus === "too-far" ? (
+            <svg className="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+            </svg>
+          ) : (
+            <svg className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+            </svg>
+          )}
+        </div>
+
+        <h3 className="text-lg font-bold text-dark mb-2 text-center">
+          {gpsStatus === "too-far" ? "Est\u00e1s muy lejos" :
+           gpsStatus === "locating" ? "Obteniendo ubicaci\u00f3n..." :
+           "\u00bfEst\u00e1s en la ubicaci\u00f3n del trabajo?"}
+        </h3>
+
+        {/* Error message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 text-center">
+            {error}
+          </div>
+        )}
+
+        {/* Too far message */}
+        {gpsStatus === "too-far" && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 text-center">
+            <p className="font-medium">Est\u00e1s a <strong>{distance}m</strong> de la ubicaci\u00f3n.</p>
+            <p className="text-xs mt-1 text-amber-600">Debes estar a menos de {CHECKIN_RADIUS_M}m para hacer check-in.<br />Ubicaci\u00f3n del trabajo: <strong>{jobLocation}</strong></p>
+          </div>
+        )}
+
+        {/* Normal info */}
+        {gpsStatus === "idle" && (
+          <p className="text-sm text-gray text-center mb-6 leading-relaxed">
+            Verificaremos que est\u00e9s cerca de <strong>{jobLocation}</strong> antes de permitir el check-in.
+          </p>
+        )}
+
+        {/* Locating */}
+        {gpsStatus === "locating" && (
+          <p className="text-sm text-gray text-center mb-6 leading-relaxed">
+            Verificando tu ubicaci\u00f3n GPS...
+          </p>
+        )}
+
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            disabled={checking}
+            className="flex-1 py-3 border border-gray-200 text-gray text-sm font-medium rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50"
+          >
+            Volver
+          </button>
+          {gpsStatus === "too-far" ? (
+            <button
+              onClick={() => {
+                setGpsStatus("idle");
+                setError("");
+                setDistance(null);
+              }}
+              className="flex-1 py-3 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm"
+            >
+              Intentar de nuevo
+            </button>
+          ) : (
+            <button
+              onClick={handleCheckin}
+              disabled={checking || gpsStatus === "locating"}
+              className="flex-1 py-3 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm disabled:opacity-50"
+            >
+              {checking ? "Verificando..." : "Estoy aqu\u00ed"}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── SKELETON ───
 function DetailSkeleton() {
   return (
@@ -453,58 +647,16 @@ export default function JobDetailPage() {
 
                         {/* Check-in location confirmation modal */}
                         {showCheckinModal && (
-                          <div
-                            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-                            onClick={() => setShowCheckinModal(false)}
-                          >
-                            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" />
-                            <div
-                              className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl animate-modal-enter p-7"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {/* Close button */}
-                              <button
-                                onClick={() => setShowCheckinModal(false)}
-                                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center"
-                                aria-label="Cerrar"
-                              >
-                                <svg className="w-4 h-4 text-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
-
-                              {/* Icon */}
-                              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                                </svg>
-                              </div>
-
-                              <h3 className="text-lg font-bold text-dark mb-2 text-center">&iquest;Est&aacute;s en la ubicaci&oacute;n del trabajo?</h3>
-                              <p className="text-sm text-gray text-center mb-6 leading-relaxed">
-                                Aseg&uacute;rate de estar en la direcci&oacute;n indicada por el empleador. Si no la encuentras, contacta al empleador para solicitar indicaciones.
-                              </p>
-
-                              <div className="flex gap-3">
-                                <button
-                                  onClick={() => setShowCheckinModal(false)}
-                                  className="flex-1 py-3 border border-gray-200 text-gray text-sm font-medium rounded-xl hover:bg-gray-50 transition-all"
-                                >
-                                  Volver
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setShowCheckinModal(false);
-                                    handleAction(() => checkIn(jobId));
-                                  }}
-                                  className="flex-1 py-3 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm"
-                                >
-                                  Estoy aqu&iacute;
-                                </button>
-                              </div>
-                            </div>
-                          </div>
+                          <CheckinModal
+                            jobLat={job.latitude ?? null}
+                            jobLng={job.longitude ?? null}
+                            jobLocation={job.location}
+                            onClose={() => setShowCheckinModal(false)}
+                            onCheckin={() => {
+                              setShowCheckinModal(false);
+                              handleAction(() => checkIn(jobId));
+                            }}
+                          />
                         )}
                       </>
                     )}
