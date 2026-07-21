@@ -7,7 +7,7 @@ import EmptyState from "@/components/EmptyState";
 import PullToRefresh from "@/components/PullToRefresh";
 import { StatSkeleton, CardSkeleton, ActivitySkeleton } from "@/components/Skeleton";
 import VerificationBanner from "@/components/VerificationBanner";
-import { myJobs, getMyApplications, getBalance, type Job, type Application } from "@/lib/api";
+import { myJobs, getMyApplications, getBalance, getMyApplicants, type Job, type Application } from "@/lib/api";
 
 // ─── TYPES ───
 interface ActivityItem {
@@ -135,18 +135,25 @@ export default function DashboardPage() {
   const [apps, setApps] = useState<Application[]>([]);
   const [balance, setBalance] = useState(0);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [candidateCount, setCandidateCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
     if (!user) return;
     try {
-      const [j, a, bal] = await Promise.all([
+      const isWorker = user.role === "worker";
+      const [j, a, bal, applicants] = await Promise.all([
         myJobs(),
         getMyApplications().catch(() => []),
         getBalance().catch(() => ({ balance: 0 })),
+        (!isWorker ? getMyApplicants().catch(() => []) : Promise.resolve([])),
       ]);
       setJobs(j);
       setApps(a);
+      if (!isWorker) {
+        const count = (applicants as { applicants: unknown[] }[]).reduce((sum, item) => sum + item.applicants.length, 0);
+        setCandidateCount(count);
+      }
       setBalance(bal.balance);
 
       const acts: ActivityItem[] = [];
@@ -222,7 +229,7 @@ export default function DashboardPage() {
     },
     {
       label: isWorker ? "Postulaciones" : "Candidatos",
-      value: isWorker ? appliedJobs : pendingApps,
+      value: isWorker ? appliedJobs : candidateCount,
       icon: <IconInbox />,
       href: isWorker ? "/dashboard/jobs" : "/dashboard/candidates",
       theme: themes[3],
