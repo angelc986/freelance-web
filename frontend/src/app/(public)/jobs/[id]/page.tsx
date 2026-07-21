@@ -147,12 +147,12 @@ function CheckinModal({
     setError("");
 
     if (jobLat == null || jobLng == null) {
-      setError("Este trabajo no tiene coordenadas de ubicaci\u00f3n. Contacta al empleador.");
+      setError("Este trabajo no tiene coordenadas de ubicación. Contacta al empleador.");
       return;
     }
 
     if (!navigator.geolocation) {
-      setError("Tu dispositivo no soporta geolocalizaci\u00f3n.");
+      setError("Tu dispositivo no soporta geolocalización.");
       return;
     }
 
@@ -180,11 +180,11 @@ function CheckinModal({
       },
       (err) => {
         setChecking(false);
-        if (err.code === err.PERMISSION_DENIED) {
+        if (err.code === 1) {
           setGpsStatus("denied");
-          setError("Permiso de ubicaci\u00f3n denegado. Activa el GPS y permite el acceso a la ubicaci\u00f3n en tu navegador.");
+          setError("Permiso de ubicación denegado. Activa el GPS y permite el acceso a la ubicación en tu navegador.");
         } else {
-          setError("No se pudo obtener tu ubicaci\u00f3n. Verifica que el GPS est\u00e9 activado.");
+          setError("No se pudo obtener tu ubicación. Verifica que el GPS esté activado.");
         }
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
@@ -214,14 +214,14 @@ function CheckinModal({
 
         {/* Icon */}
         <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors ${
-          gpsStatus === "too-far" ? "bg-red-50" :
-          gpsStatus === "locating" ? "bg-amber-50" :
+          gpsStatus === "too-far" ? "bg-gray-100" :
+          gpsStatus === "locating" ? "bg-gray-100" :
           "bg-primary/10"
         }`}>
           {gpsStatus === "locating" ? (
-            <span className="w-7 h-7 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+            <span className="w-7 h-7 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
           ) : gpsStatus === "too-far" ? (
-            <svg className="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
             </svg>
@@ -234,37 +234,50 @@ function CheckinModal({
         </div>
 
         <h3 className="text-lg font-bold text-dark mb-2 text-center">
-          {gpsStatus === "too-far" ? "Est\u00e1s muy lejos" :
-           gpsStatus === "locating" ? "Obteniendo ubicaci\u00f3n..." :
-           "\u00bfEst\u00e1s en la ubicaci\u00f3n del trabajo?"}
+          {gpsStatus === "too-far" ? "Ubicación incorrecta" :
+           gpsStatus === "locating" ? "Obteniendo ubicación..." :
+           "¿Estás en la ubicación del trabajo?"}
         </h3>
 
         {/* Error message */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 text-center">
+          <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-600 text-center">
             {error}
           </div>
         )}
 
         {/* Too far message */}
         {gpsStatus === "too-far" && (
-          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 text-center">
-            <p className="font-medium">Est\u00e1s a <strong>{distance}m</strong> de la ubicaci\u00f3n.</p>
-            <p className="text-xs mt-1 text-amber-600">Debes estar a menos de {CHECKIN_RADIUS_M}m para hacer check-in.<br />Ubicaci\u00f3n del trabajo: <strong>{jobLocation}</strong></p>
+          <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-600 text-center space-y-2">
+            <p className="font-medium text-gray-800">
+              No estás en la ubicación del trabajo
+            </p>
+            <p className="text-gray-500">
+              Te encuentras a <strong className="text-gray-700">{distance}m</strong> de la dirección indicada.
+              Debes estar a menos de {CHECKIN_RADIUS_M}m para poder hacer check-in.
+            </p>
+            <div className="pt-2 border-t border-gray-200">
+              <p className="text-xs text-gray-400">
+                <strong className="text-gray-500">Ubicación del trabajo:</strong> {jobLocation}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                Asegúrate de estar en la dirección correcta. Si no la encuentras, contacta al contratista para solicitar indicaciones.
+              </p>
+            </div>
           </div>
         )}
 
         {/* Normal info */}
         {gpsStatus === "idle" && (
           <p className="text-sm text-gray text-center mb-6 leading-relaxed">
-            Verificaremos que est\u00e9s cerca de <strong>{jobLocation}</strong> antes de permitir el check-in.
+            Verificaremos que estés cerca de <strong>{jobLocation}</strong> antes de permitir el check-in.
           </p>
         )}
 
         {/* Locating */}
         {gpsStatus === "locating" && (
           <p className="text-sm text-gray text-center mb-6 leading-relaxed">
-            Verificando tu ubicaci\u00f3n GPS...
+            Verificando tu ubicación GPS...
           </p>
         )}
 
@@ -293,7 +306,7 @@ function CheckinModal({
               disabled={checking || gpsStatus === "locating"}
               className="flex-1 py-3 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm disabled:opacity-50"
             >
-              {checking ? "Verificando..." : "Estoy aqu\u00ed"}
+              {checking ? "Verificando..." : "Estoy aquí"}
             </button>
           )}
         </div>
