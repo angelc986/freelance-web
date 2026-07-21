@@ -51,14 +51,14 @@ function IconLogout({ className = "w-5 h-5" }: { className?: string }) {
   );
 }
 
-const navItems = [
+const getNavItems = (isContractor: boolean) => [
   {
     label: "Inicio",
     href: "/dashboard",
     icon: <IconHome />,
   },
   {
-    label: "Postulaciones",
+    label: isContractor ? "Mis Trabajos" : "Postulaciones",
     href: "/dashboard/jobs",
     icon: <IconBriefcase />,
   },
@@ -82,6 +82,8 @@ export default function DashboardLayout({
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const isContractor = user?.role === "contractor" || user?.role === "both";
+  const navItems = getNavItems(isContractor);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -180,7 +182,7 @@ export default function DashboardLayout({
 
         {/* Nav */}
         <nav className="px-3 py-4 flex flex-col gap-1">
-          {navItems.map((item) => {
+          {getNavItems(isContractor).map((item) => {
             const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
             return (
               <Link
@@ -271,7 +273,7 @@ export default function DashboardLayout({
       {/* MOBILE BOTTOM NAV */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-gray-200/70 shadow-lg shadow-gray-200/30 pb-[env(safe-area-inset-bottom,0px)]">
         <div className="grid grid-cols-4 h-14">
-          {navItems.map((item) => {
+          {getNavItems(isContractor).map((item) => {
             const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
             return (
               <Link
