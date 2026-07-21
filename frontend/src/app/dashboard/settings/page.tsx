@@ -4,16 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import BackButton, { IconArrowLeft } from "@/components/BackButton";
 import { updateProfile, updateWallet, uploadAvatar, updateNotificationPreferences, addPushSubscription, removePushSubscription, requestChange, confirmChange, API_BASE } from "@/lib/api";
 
 // ─── SVG ICONS ───
-function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>
-  );
-}
+
 function IconUser({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -343,9 +338,7 @@ export default function SettingsPage() {
 
       {/* ═══ HEADER ═══ */}
       <div className="flex items-center gap-3">
-        <Link href="/dashboard" className="w-8 h-8 rounded-xl bg-gray-100 text-gray flex items-center justify-center hover:bg-gray-200 hover:text-primary transition-all">
-          <IconArrowLeft className="w-4 h-4" />
-        </Link>
+        <BackButton />
         <div>
           <h1 className="text-xl font-bold text-dark">Configuración</h1>
           <p className="text-sm text-gray">Administra tu perfil y wallet</p>

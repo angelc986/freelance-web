@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import EmptyState from "@/components/EmptyState";
 import PullToRefresh from "@/components/PullToRefresh";
 import { StatSkeleton, CardSkeleton, ActivitySkeleton } from "@/components/Skeleton";
+import { formatUSD } from "@/lib/format";
 import VerificationBanner from "@/components/VerificationBanner";
 import { myJobs, getMyApplications, getBalance, getMyApplicants, type Job, type Application } from "@/lib/api";
 
@@ -207,7 +208,7 @@ export default function DashboardPage() {
   const stats = [
     {
       label: "Balance",
-      value: "$" + balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      value: formatUSD(balance),
       icon: <IconWallet />,
       href: "/dashboard/wallet",
       theme: themes[0],

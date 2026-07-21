@@ -6,6 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getBalance, getHistory, deposit, withdraw, type Transaction } from "@/lib/api";
 import PullToRefresh from "@/components/PullToRefresh";
 import EmptyState from "@/components/EmptyState";
+import BackButton, { IconArrowLeft } from "@/components/BackButton";
+import { formatUSD, formatUSDT } from "@/lib/format";
 import AnimatedCounter from "@/components/AnimatedCounter";
 
 const typeMeta: Record<string, { label: string; color: string; sign: string }> = {
@@ -24,13 +26,7 @@ const statusStyle: Record<string, string> = {
 };
 
 // ─── ICONS ───
-function IconArrowLeft() {
-  return (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>
-  );
-}
+
 function IconCopy({ className = "w-4 h-4" }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -145,7 +141,7 @@ export default function WalletPage() {
     <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4 w-full overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <Link href="/dashboard" className="text-gray hover:text-primary transition-colors"><IconArrowLeft /></Link>
+        <BackButton />
         <h1 className="text-lg font-bold text-dark">Wallet</h1>
       </div>
 
@@ -162,14 +158,14 @@ export default function WalletPage() {
               </div>
               <div>
                 <p className="text-[11px] sm:text-xs text-white/70">Balance disponible</p>
-                <p className="text-2xl sm:text-3xl font-bold tracking-tight">$<AnimatedCounter value={balance} duration={1000} /></p>
+                <p className="text-2xl sm:text-3xl font-bold tracking-tight">{formatUSD(balance)}</p>
               </div>
             </div>
 
             {/* Stats — hidden on small mobile, visible sm+ */}
             <div className="hidden sm:flex items-center gap-4 text-xs text-white/80">
-              {isContractor && <><div className="text-right"><p className="text-white/50">Depositado</p><p className="font-semibold">${totalDeposits.toFixed(2)}</p></div><div className="w-px h-8 bg-white/15" /></>}
-              <div className="text-right"><p className="text-white/50">{isContractor ? "Retirado" : "Ganado"}</p><p className="font-semibold">${isContractor ? totalWithdrawals.toFixed(2) : totalEarned.toFixed(2)}</p></div>
+              {isContractor && <><div className="text-right"><p className="text-white/50">Depositado</p><p className="font-semibold">{formatUSD(totalDeposits)}</p></div><div className="w-px h-8 bg-white/15" /></>}
+              <div className="text-right"><p className="text-white/50">{isContractor ? "Retirado" : "Ganado"}</p><p className="font-semibold">{formatUSD(isContractor ? totalWithdrawals : totalEarned)}</p></div>
             </div>
           </div>
 
@@ -177,11 +173,11 @@ export default function WalletPage() {
           <div className="sm:hidden flex items-center gap-4 mt-3 pt-3 border-t border-white/10">
             {isContractor && <div className="flex-1">
               <p className="text-[10px] text-white/50">Depositado</p>
-              <p className="text-xs font-semibold mt-0.5">${totalDeposits.toFixed(2)}</p>
+              <p className="text-xs font-semibold mt-0.5">{formatUSD(totalDeposits)}</p>
             </div>}
             <div className="flex-1">
               <p className="text-[10px] text-white/50">{isContractor ? "Retirado" : "Ganado"}</p>
-              <p className="text-xs font-semibold mt-0.5">${isContractor ? totalWithdrawals.toFixed(2) : totalEarned.toFixed(2)}</p>
+              <p className="text-xs font-semibold mt-0.5">{formatUSD(isContractor ? totalWithdrawals : totalEarned)}</p>
             </div>
           </div>
         </div>
@@ -300,7 +296,7 @@ export default function WalletPage() {
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-xs font-medium text-dark">Monto a retirar</label>
-                  <span className="text-[11px] text-gray-400">Disponible: <span className="font-semibold text-dark">${balance.toFixed(2)}</span></span>
+                  <span className="text-[11px] text-gray-400">Disponible: <span className="font-semibold text-dark">{formatUSD(balance)}</span></span>
                 </div>
                 <div className="relative mb-3">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-primary">$</span>
@@ -415,7 +411,7 @@ export default function WalletPage() {
                       </div>
                     </div>
                     <div className="text-right flex items-center gap-2 flex-shrink-0">
-                      <p className={"text-sm font-semibold whitespace-nowrap " + meta.color}>{meta.sign}${tx.amount.toFixed(2)}</p>
+                      <p className={"text-sm font-semibold whitespace-nowrap " + meta.color}>{meta.sign}{formatUSD(tx.amount)}</p>
                       <span className={"px-2 py-0.5 text-[10px] font-medium rounded-full border whitespace-nowrap " + stStyle}>{tx.status.replace(/_/g, " ")}</span>
                     </div>
                   </div>
@@ -473,13 +469,13 @@ export default function WalletPage() {
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-xs font-bold text-blue-800 uppercase tracking-widest">{cap}</span>
                           <span className={"text-sm font-bold " + (net >= 0 ? "text-emerald-600" : "text-red-600")}>
-                            {net >= 0 ? "+" : ""}{net.toFixed(2)} USDT
+                            {net >= 0 ? "+" : ""}{formatUSDT(net)}
                           </span>
                         </div>
                         <div className="flex items-center gap-4 text-[11px]">
-                          <span className="text-blue-600">+{credits.toFixed(2)}</span>
+                          <span className="text-blue-600">+{formatUSD(credits)}</span>
                           <span className="text-gray-300">|</span>
-                          <span className="text-red-500">-{debits.toFixed(2)}</span>
+                          <span className="text-red-500">-{formatUSD(debits)}</span>
                           <span className="text-gray-400">{txs.length} {txs.length === 1 ? "op" : "ops"}</span>
                         </div>
                       </div>
@@ -503,7 +499,7 @@ export default function WalletPage() {
                               </div>
                               <div className="text-right flex items-center gap-2 flex-shrink-0">
                                 <p className={"text-sm font-semibold whitespace-nowrap " + (isCredit ? "text-blue-600" : "text-gray-600")}>
-                                  {isCredit ? "+" : "-"}${tx.amount.toFixed(2)}
+                                  {isCredit ? "+" : "-"}{formatUSD(tx.amount)}
                                 </p>
                                 <span className={"px-2 py-0.5 text-[10px] font-medium rounded-full border whitespace-nowrap " + stStyle}>{tx.status.replace(/_/g, " ")}</span>
                               </div>

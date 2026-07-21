@@ -9,6 +9,8 @@ import NotificationBell from "@/components/NotificationBell";
 import PullToRefresh from "@/components/PullToRefresh";
 import EmptyState from "@/components/EmptyState";
 import { StatSkeleton } from "@/components/Skeleton";
+import BackButton, { IconArrowLeft } from "@/components/BackButton";
+import { formatUSD } from "@/lib/format";
 
 const categories = [
   "Todas", "Gastronomía", "Logística", "Servicios", "Limpieza", "Eventos", "Retail",
@@ -122,15 +124,7 @@ export default function JobsPage() {
         <div className="max-w-5xl mx-auto px-4 py-8">
           {/* Back + Header */}
           <div className="mb-8 animate-fade-in">
-            <a
-              href="/dashboard"
-              className="btn-ripple inline-flex items-center gap-1.5 px-4 py-1.5 border border-gray-200 text-sm text-gray font-medium rounded-full hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all mb-4"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-              </svg>
-              Volver
-            </a>
+            <BackButton label="Volver" />
             <h1 className="text-2xl font-bold text-dark">Trabajos disponibles</h1>
             <p className="text-gray text-sm mt-1">Encuentra el turno ideal cerca de ti</p>
           </div>
@@ -196,7 +190,7 @@ export default function JobsPage() {
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <p className="text-lg font-bold text-primary">${job.budget}</p>
+                          <p className="text-lg font-bold text-primary">{formatUSD(job.budget)}</p>
                           <span className="inline-block mt-1 px-2 py-0.5 bg-secondary-light text-secondary text-[11px] font-medium rounded-full">
                             Abierto
                           </span>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatUSD } from "@/lib/format";
 
 /* ═══════════════════════════════════════ TYPES ═══════════════════════════════════════ */
 
@@ -64,7 +65,7 @@ async function adm<T>(path: string, init?: RequestInit): Promise<T> {
 /* ═══════════════════════════════════════ HELPERS ═══════════════════════════════════════ */
 
 const fmt = (n: number) => n?.toLocaleString() ?? "0";
-const usd = (n: number) => `$${n?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? "0.00"}`;
+
 const since = (d: string | null) => {
   if (!d) return "—";
   const diff = Date.now() - new Date(d).getTime();
@@ -443,7 +444,7 @@ export default function AdminPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
           <Kpi label="Usuarios" value={fmt(stats.total_users)} icon={icons.users} accent="bg-blue-50 text-blue-600" sub={`${stats.total_workers} trab. · ${stats.total_contractors} cont.`} />
           <Kpi label="Trabajos" value={fmt(stats.total_jobs)} icon={icons.jobs} accent="bg-emerald-50 text-emerald-600" sub={`${stats.active_jobs} activos · ${stats.completed_jobs} completados`} />
-          <Kpi label="Volumen USDT" value={usd(stats.total_volume_usdt)} icon={icons.txs} accent="bg-amber-50 text-amber-600" sub={`${fmt(stats.total_transactions)} transacciones`} />
+          <Kpi label="Volumen USDT" value={formatUSD(stats.total_volume_usdt)} icon={icons.txs} accent="bg-amber-50 text-amber-600" sub={`${fmt(stats.total_transactions)} transacciones`} />
           <Kpi label="Disputas" value={fmt(stats.disputed_jobs)} icon={icons.dispute} accent="bg-red-50 text-red-600" sub={stats.disputed_jobs > 0 ? "Requieren atención" : "Todo en orden"} />
         </div>
       )}
@@ -513,11 +514,11 @@ export default function AdminPage() {
             <div className="text-[11px] text-gray-500 mt-1">Tasa completación</div>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{usd(stats.total_volume_usdt)}</div>
+            <div className="text-2xl font-bold text-blue-600">{formatUSD(stats.total_volume_usdt)}</div>
             <div className="text-[11px] text-gray-500 mt-1">Volumen total</div>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center">
-            <div className="text-2xl font-bold text-amber-600">{usd(stats.total_jobs > 0 ? stats.total_volume_usdt / stats.total_jobs : 0)}</div>
+            <div className="text-2xl font-bold text-amber-600">{formatUSD(stats.total_jobs > 0 ? stats.total_volume_usdt / stats.total_jobs : 0)}</div>
             <div className="text-[11px] text-gray-500 mt-1">Ticket promedio</div>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center">
@@ -546,7 +547,7 @@ export default function AdminPage() {
             <div className="text-xs text-emerald-500">Completados históricos</div>
           </div>
           <div className="p-4 bg-amber-50 rounded-xl">
-            <div className="text-lg font-bold text-amber-700">{usd(stats?.total_volume_usdt ?? 0)}</div>
+            <div className="text-lg font-bold text-amber-700">{formatUSD(stats?.total_volume_usdt ?? 0)}</div>
             <div className="text-xs text-amber-500">Volumen procesado</div>
           </div>
         </div>
@@ -630,7 +631,7 @@ export default function AdminPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-500 capitalize hidden sm:table-cell">{u.role}</td>
-                    <td className="px-4 py-3 text-right text-xs font-mono text-gray-700 hidden sm:table-cell">{usd(u.balance)}</td>
+                    <td className="px-4 py-3 text-right text-xs font-mono text-gray-700 hidden sm:table-cell">{formatUSD(u.balance)}</td>
                     <td className="px-4 py-3 text-center">
                       <span className={`inline-flex text-[10px] font-medium px-2 py-0.5 rounded-full border ${u.is_active ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200"}`}>
                         {u.is_active ? "Activo" : "Suspendido"}
@@ -718,7 +719,7 @@ export default function AdminPage() {
                   <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${clsStatus[j.status] || "bg-gray-50 text-gray-700 border-gray-200"}`}>
                     {stLabel[j.status] || j.status}
                   </span>
-                  <span className="text-sm font-semibold text-gray-900">{usd(j.budget)}</span>
+                  <span className="text-sm font-semibold text-gray-900">{formatUSD(j.budget)}</span>
                 </div>
               </div>
             </div>
@@ -760,7 +761,7 @@ export default function AdminPage() {
                     <td className="px-4 py-3 text-xs font-mono text-gray-400">#{t.id}</td>
                     <td className="px-4 py-3 text-xs text-gray-700">#{t.user_id}</td>
                     <td className="px-4 py-3 text-xs text-gray-600 capitalize hidden sm:table-cell">{t.type}</td>
-                    <td className="px-4 py-3 text-right text-xs font-mono font-semibold text-gray-900">{usd(t.amount)}</td>
+                    <td className="px-4 py-3 text-right text-xs font-mono font-semibold text-gray-900">{formatUSD(t.amount)}</td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${t.status === "confirmed" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>
                         {t.status}
@@ -793,7 +794,7 @@ export default function AdminPage() {
                   <div className="text-xs text-red-600 mt-1 bg-red-50 px-2 py-0.5 rounded-lg inline-block">{d.dispute_reason || "Sin motivo especificado"}</div>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="text-sm font-semibold text-gray-900">{usd(d.budget)}</div>
+                  <div className="text-sm font-semibold text-gray-900">{formatUSD(d.budget)}</div>
                   <div className="text-[10px] text-gray-400">ID #{d.id}</div>
                 </div>
               </div>
@@ -821,19 +822,19 @@ export default function AdminPage() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
             <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Balance</div>
-            <div className="text-xl font-bold text-emerald-600">{usd(wallet.balance)}</div>
+            <div className="text-xl font-bold text-emerald-600">{formatUSD(wallet.balance)}</div>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
             <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Depósitos</div>
-            <div className="text-xl font-bold text-blue-600">{usd(wallet.total_deposits)}</div>
+            <div className="text-xl font-bold text-blue-600">{formatUSD(wallet.total_deposits)}</div>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
             <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Retiros</div>
-            <div className="text-xl font-bold text-amber-600">{usd(wallet.total_withdrawals)}</div>
+            <div className="text-xl font-bold text-amber-600">{formatUSD(wallet.total_withdrawals)}</div>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
             <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Pendientes</div>
-            <div className="text-xl font-bold text-purple-600">{usd(wallet.pending_confirmation)}</div>
+            <div className="text-xl font-bold text-purple-600">{formatUSD(wallet.pending_confirmation)}</div>
           </div>
         </div>
       )}
@@ -956,7 +957,7 @@ export default function AdminPage() {
             <div>
               <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Wallet</h4>
               <div className="grid grid-cols-2 gap-2">
-                <InfoCell label="Balance" value={usd(selectedUserFull.user.balance)} />
+                <InfoCell label="Balance" value={formatUSD(selectedUserFull.user.balance)} />
                 <InfoCell label="Rating" value={selectedUserFull.user.rating_avg.toFixed(1) + " ★"} />
                 <InfoCell label="Wallet Address" value={selectedUserFull.user.wallet_address || "No registrada"} mono className="col-span-2" />
               </div>
@@ -966,8 +967,8 @@ export default function AdminPage() {
             <div>
               <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Métricas</h4>
               <div className="grid grid-cols-3 gap-2">
-                <StatCell label="Ganado" value={usd(selectedUserFull.stats.total_earned)} accent="text-emerald-600" />
-                <StatCell label="Gastado" value={usd(selectedUserFull.stats.total_spent)} accent="text-amber-600" />
+                <StatCell label="Ganado" value={formatUSD(selectedUserFull.stats.total_earned)} accent="text-emerald-600" />
+                <StatCell label="Gastado" value={formatUSD(selectedUserFull.stats.total_spent)} accent="text-amber-600" />
                 <StatCell label="Publicados" value={fmt(selectedUserFull.stats.jobs_posted)} accent="text-blue-600" />
                 <StatCell label="Completados" value={fmt(selectedUserFull.stats.jobs_completed)} accent="text-purple-600" />
                 <StatCell label="Asignados" value={fmt(selectedUserFull.stats.jobs_assigned)} accent="text-indigo-600" />
@@ -986,7 +987,7 @@ export default function AdminPage() {
                         <span className="font-medium text-gray-800 truncate block">{j.title}</span>
                         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${clsStatus[j.status] || ""}`}>{stLabel[j.status] || j.status}</span>
                       </div>
-                      <span className="font-semibold text-gray-700 ml-2 shrink-0">{usd(j.budget)}</span>
+                      <span className="font-semibold text-gray-700 ml-2 shrink-0">{formatUSD(j.budget)}</span>
                     </div>
                   ))}
                 </div>
@@ -1002,7 +1003,7 @@ export default function AdminPage() {
                         <span className="font-medium text-gray-800 truncate block">{j.title}</span>
                         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${clsStatus[j.status] || ""}`}>{stLabel[j.status] || j.status}</span>
                       </div>
-                      <span className="font-semibold text-gray-700 ml-2 shrink-0">{usd(j.budget)}</span>
+                      <span className="font-semibold text-gray-700 ml-2 shrink-0">{formatUSD(j.budget)}</span>
                     </div>
                   ))}
                 </div>
@@ -1039,7 +1040,7 @@ export default function AdminPage() {
                         <span className="capitalize text-gray-600">{t.type}</span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${t.status === "confirmed" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>{t.status}</span>
                       </div>
-                      <span className="font-semibold text-gray-800">{usd(t.amount)}</span>
+                      <span className="font-semibold text-gray-800">{formatUSD(t.amount)}</span>
                     </div>
                   ))}
                 </div>

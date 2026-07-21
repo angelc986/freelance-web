@@ -7,6 +7,8 @@ import { myJobs, getMyApplications, type Job, type Application } from "@/lib/api
 import PullToRefresh from "@/components/PullToRefresh";
 import EmptyState from "@/components/EmptyState";
 import Link from "next/link";
+import BackButton, { IconArrowLeft } from "@/components/BackButton";
+import { formatUSD } from "@/lib/format";
 
 // ─── SVG ICONS ───
 function IconBriefcase({ className = "w-5 h-5" }: { className?: string }) {
@@ -33,13 +35,7 @@ function IconXCircle({ className = "w-5 h-5" }: { className?: string }) {
   );
 }
 
-function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>
-  );
-}
+
 
 function IconClock({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -187,9 +183,7 @@ export default function DashboardJobsPage() {
       {/* HEADER */}
       <div className="flex items-center justify-between mb-6 animate-fade-in flex-wrap gap-2">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gray-100 text-gray flex items-center justify-center hover:bg-gray-200 transition-colors">
-            <IconArrowLeft className="w-4 h-4" />
-          </Link>
+          <BackButton />
           <div>
             <h1 className="text-lg sm:text-xl font-bold text-dark">{isWorker ? "Postulaciones" : "Mis Trabajos"}</h1>
             <p className="text-sm text-gray mt-0.5">{jobs.length} en total</p>
@@ -289,7 +283,7 @@ export default function DashboardJobsPage() {
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0 flex flex-col items-end gap-2">
-                        <p className="text-base sm:text-lg font-bold text-dark whitespace-nowrap">${job.budget}</p>
+                        <p className="text-base sm:text-lg font-bold text-primary whitespace-nowrap">{formatUSD(job.budget)}</p>
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-medium rounded-full border whitespace-nowrap ${st.color}`}>
                           <span className={"w-1.5 h-1.5 rounded-full " + st.dot} />
                           {st.label}
