@@ -191,7 +191,7 @@ export default function DashboardJobsPage() {
             <IconArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-lg sm:text-xl font-bold text-dark">Postulaciones</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-dark">{isWorker ? "Postulaciones" : "Mis Trabajos"}</h1>
             <p className="text-sm text-gray mt-0.5">{jobs.length} en total</p>
           </div>
         </div>

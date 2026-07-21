@@ -221,7 +221,7 @@ export default function DashboardPage() {
       theme: themes[2],
     },
     {
-      label: isWorker ? "Postulaciones" : "Solicitudes",
+      label: isWorker ? "Postulaciones" : "Mis Trabajos",
       value: isWorker ? appliedJobs : pendingApps,
       icon: <IconInbox />,
       href: "/dashboard/jobs",
