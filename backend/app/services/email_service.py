@@ -101,14 +101,14 @@ def send_email(to: str, subject: str, html: str) -> bool:
 def send_notification_email(to: str, event: str, message: str) -> bool:
     """Template de email para notificaciones."""
     subject_map = {
-        "job_assigned": "🎉 ¡Te contrataron!",
-        "job_applied": "👋 Alguien aplicó a tu trabajo",
-        "job_completed": "✅ Trabajo completado",
-        "payment_received": "💰 Recibiste un pago",
-        "new_message": "💬 Nuevo mensaje",
-        "job_cancelled": "⚠️ Trabajo cancelado",
+        "job_assigned": "Has sido contratado en TurnoGO",
+        "job_applied": "Nuevo candidato para tu trabajo",
+        "job_completed": "Trabajo completado en TurnoGO",
+        "payment_received": "Pago recibido en TurnoGO",
+        "new_message": "Nuevo mensaje en TurnoGO",
+        "job_cancelled": "Trabajo cancelado en TurnoGO",
     }
-    subject = subject_map.get(event, f"📢 TurnoGO — {message}")
+    subject = subject_map.get(event, f"TurnoGO — {message}")
 
     html = f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>

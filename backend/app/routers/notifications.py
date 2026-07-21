@@ -82,7 +82,7 @@ def send_test_notification(current_user: User = Depends(get_current_user)):
     create_notification(
         user_id=current_user.id,
         event="test_notification",
-        message="🔔 ¡Notificación de prueba de TurnoGO! Si estás viendo esto, tus notificaciones están funcionando correctamente.",
+        message="Notificacion de prueba de TurnoGO. Tus notificaciones estan funcionando correctamente.",
     )
     return {
         "ok": True,
@@ -119,7 +119,7 @@ def admin_send_test_notification(
         create_notification(
             user_id=user_id,
             event="test_notification",
-            message="🔔 ¡Notificación de prueba de TurnoGO! Si recibes esto, todo funciona correctamente.",
+            message="Notificacion de prueba de TurnoGO. Todo esta funcionando correctamente.",
         )
         results["email"] = "Enviado"
         results["push"] = "Enviado"

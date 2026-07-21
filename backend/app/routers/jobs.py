@@ -232,9 +232,9 @@ def apply_to_job(request: Request, job_id: int, application: ApplicationCreate, 
         "job_id": job.id,
         "job_title": job.title,
         "worker_name": current_user.full_name,
-        "message": f"{current_user.full_name} aplicó a tu trabajo '{job.title}'"
+        "message": f"{current_user.full_name} ha solicitado el puesto de {job.title}"
     })
-    create_notification(job.client_id, "job_applied", f"{current_user.full_name} aplicó a tu trabajo '{job.title}'", {
+    create_notification(job.client_id, "job_applied", f"{current_user.full_name} ha solicitado el puesto de {job.title}", {
         "job_id": job.id,
         "job_title": job.title,
     })
@@ -296,9 +296,9 @@ def accept_application(request: Request, job_id: int, application_id: int, db: S
     publish(job.worker_id, "job_accepted", {
         "job_id": job.id,
         "job_title": job.title,
-        "message": f"Fuiste aceptado para '{job.title}'"
+        "message": f"Has sido seleccionado para: {job.title}"
     })
-    create_notification(job.worker_id, "job_accepted", f"Fuiste aceptado para '{job.title}'", {
+    create_notification(job.worker_id, "job_accepted", f"Has sido seleccionado para: {job.title}", {
         "job_id": job.id,
         "job_title": job.title,
     })
@@ -332,10 +332,10 @@ def request_complete(request: Request, job_id: int, db: Session = Depends(get_db
     publish(job.client_id, "job_review_pending", {
         "job_id": job.id,
         "job_title": job.title,
-        "message": f"{current_user.full_name} marcó '{job.title}' como completado. El código de verificación está disponible en la página del trabajo."
+        "message": f"{current_user.full_name} ha marcado {job.title} como finalizado. El código de verificación está disponible en la página del trabajo."
     })
     create_notification(job.client_id, "job_review_pending",
-        f"{current_user.full_name} marcó '{job.title}' como completado. El código de verificación está disponible en la página del trabajo.",
+        f"{current_user.full_name} ha marcado {job.title} como finalizado. El código de verificación está disponible en la página del trabajo.",
         {
             "job_id": job.id,
             "job_title": job.title,
@@ -379,9 +379,9 @@ def verify_completion(
     publish(job.client_id, "job_completed", {
         "job_id": job.id,
         "job_title": job.title,
-        "message": f"'{job.title}' fue verificado y completado"
+        "message": f"{job.title} ha sido verificado y completado exitosamente"
     })
-    create_notification(job.client_id, "job_completed", f"'{job.title}' fue verificado y completado", {
+    create_notification(job.client_id, "job_completed", f"{job.title} ha sido verificado y completado exitosamente", {
         "job_id": job.id,
         "job_title": job.title,
     })
@@ -409,9 +409,9 @@ def approve_job(request: Request, job_id: int, db: Session = Depends(get_db),
     publish(job.worker_id, "job_completed", {
         "job_id": job.id,
         "job_title": job.title,
-        "message": f"'{job.title}' fue aprobado y completado"
+        "message": f"{job.title} ha sido aprobado y completado exitosamente"
     })
-    create_notification(job.worker_id, "job_completed", f"'{job.title}' fue aprobado y completado", {
+    create_notification(job.worker_id, "job_completed", f"{job.title} ha sido aprobado y completado exitosamente", {
         "job_id": job.id,
         "job_title": job.title,
     })
@@ -465,9 +465,9 @@ def cancel_job(request: Request, job_id: int, db: Session = Depends(get_db),
         publish(job.worker_id, "job_cancelled", {
             "job_id": job.id,
             "job_title": job.title,
-            "message": f"'{job.title}' fue cancelado"
+            "message": f"{job.title} ha sido cancelado"
         })
-        create_notification(job.worker_id, "job_cancelled", f"'{job.title}' fue cancelado", {
+        create_notification(job.worker_id, "job_cancelled", f"{job.title} ha sido cancelado", {
             "job_id": job.id,
             "job_title": job.title,
         })
