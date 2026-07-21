@@ -803,23 +803,18 @@ export default function JobDetailPage() {
                     {/* Owner: Approve */}
                     {isOwner && job.status === "review_pending" && (
                       <div className="space-y-3">
-                        <p className="text-sm text-gray">El trabajador ha solicitado finalizar este trabajo.</p>
+                        <p className="text-sm text-gray">
+                          El trabajador ha solicitado finalizar este trabajo. Comparte el c&oacute;digo de verificaci&oacute;n con &eacute;l para completar.
+                        </p>
                         {job.completion_code && (
                           <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl text-center">
-                            <p className="text-xs text-gray-500 mb-1">Código de verificación</p>
+                            <p className="text-xs text-gray-500 mb-1">C&oacute;digo de verificaci&oacute;n</p>
                             <p className="text-2xl font-bold tracking-[0.3em] text-primary">{job.completion_code}</p>
                             <p className="text-xs text-gray-400 mt-2">
-                              Comparte este código con el trabajador para que pueda completar el trabajo.
+                              Comparte este c&oacute;digo con el trabajador para que pueda completar el trabajo.
                             </p>
                           </div>
                         )}
-                        <button
-                          onClick={() => handleAction(() => approveJob(jobId))}
-                          className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-secondary text-white font-semibold rounded-xl hover:brightness-110 transition-all shadow-sm"
-                        >
-                          <IconCheck className="w-5 h-5" />
-                          Aprobar y completar
-                        </button>
                       </div>
                     )}
                   </div>

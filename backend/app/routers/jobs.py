@@ -332,15 +332,13 @@ def request_complete(request: Request, job_id: int, db: Session = Depends(get_db
     publish(job.client_id, "job_review_pending", {
         "job_id": job.id,
         "job_title": job.title,
-        "completion_code": code,
-        "message": f"{current_user.full_name} marcó '{job.title}' como completado. Código de verificación: {code}"
+        "message": f"{current_user.full_name} marcó '{job.title}' como completado. El código de verificación está disponible en la página del trabajo."
     })
     create_notification(job.client_id, "job_review_pending",
-        f"{current_user.full_name} marcó '{job.title}' como completado. Código: {code}",
+        f"{current_user.full_name} marcó '{job.title}' como completado. El código de verificación está disponible en la página del trabajo.",
         {
             "job_id": job.id,
             "job_title": job.title,
-            "completion_code": code,
         }
     )
     return job
