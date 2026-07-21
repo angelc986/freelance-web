@@ -104,7 +104,7 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
       zoomControl: true,
       attributionControl: false,
     });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
       maxZoom: 20,
       attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
     }).addTo(map);
