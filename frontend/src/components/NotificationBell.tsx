@@ -138,7 +138,7 @@ export default function NotificationBell() {
       {/* Backdrop */}
       {open && (
         <div
-          className={`fixed inset-0 z-[60] md:hidden transition-opacity duration-200 ${animIn ? "opacity-100" : "opacity-0"}`}
+          className={`fixed inset-0 z-[80] md:hidden transition-opacity duration-200 ${animIn ? "opacity-100" : "opacity-0"}`}
           onClick={() => { setAnimIn(false); setTimeout(() => setOpen(false), 200); }}
         >
           <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" />
@@ -151,7 +151,7 @@ export default function NotificationBell() {
           className={`
             fixed md:fixed
             inset-x-4 top-20 md:inset-x-auto md:right-4 md:top-16
-            z-[70]
+            z-[90]
             bg-white/90 backdrop-blur-2xl
             rounded-2xl shadow-2xl shadow-black/10 border border-white/50
             overflow-hidden
