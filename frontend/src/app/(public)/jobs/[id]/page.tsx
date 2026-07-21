@@ -162,6 +162,7 @@ export default function JobDetailPage() {
   const [error, setError] = useState("");
   const [ratings, setRatings] = useState<RatingInfo[]>([]);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [appliedSuccess, setAppliedSuccess] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
 
@@ -441,13 +442,71 @@ export default function JobDetailPage() {
 
                     {/* Worker: Check-in */}
                     {isAssigned && job.status === "in_progress" && (
-                      <button
-                        onClick={() => handleAction(() => checkIn(jobId))}
-                        className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-md shadow-primary/20"
-                      >
-                        <IconCheck className="w-5 h-5" />
-                        Hacer check-in (llegu&eacute; al trabajo)
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setShowCheckinModal(true)}
+                          className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-md shadow-primary/20"
+                        >
+                          <IconCheck className="w-5 h-5" />
+                          Llegu&eacute; al trabajo
+                        </button>
+
+                        {/* Check-in location confirmation modal */}
+                        {showCheckinModal && (
+                          <div
+                            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+                            onClick={() => setShowCheckinModal(false)}
+                          >
+                            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" />
+                            <div
+                              className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl animate-modal-enter p-7"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {/* Close button */}
+                              <button
+                                onClick={() => setShowCheckinModal(false)}
+                                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center"
+                                aria-label="Cerrar"
+                              >
+                                <svg className="w-4 h-4 text-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+
+                              {/* Icon */}
+                              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                                </svg>
+                              </div>
+
+                              <h3 className="text-lg font-bold text-dark mb-2 text-center">&iquest;Est&aacute;s en la ubicaci&oacute;n del trabajo?</h3>
+                              <p className="text-sm text-gray text-center mb-6 leading-relaxed">
+                                Aseg&uacute;rate de estar en la direcci&oacute;n indicada por el empleador. Si no la encuentras, contacta al empleador para solicitar indicaciones.
+                              </p>
+
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => setShowCheckinModal(false)}
+                                  className="flex-1 py-3 border border-gray-200 text-gray text-sm font-medium rounded-xl hover:bg-gray-50 transition-all"
+                                >
+                                  Volver
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setShowCheckinModal(false);
+                                    handleAction(() => checkIn(jobId));
+                                  }}
+                                  className="flex-1 py-3 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm"
+                                >
+                                  Estoy aqu&iacute;
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
 
                     {/* Worker: Complete request */}
