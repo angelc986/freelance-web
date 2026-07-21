@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNotifications } from "@/contexts/NotificationContext";
 import Link from "next/link";
 
@@ -83,6 +84,9 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [animIn, setAnimIn] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -135,19 +139,19 @@ export default function NotificationBell() {
         <span className={`block w-1.5 h-1.5 rounded-full ring-2 ring-white transition-colors duration-300 ${connected ? "bg-emerald-400" : "bg-gray-300"}`} />
       </div>
 
-      {/* Backdrop */}
-      {open && (
-        <div
-          className={`fixed inset-0 z-[9998] md:hidden transition-opacity duration-200 ${animIn ? "opacity-100" : "opacity-0"}`}
-          onClick={() => { setAnimIn(false); setTimeout(() => setOpen(false), 200); }}
-        >
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" />
-        </div>
-      )}
+      {/* Backdrop + Dropdown via Portal — fuera del DOM del header para evitar stacking context issues */}
+      {mounted && open && createPortal(
+        <>
+          {/* Backdrop */}
+          <div
+            className={`fixed inset-0 z-[9998] md:hidden transition-opacity duration-200 ${animIn ? "opacity-100" : "opacity-0"}`}
+            onClick={() => { setAnimIn(false); setTimeout(() => setOpen(false), 200); }}
+          >
+            <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" />
+          </div>
 
-      {/* Dropdown */}
-      {open && (
-        <div
+          {/* Dropdown */}
+          <div
           className={`
             fixed md:fixed
             inset-x-4 top-20 md:inset-x-auto md:right-4 md:top-16
@@ -262,6 +266,8 @@ export default function NotificationBell() {
             </div>
           )}
         </div>
+        </>,
+        document.body
       )}
     </div>
   );
