@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateProfile, updateWallet, uploadAvatar, updateNotificationPreferences, addPushSubscription, removePushSubscription, API_BASE } from "@/lib/api";
+import { updateProfile, updateWallet, uploadAvatar, updateNotificationPreferences, addPushSubscription, removePushSubscription, requestChange, confirmChange, API_BASE } from "@/lib/api";
 
 // ─── SVG ICONS ───
 function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
@@ -109,6 +109,13 @@ export default function SettingsPage() {
   const [notifLoading, setNotifLoading] = useState(false);
   const [notifMsg, setNotifMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
+  // Cambio de email/phone con verificación
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [verifyCode, setVerifyCode] = useState("");
+  const [pendingChanges, setPendingChanges] = useState<{ new_email?: string; new_phone?: string }>({});
+  const [verifying, setVerifying] = useState(false);
+  const [verifyMsg, setVerifyMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
   const urlB64ToUint8Array = (base64String: string) => {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -211,6 +218,34 @@ export default function SettingsPage() {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setProfileMsg(null);
+
+    // Detectar si cambió email o teléfono
+    const emailChanged = email !== user.email;
+    const phoneChanged = phone !== user.phone;
+    const needsVerify = emailChanged || phoneChanged;
+
+    if (needsVerify) {
+      // Mostrar modal de verificación en vez de guardar directo
+      setSavingProfile(true);
+      try {
+        const changes: { new_email?: string; new_phone?: string } = {};
+        if (emailChanged) changes.new_email = email;
+        if (phoneChanged) changes.new_phone = phone;
+        await requestChange(changes);
+        setPendingChanges(changes);
+        setVerifyCode("");
+        setVerifyMsg(null);
+        setShowVerifyModal(true);
+        setProfileMsg({ ok: true, text: "📧 Código enviado a tu correo actual. Revisa tu bandeja de entrada." });
+      } catch (err: any) {
+        setProfileMsg({ ok: false, text: err.message });
+      } finally {
+        setSavingProfile(false);
+      }
+      return;
+    }
+
+    // Solo nombre/cedula — guardar directo
     setSavingProfile(true);
     try {
       await updateProfile({ full_name: name, phone, email, cedula: hasCedulaHash ? cedula : undefined });
@@ -220,6 +255,24 @@ export default function SettingsPage() {
       setProfileMsg({ ok: false, text: err.message });
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  const handleConfirmChange = async () => {
+    setVerifyMsg(null);
+    setVerifying(true);
+    try {
+      const result = await confirmChange({
+        token: verifyCode,
+        ...pendingChanges,
+      });
+      setShowVerifyModal(false);
+      setProfileMsg({ ok: true, text: result.message });
+      await refreshUser?.();
+    } catch (err: any) {
+      setVerifyMsg({ ok: false, text: err.message });
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -632,6 +685,57 @@ export default function SettingsPage() {
           </button>
         </div>
       </Card>
+
+      {/* ═══ MODAL VERIFICACIÓN ═══ */}
+      {showVerifyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-sm mx-4 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-5 py-4">
+              <h3 className="text-white font-semibold text-base">🔐 Verificar cambios</h3>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-gray-600">
+                Te enviamos un código de 6 dígitos a <strong>{user.email}</strong>.
+                Revísalo e ingrésalo abajo para confirmar los cambios.
+              </p>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Código de verificación</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={verifyCode}
+                  onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="000000"
+                  className="w-full px-4 py-3 text-center text-2xl font-bold tracking-[8px] border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  autoFocus
+                />
+              </div>
+              {verifyMsg && (
+                <div className={`text-sm px-4 py-3 rounded-xl border ${verifyMsg.ok ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-600 border-red-200"}`}>
+                  {verifyMsg.text}
+                </div>
+              )}
+              <div className="flex gap-3 pt-1">
+                <button
+                  onClick={() => setShowVerifyModal(false)}
+                  className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmChange}
+                  disabled={verifying || verifyCode.length < 6}
+                  className="flex-1 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-primary-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {verifying ? "Verificando..." : "Confirmar"}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 text-center">El código expira en 15 minutos</p>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

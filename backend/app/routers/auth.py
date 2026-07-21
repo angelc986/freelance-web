@@ -1,5 +1,6 @@
 import hashlib
 import secrets
+import random
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
@@ -12,7 +13,8 @@ from app.database import SessionLocal
 from app.limiter import limiter
 from app.models.user import User
 from app.models.refresh_token import RefreshToken
-from app.schemas.user import UserCreate, UserLogin, UserResponse, UpdateProfileRequest, UpdateWalletRequest, CompleteProfileRequest
+from app.models.change_token import ChangeToken
+from app.schemas.user import UserCreate, UserLogin, UserResponse, UpdateProfileRequest, UpdateWalletRequest, CompleteProfileRequest, RequestChangeRequest, ConfirmChangeRequest
 from app.services.audit import log_action
 from app.config import get_settings
 
@@ -451,4 +453,142 @@ def update_notification_preferences(
     db.commit()
     db.refresh(user)
     return user
+
+
+@router.post("/request-change")
+def request_change(
+    request: RequestChangeRequest,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    """
+    📧 SOLICITAR CAMBIO DE EMAIL/TELÉFONO
+
+    Envía un código de verificación de 6 dígitos a tu correo actual.
+    El código expira en 15 minutos.
+    """
+    from app.services.email_service import send_email
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = int(payload.get("sub"))
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    if not request.new_email and not request.new_phone:
+        raise HTTPException(status_code=400, detail="Debes enviar al menos email o teléfono nuevo")
+
+    # Validar que no estén ya registrados
+    if request.new_email and request.new_email != user.email:
+        existing = db.query(User).filter(User.email == request.new_email).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Ese email ya está registrado por otro usuario")
+
+    if request.new_phone and request.new_phone != user.phone:
+        existing = db.query(User).filter(User.phone == request.new_phone).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Ese teléfono ya está registrado por otro usuario")
+
+    # Generar código de 6 dígitos
+    code = str(random.randint(100000, 999999))
+    code_hash = hashlib.sha256(code.encode()).hexdigest()
+
+    # Guardar en BD (expira 15 min)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
+    change = ChangeToken(
+        user_id=user_id,
+        token_hash=code_hash,
+        new_email=request.new_email,
+        new_phone=request.new_phone,
+        expires_at=expires_at,
+    )
+    db.add(change)
+    db.commit()
+
+    # Enviar email
+    html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:24px">
+<div style="background:#2563EB;padding:24px;border-radius:16px 16px 0 0;text-align:center">
+<span style="color:white;font-size:20px;font-weight:700">🔐 TurnoGO</span></div>
+<div style="background:#fff;padding:24px;border:1px solid #E2E8F0;border-top:0;border-radius:0 0 16px 16px">
+<h2 style="color:#1F2937;margin-top:0;font-size:18px">Código de verificación</h2>
+<p style="color:#6B7280;font-size:14px">Usa este código para confirmar los cambios en tu cuenta:</p>
+<div style="text-align:center;margin:24px 0">
+<div style="display:inline-block;background:#EFF6FF;padding:16px 32px;border-radius:12px;font-size:36px;font-weight:bold;letter-spacing:8px;color:#2563EB">{code}</div>
+</div>
+<p style="color:#6B7280;font-size:13px">Válido por <strong>15 minutos</strong>. Si no solicitaste este cambio, ignora este mensaje.</p>
+</div>
+<div style="text-align:center;padding:16px;color:#9CA3AF;font-size:11px">
+TurnoGO — © 2026
+</div></body></html>"""
+    send_email(user.email, "🔐 TurnoGO — Código de verificación", html)
+
+    return {"message": "Código enviado a tu correo", "expires_in": 15}
+
+
+@router.post("/confirm-change")
+def confirm_change(
+    request: ConfirmChangeRequest,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    """
+    ✅ CONFIRMAR CAMBIO DE EMAIL/TELÉFONO
+
+    Verifica el código recibido por correo y aplica los cambios.
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = int(payload.get("sub"))
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    # Buscar el token pendiente más reciente
+    change_request = db.query(ChangeToken).filter(
+        ChangeToken.user_id == user_id,
+        ChangeToken.used == False,
+        ChangeToken.expires_at > datetime.now(timezone.utc),
+    ).order_by(ChangeToken.created_at.desc()).first()
+
+    if not change_request:
+        raise HTTPException(status_code=400, detail="No hay cambios pendientes o el código expiró")
+
+    # Verificar código
+    code_hash = hashlib.sha256(request.token.encode()).hexdigest()
+    if code_hash != change_request.token_hash:
+        raise HTTPException(status_code=400, detail="Código incorrecto")
+
+    # Aplicar cambios
+    cambios = []
+    if change_request.new_email and change_request.new_email != user.email:
+        existing = db.query(User).filter(User.email == change_request.new_email).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Ese email ya está registrado")
+        user.email = change_request.new_email
+        cambios.append("email")
+
+    if change_request.new_phone and change_request.new_phone != user.phone:
+        existing = db.query(User).filter(User.phone == change_request.new_phone).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Ese teléfono ya está registrado")
+        user.phone = change_request.new_phone
+        cambios.append("teléfono")
+
+    # Marcar token como usado
+    change_request.used = True
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "message": f"Cambios aplicados: {' y '.join(cambios)} actualizado(s) correctamente",
+        "user": user,
+    }
 

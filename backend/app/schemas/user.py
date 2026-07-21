@@ -25,7 +25,17 @@ class UserLogin(BaseModel):
 class UpdateProfileRequest(BaseModel):
     full_name: str | None = None
     phone: str | None = None
+    email: str | None = None
     cedula: str | None = None
+
+class RequestChangeRequest(BaseModel):
+    new_email: str | None = None
+    new_phone: str | None = None
+
+class ConfirmChangeRequest(BaseModel):
+    token: str
+    new_email: str | None = None
+    new_phone: str | None = None
 
 class UpdateWalletRequest(BaseModel):
     wallet_address: str
