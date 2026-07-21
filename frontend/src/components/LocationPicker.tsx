@@ -104,9 +104,9 @@ export default function LocationPicker({ lat, lng, address, onLocationChange }: 
       zoomControl: true,
       attributionControl: false,
     });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      maxZoom: 20,
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://openstreetmap.org/">OpenStreetMap</a>',
     }).addTo(map);
     const marker = L.marker([currentLat, currentLng], { draggable: true }).addTo(map);
     marker.on("dragend", async () => {
