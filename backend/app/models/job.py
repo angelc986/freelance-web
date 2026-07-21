@@ -23,6 +23,7 @@ class Job(Base):
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     dispute_reason = Column(String(1000), nullable=True)
     review_requested_at = Column(DateTime, nullable=True)  # Cuándo pidió completar el worker
+    completion_code = Column(String(6), nullable=True)  # Código de verificación para completar
 
     client = relationship("User", foreign_keys=[client_id])
     worker = relationship("User", foreign_keys=[worker_id])

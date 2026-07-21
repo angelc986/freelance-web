@@ -31,6 +31,7 @@ class JobResponse(BaseModel):
     updated_at: datetime
     dispute_reason: Optional[str] = None
     review_requested_at: Optional[datetime] = None
+    completion_code: Optional[str] = None
 
     class Config:
         from_attributes = True

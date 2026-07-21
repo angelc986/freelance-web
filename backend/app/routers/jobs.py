@@ -1,4 +1,4 @@
-from fastapi import Request,  APIRouter, Depends, HTTPException, status
+from fastapi import Request, Body, APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timezone, timedelta
@@ -312,7 +312,8 @@ def accept_application(request: Request, job_id: int, application_id: int, db: S
 @limiter.limit("10/minute")
 def request_complete(request: Request, job_id: int, db: Session = Depends(get_db),
                      current_user: User = Depends(get_current_user)):
-    """El worker solicita marcar el trabajo como terminado"""
+    """El worker solicita marcar el trabajo como terminado. Genera codigo de verificacion."""
+    import random
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Trabajo no encontrado")
@@ -321,16 +322,68 @@ def request_complete(request: Request, job_id: int, db: Session = Depends(get_db
     if job.worker_id != current_user.id:
         raise HTTPException(status_code=403, detail="Solo el worker asignado puede solicitar completar")
 
+    # Generar código de verificación de 6 dígitos
+    code = str(random.randint(100000, 999999))
     job.status = "review_pending"
     job.review_requested_at = datetime.now(timezone.utc)
+    job.completion_code = code
     db.commit()
     db.refresh(job)
     publish(job.client_id, "job_review_pending", {
         "job_id": job.id,
         "job_title": job.title,
-        "message": f"{current_user.full_name} marcó '{job.title}' como completado"
+        "completion_code": code,
+        "message": f"{current_user.full_name} marcó '{job.title}' como completado. Código de verificación: {code}"
     })
-    create_notification(job.client_id, "job_review_pending", f"{current_user.full_name} marcó '{job.title}' como completado", {
+    create_notification(job.client_id, "job_review_pending",
+        f"{current_user.full_name} marcó '{job.title}' como completado. Código: {code}",
+        {
+            "job_id": job.id,
+            "job_title": job.title,
+            "completion_code": code,
+        }
+    )
+    return job
+
+
+@router.post("/{job_id}/verify-completion", response_model=JobResponse)
+@limiter.limit("5/minute")
+def verify_completion(
+    request: Request,
+    job_id: int,
+    body: dict = Body(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """El worker ingresa el codigo de verificacion para completar el trabajo"""
+    code = body.get("code", "") if isinstance(body, dict) else ""
+    if not code or len(str(code)) != 6:
+        raise HTTPException(status_code=422, detail="Se requiere un código de 6 dígitos")
+    code = str(code)
+
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Trabajo no encontrado")
+    if job.status != "review_pending":
+        raise HTTPException(status_code=400, detail="El trabajo no está esperando verificación")
+    if job.worker_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Solo el worker asignado puede verificar")
+    if not job.completion_code:
+        raise HTTPException(status_code=400, detail="No hay código de verificación pendiente")
+    if code != job.completion_code:
+        raise HTTPException(status_code=400, detail="Código de verificación incorrecto")
+
+    job.status = "completed"
+    job.review_requested_at = None
+    job.completion_code = None
+    db.commit()
+    db.refresh(job)
+    publish(job.client_id, "job_completed", {
+        "job_id": job.id,
+        "job_title": job.title,
+        "message": f"'{job.title}' fue verificado y completado"
+    })
+    create_notification(job.client_id, "job_completed", f"'{job.title}' fue verificado y completado", {
         "job_id": job.id,
         "job_title": job.title,
     })
@@ -352,6 +405,7 @@ def approve_job(request: Request, job_id: int, db: Session = Depends(get_db),
 
     job.status = "completed"
     job.review_requested_at = None
+    job.completion_code = None
     db.commit()
     db.refresh(job)
     publish(job.worker_id, "job_completed", {

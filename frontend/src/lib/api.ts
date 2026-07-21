@@ -255,6 +255,7 @@ export interface Job {
   worker_id: number | null;
   latitude?: number | null;
   longitude?: number | null;
+  completion_code?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -414,6 +415,13 @@ export function checkIn(jobId: number): Promise<any> {
 export function completeRequest(jobId: number): Promise<any> {
   return request(`/jobs/${jobId}/complete-request`, {
     method: "POST",
+  });
+}
+
+export function verifyCompletion(jobId: number, code: string): Promise<any> {
+  return request(`/jobs/${jobId}/verify-completion`, {
+    method: "POST",
+    body: JSON.stringify({ code }),
   });
 }
 

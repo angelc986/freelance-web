@@ -26,6 +26,7 @@ def run_migrations():
                 conn.execute(sa_text("ALTER TABLE users ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION"))
                 conn.execute(sa_text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION"))
                 conn.execute(sa_text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION"))
+                conn.execute(sa_text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS completion_code VARCHAR(6)"))
             elif dialect == "sqlite":
                 cols = [row[1] for row in conn.execute(sa_text("PRAGMA table_info(users)")).fetchall()]
                 if "google_id" not in cols:

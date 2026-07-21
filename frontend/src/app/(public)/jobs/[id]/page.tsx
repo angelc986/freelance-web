@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getJob, updateJob, applyToJob, getApplications, getMyApplications, acceptApplication, checkIn, completeRequest, approveJob, cancelJob, rateJob, getJobRatings, type Job, type Application, type RatingInfo } from "@/lib/api";
+import { getJob, updateJob, applyToJob, getApplications, getMyApplications, acceptApplication, checkIn, completeRequest, verifyCompletion, approveJob, cancelJob, rateJob, getJobRatings, type Job, type Application, type RatingInfo } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import Logo from "@/components/Logo";
 import NotificationBell from "@/components/NotificationBell";
@@ -370,6 +370,10 @@ export default function JobDetailPage() {
   const [ratings, setRatings] = useState<RatingInfo[]>([]);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showCheckinModal, setShowCheckinModal] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [verifyError, setVerifyError] = useState("");
+  const [verifyLoading, setVerifyLoading] = useState(false);
   const [appliedSuccess, setAppliedSuccess] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
 
@@ -467,6 +471,27 @@ export default function JobDetailPage() {
       setError(e.message);
     } finally {
       setRatingLoading(false);
+    }
+  };
+
+  const handleVerify = async () => {
+    setVerifyError("");
+    if (!verificationCode || verificationCode.length !== 6) {
+      setVerifyError("Ingresa el código de 6 dígitos que el contratista te dará.");
+      return;
+    }
+    setVerifyLoading(true);
+    try {
+      await verifyCompletion(jobId, verificationCode);
+      setShowVerifyModal(false);
+      setVerificationCode("");
+      const updated = await loadJob();
+      if (updated?.status === "completed") loadRatings();
+      loadApps();
+    } catch (e: any) {
+      setVerifyError(e.message);
+    } finally {
+      setVerifyLoading(false);
     }
   };
 
@@ -677,7 +702,7 @@ export default function JobDetailPage() {
                     {/* Worker: Complete request */}
                     {isAssigned && job.status === "checked_in" && (
                       <button
-                        onClick={() => handleAction(() => completeRequest(jobId))}
+                        onClick={() => handleAction(() => completeRequest(jobId), () => setShowVerifyModal(true))}
                         className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-secondary text-white font-semibold rounded-xl hover:brightness-110 transition-all shadow-sm"
                       >
                         <IconCheck className="w-5 h-5" />
@@ -685,10 +710,109 @@ export default function JobDetailPage() {
                       </button>
                     )}
 
+                    {/* Worker: Verify completion code (after requesting) */}
+                    {isAssigned && job.status === "review_pending" && (
+                      <div className="space-y-3">
+                        <p className="text-sm text-gray">
+                          Solicitud enviada. El contratista recibi&oacute; un c&oacute;digo de verificaci&oacute;n.
+                        </p>
+                        <button
+                          onClick={() => setShowVerifyModal(true)}
+                          className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm"
+                        >
+                          <IconCheck className="w-5 h-5" />
+                          Ingresar c&oacute;digo de verificaci&oacute;n
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Verification code modal */}
+                    {showVerifyModal && (
+                      <div
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+                        onClick={() => { setShowVerifyModal(false); setVerifyError(""); setVerificationCode(""); }}
+                      >
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" />
+                        <div
+                          className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl animate-modal-enter p-7"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            onClick={() => { setShowVerifyModal(false); setVerifyError(""); setVerificationCode(""); }}
+                            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center"
+                            aria-label="Cerrar"
+                          >
+                            <svg className="w-4 h-4 text-gray" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+
+                          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                            </svg>
+                          </div>
+
+                          <h3 className="text-lg font-bold text-dark mb-2 text-center">
+                            C&oacute;digo de verificaci&oacute;n
+                          </h3>
+
+                          {verifyError && (
+                            <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-600 text-center">
+                              {verifyError}
+                            </div>
+                          )}
+
+                          <p className="text-sm text-gray text-center mb-4 leading-relaxed">
+                            El contratista recibi&oacute; un c&oacute;digo de 6 d&iacute;gitos. P&iacute;deselo e ingr&eacute;salo aqu&iacute; para completar el trabajo.
+                          </p>
+
+                          <div className="mb-4">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={6}
+                              autoComplete="one-time-code"
+                              placeholder="000000"
+                              value={verificationCode}
+                              onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                              className="w-full text-center text-2xl font-bold tracking-[0.3em] py-4 px-3 border border-gray-200 rounded-xl focus:border-primary outline-none transition-all bg-white"
+                            />
+                          </div>
+
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => { setShowVerifyModal(false); setVerifyError(""); setVerificationCode(""); }}
+                              disabled={verifyLoading}
+                              className="flex-1 py-3 border border-gray-200 text-gray text-sm font-medium rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              onClick={handleVerify}
+                              disabled={verifyLoading || verificationCode.length !== 6}
+                              className="flex-1 py-3 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm disabled:opacity-50"
+                            >
+                              {verifyLoading ? "Verificando..." : "Verificar"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Owner: Approve */}
                     {isOwner && job.status === "review_pending" && (
                       <div className="space-y-3">
                         <p className="text-sm text-gray">El trabajador ha solicitado finalizar este trabajo.</p>
+                        {job.completion_code && (
+                          <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl text-center">
+                            <p className="text-xs text-gray-500 mb-1">Código de verificación</p>
+                            <p className="text-2xl font-bold tracking-[0.3em] text-primary">{job.completion_code}</p>
+                            <p className="text-xs text-gray-400 mt-2">
+                              Comparte este código con el trabajador para que pueda completar el trabajo.
+                            </p>
+                          </div>
+                        )}
                         <button
                           onClick={() => handleAction(() => approveJob(jobId))}
                           className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-secondary text-white font-semibold rounded-xl hover:brightness-110 transition-all shadow-sm"
