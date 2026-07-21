@@ -221,7 +221,7 @@ function ApplicantCard({ applicant, jobId, onAccept, loadingId, onNameClick }: {
       <div className="flex-shrink-0">
         {applicant.status === "pending" && (
           <button onClick={() => onAccept(jobId, applicant.id)} disabled={loadingId === applicant.id}
-            className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-500 text-white text-xs font-medium rounded-lg hover:bg-emerald-600 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0">
+            className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0">
             {loadingId === applicant.id ? (
               <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
             ) : <IconCheck />}

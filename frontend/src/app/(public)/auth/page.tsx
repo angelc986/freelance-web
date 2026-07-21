@@ -225,16 +225,9 @@ function Particles({ count = 15 }: { count?: number }) {
 function TopRowLogo({ onBack }: { onBack: () => void }) {
   return (
     <div className="flex items-center gap-2">
-      {/* Logo + texto: solo visible en desktop (md+) — enlace al inicio */}
+      {/* Logo + texto: solo visible en desktop (md+) â†' enlace al inicio */}
       <a href="/" className="hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity">
-        <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs><linearGradient id="tlg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#2563EB"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs>
-          <circle cx="24" cy="24" r="22" fill="url(#tlg)"/>
-          <path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round"/>
-          <path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.8"/>
-          <circle cx="36.5" cy="19" r="1.5" fill="white" opacity="0.8"/>
-          <circle cx="24" cy="24" r="3" fill="white" opacity="0.6"/>
-        </svg>
+        <Logo size="sm" showText={false} />
         <span className="logo-text font-bold tracking-tight">Turno<span style={{color:"#2563EB"}}>GO</span></span>
         <div className="w-px h-4 bg-gray-300 mx-1"></div>
       </a>
@@ -664,16 +657,7 @@ function AuthPageInner() {
  <div className="flex-1 flex flex-col justify-center items-center text-center">
  <div className="stagger">
  <div className="logo-container mx-auto mb-6">
- <div className="logo-mark">
- <svg viewBox="0 0 48 48" fill="none" style={{width:"100%",height:"100%"}}>
- <defs><linearGradient id="logoGradWelcome" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stopColor="#2563EB"/><stop offset="100%" stopColor="#1D4ED8"/></linearGradient></defs>
- <circle cx="24" cy="24" r="22" fill="url(#logoGradWelcome)"/>
- <path d="M15 16h18M24 16v16" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
- <path d="M33 28c3-2.5 4-6 3.5-9" stroke="white" strokeWidth="2" strokeLinecap="round"/>
- <circle cx="36.5" cy="19" r="1.5" fill="white"/>
- <circle cx="24" cy="24" r="3" fill="white"/>
- </svg>
- </div>
+ <Logo size="lg" showText={false} className="logo-mark mx-auto" />
  <span className="logo-text">Turno<span style={{color:"#2563EB"}}>GO</span></span>
  </div>
  </div>
