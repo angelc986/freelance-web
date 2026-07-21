@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { getJob, updateJob } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import Logo from "@/components/Logo";
+import BackButton from "@/components/BackButton";
 
 // ─── CONSTANTS ───
 const categories = [
@@ -25,13 +26,6 @@ const categories = [
 const budgetSuggestions = [5, 10, 15, 20, 30, 50];
 
 // ─── SVG ───
-function IconArrowLeft({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>
-  );
-}
 
 function IconAlert({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -186,15 +180,7 @@ export default function EditJobPage() {
       <div className="flex-1 py-8">
         <div className="max-w-4xl mx-auto px-4">
           {/* Back */}
-          <a
-            href={`/jobs/${jobId}`}
-            className="btn-ripple inline-flex items-center gap-1.5 px-4 py-1.5 border border-gray-200 text-sm text-gray font-medium rounded-full hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all mb-6"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            Volver
-          </a>
+          <BackButton href={`/jobs/${jobId}`} label="Volver" />
 
           {/* Header */}
           <div className="mb-8 animate-fade-in">

@@ -7,16 +7,9 @@ import { getJob, updateJob, applyToJob, getApplications, getMyApplications, acce
 import { useAuth } from "@/contexts/AuthContext";
 import Logo from "@/components/Logo";
 import NotificationBell from "@/components/NotificationBell";
+import BackButton from "@/components/BackButton";
 
 // ─── SVG COMPONENTS ───
-function IconArrowLeft({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>
-  );
-}
-
 function IconLocation({ className = "w-4 h-4" }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -539,22 +532,16 @@ export default function JobDetailPage() {
         <div className="flex-1 py-8">
           <div className="max-w-5xl mx-auto px-4 animate-fade-in">
             {/* Back link — returns to previous page, not always /jobs */}
-            <button
+            <BackButton
               onClick={() => {
-                // Volver a la pagina anterior. Si no hay historial, ir a dashboard o jobs
                 if (window.history.length > 1) {
                   router.back();
                 } else {
                   router.push(user ? "/dashboard/jobs" : "/jobs");
                 }
               }}
-              className="btn-ripple inline-flex items-center gap-1.5 px-4 py-1.5 border border-gray-200 text-sm text-gray font-medium rounded-full hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all mb-4"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-              </svg>
-              Volver
-            </button>
+              label="Volver"
+            />
 
             <div className="grid lg:grid-cols-3 gap-6">
               {/* ===== MAIN ===== */}
