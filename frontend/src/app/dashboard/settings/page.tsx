@@ -130,7 +130,7 @@ export default function SettingsPage() {
   // Cambio de email/phone con verificación
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [verifyCode, setVerifyCode] = useState("");
-  const [pendingChanges, setPendingChanges] = useState<{ new_email?: string; new_phone?: string }>({});
+  const [pendingChanges, setPendingChanges] = useState<{ new_email?: string; new_phone?: string; new_wallet?: string }>({});
   const [verifying, setVerifying] = useState(false);
   const [verifyMsg, setVerifyMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
