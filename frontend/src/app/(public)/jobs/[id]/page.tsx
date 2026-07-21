@@ -528,7 +528,7 @@ export default function JobDetailPage() {
                 </>
               ) : (
                 <>
-                  <a href="/auth/login" className="text-sm text-gray hover:text-dark transition-colors">Iniciar sesi&oacute;n</a>
+                  <a href="/auth/login" className="text-sm text-gray hover:text-dark transition-colors">Iniciar sesión</a>
                   <a href="/auth/register" className="btn-ripple px-4 py-2 text-sm font-medium text-white bg-primary rounded-full hover:bg-primary-dark transition-all">Registrarse</a>
                 </>
               )}
@@ -595,7 +595,7 @@ export default function JobDetailPage() {
                   </div>
 
                   <div className="mt-6 pt-6 border-t border-gray-100">
-                    <h3 className="font-semibold text-dark mb-2">Descripci&oacute;n</h3>
+                    <h3 className="font-semibold text-dark mb-2">Descripción</h3>
                     <p className="text-sm text-gray leading-relaxed whitespace-pre-wrap">{job.description}</p>
                   </div>
                 </div>
@@ -621,8 +621,8 @@ export default function JobDetailPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                             </svg>
                           </div>
-                          <p className="text-sm font-medium text-emerald-700">Postulaci&oacute;n enviada</p>
-                          <p className="text-xs text-gray mt-0.5">El contratista revisar&aacute; tu solicitud</p>
+                          <p className="text-sm font-medium text-emerald-700">Postulación enviada</p>
+                          <p className="text-xs text-gray mt-0.5">El contratista revisará tu solicitud</p>
                         </div>
                       ) : (
                         <div className="space-y-3">
@@ -680,7 +680,7 @@ export default function JobDetailPage() {
                           className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-md shadow-primary/20"
                         >
                           <IconCheck className="w-5 h-5" />
-                          Llegu&eacute; al trabajo
+                          Llegué al trabajo
                         </button>
 
                         {/* Check-in location confirmation modal */}
@@ -706,7 +706,7 @@ export default function JobDetailPage() {
                         className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-secondary text-white font-semibold rounded-xl hover:brightness-110 transition-all shadow-sm"
                       >
                         <IconCheck className="w-5 h-5" />
-                        Solicitar finalizaci&oacute;n
+                        Solicitar finalización
                       </button>
                     )}
 
@@ -714,14 +714,14 @@ export default function JobDetailPage() {
                     {isAssigned && job.status === "review_pending" && (
                       <div className="space-y-3">
                         <p className="text-sm text-gray">
-                          Solicitud enviada. El contratista recibi&oacute; un c&oacute;digo de verificaci&oacute;n.
+                          Solicitud enviada. El contratista recibió un código de verificación.
                         </p>
                         <button
                           onClick={() => setShowVerifyModal(true)}
                           className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm"
                         >
                           <IconCheck className="w-5 h-5" />
-                          Ingresar c&oacute;digo de verificaci&oacute;n
+                          Ingresar código de verificación
                         </button>
                       </div>
                     )}
@@ -754,7 +754,7 @@ export default function JobDetailPage() {
                           </div>
 
                           <h3 className="text-lg font-bold text-dark mb-2 text-center">
-                            C&oacute;digo de verificaci&oacute;n
+                            Código de verificación
                           </h3>
 
                           {verifyError && (
@@ -764,7 +764,7 @@ export default function JobDetailPage() {
                           )}
 
                           <p className="text-sm text-gray text-center mb-4 leading-relaxed">
-                            El contratista recibi&oacute; un c&oacute;digo de 6 d&iacute;gitos. P&iacute;deselo e ingr&eacute;salo aqu&iacute; para completar el trabajo.
+                            El contratista recibió un código de 6 dígitos. Pídeselo e ingrésalo aquí para completar el trabajo.
                           </p>
 
                           <div className="mb-4">
@@ -804,14 +804,14 @@ export default function JobDetailPage() {
                     {isOwner && job.status === "review_pending" && (
                       <div className="space-y-3">
                         <p className="text-sm text-gray">
-                          El trabajador ha solicitado finalizar este trabajo. Comparte el c&oacute;digo de verificaci&oacute;n con &eacute;l para completar.
+                          El trabajador ha solicitado finalizar este trabajo. Comparte el código de verificación con él para completar.
                         </p>
                         {job.completion_code && (
                           <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl text-center">
-                            <p className="text-xs text-gray-500 mb-1">C&oacute;digo de verificaci&oacute;n</p>
+                            <p className="text-xs text-gray-500 mb-1">Código de verificación</p>
                             <p className="text-2xl font-bold tracking-[0.3em] text-primary">{job.completion_code}</p>
                             <p className="text-xs text-gray-400 mt-2">
-                              Comparte este c&oacute;digo con el trabajador para que pueda completar el trabajo.
+                              Comparte este código con el trabajador para que pueda completar el trabajo.
                             </p>
                           </div>
                         )}
@@ -844,7 +844,7 @@ export default function JobDetailPage() {
                         {/* Stars */}
                         <div>
                           <label className="block text-sm font-medium text-dark mb-2">
-                            &iquest;C&oacute;mo fue tu experiencia?
+                            ¿Cómo fue tu experiencia?
                           </label>
                           <div className="flex gap-1.5">
                             {[1, 2, 3, 4, 5].map((star) => (
@@ -873,7 +873,7 @@ export default function JobDetailPage() {
                           <textarea
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
-                            placeholder="Cu&eacute;ntale a otros sobre tu experiencia..."
+                            placeholder="Cuéntale a otros sobre tu experiencia..."
                             className="input-glow w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-primary outline-none transition-all text-sm resize-none bg-white"
                             rows={3}
                             maxLength={500}
@@ -891,7 +891,7 @@ export default function JobDetailPage() {
                               <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                               Enviando...
                             </span>
-                          ) : "Enviar calificaci&oacute;n"}
+                          ) : "Enviar calificación"}
                         </button>
                       </div>
                     )}
@@ -914,8 +914,8 @@ export default function JobDetailPage() {
                         <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
                           <IconUsers className="w-6 h-6 text-gray" />
                         </div>
-                        <p className="text-sm text-gray">No hay aplicaciones a&uacute;n</p>
-                        <p className="text-xs text-gray mt-1">Los trabajadores ver&aacute;n este trabajo y aplicar&aacute;n</p>
+                        <p className="text-sm text-gray">No hay aplicaciones aún</p>
+                        <p className="text-xs text-gray mt-1">Los trabajadores verán este trabajo y aplicarán</p>
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -964,15 +964,15 @@ export default function JobDetailPage() {
                   <ul className="space-y-2.5 text-xs text-gray">
                     <li className="flex gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                      Revisa bien la descripci&oacute;n antes de aplicar
+                      Revisa bien la descripción antes de aplicar
                     </li>
                     <li className="flex gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                      Los pagos son en USDT v&iacute;a Polygon &mdash; seguro y r&aacute;pido
+                      Los pagos son en USDT vía Polygon &mdash; seguro y rápido
                     </li>
                     <li className="flex gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                      Califica a tu contratista/trabajador despu&eacute;s de completar
+                      Califica a tu contratista/trabajador después de completar
                     </li>
                   </ul>
                 </div>
@@ -998,9 +998,9 @@ export default function JobDetailPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
               </svg>
             </div>
-            <h3 className="text-lg font-bold text-dark mb-2">&iquest;Cancelar trabajo?</h3>
+            <h3 className="text-lg font-bold text-dark mb-2">¿Cancelar trabajo?</h3>
             <p className="text-sm text-gray mb-6">
-              Esta acci&oacute;n no se puede deshacer. El trabajo se cancelar&aacute; y se notificar&aacute; a los postulados.
+              Esta acción no se puede deshacer. El trabajo se cancelará y se notificará a los postulados.
             </p>
             <div className="flex gap-3">
               <button
@@ -1016,7 +1016,7 @@ export default function JobDetailPage() {
                 }}
                 className="flex-1 py-3 bg-red-500 text-white text-sm font-semibold rounded-xl hover:bg-red-600 transition-all shadow-sm"
               >
-                S&iacute;, cancelar
+                Sí, cancelar
               </button>
             </div>
           </div>

@@ -8,18 +8,18 @@ import Logo from "@/components/Logo";
 
 // ─── CONSTANTS ───
 const categories = [
-  { name: "Construcci&oacute;n", desc: "Peones, alba&ntilde;iles, obra" },
-  { name: "Electricidad y Mantenimiento", desc: "Electricistas, t&eacute;cnicos, plomeros" },
-  { name: "Pintura y Acabados", desc: "Pintores, drywall, cer&aacute;mica" },
+  { name: "Construcción", desc: "Peones, albañiles, obra" },
+  { name: "Electricidad y Mantenimiento", desc: "Electricistas, técnicos, plomeros" },
+  { name: "Pintura y Acabados", desc: "Pintores, drywall, cerámica" },
   { name: "Carga y Mudanza", desc: "Cargadores, fletes, mudanceros" },
   { name: "Limpieza", desc: "Casas, oficinas, edificios" },
-  { name: "Cuidado Personal", desc: "Ni&ntilde;eras, cuidadores" },
-  { name: "Gastronom&iacute;a", desc: "Meseros, cocina, bar" },
-  { name: "Eventos", desc: "Montaje, atenci&oacute;n al p&uacute;blico" },
-  { name: "Log&iacute;stica", desc: "Repartidores, almac&eacute;n" },
+  { name: "Cuidado Personal", desc: "Niñeras, cuidadores" },
+  { name: "Gastronomía", desc: "Meseros, cocina, bar" },
+  { name: "Eventos", desc: "Montaje, atención al público" },
+  { name: "Logística", desc: "Repartidores, almacén" },
   { name: "Retail y Ventas", desc: "Vendedores, cajeros, stockers" },
-  { name: "Jardiner&iacute;a", desc: "Jardineros, poda, limpieza" },
-  { name: "Conducci&oacute;n y Mensajer&iacute;a", desc: "Conductores, mensajeros, delivery" },
+  { name: "Jardinería", desc: "Jardineros, poda, limpieza" },
+  { name: "Conducción y Mensajería", desc: "Conductores, mensajeros, delivery" },
 ];
 
 const budgetSuggestions = [5, 10, 15, 20, 30, 50];
@@ -139,17 +139,17 @@ export default function EditJobPage() {
 
     const budgetNum = parseFloat(budget);
     if (isNaN(budgetNum) || budgetNum <= 0) {
-      setError("El presupuesto debe ser un n&uacute;mero v&aacute;lido mayor a 0");
+      setError("El presupuesto debe ser un número válido mayor a 0");
       return;
     }
 
     if (title.length < 5) {
-      setError("El t&iacute;tulo debe tener al menos 5 caracteres");
+      setError("El título debe tener al menos 5 caracteres");
       return;
     }
 
     if (description.length < 20) {
-      setError("La descripci&oacute;n debe tener al menos 20 caracteres");
+      setError("La descripción debe tener al menos 20 caracteres");
       return;
     }
 
@@ -200,37 +200,37 @@ export default function EditJobPage() {
           <div className="mb-8 animate-fade-in">
             <h1 className="text-2xl font-bold text-dark">Editar trabajo</h1>
             <p className="text-gray text-sm mt-1">
-              Modifica los detalles del trabajo. Solo se puede editar mientras est&aacute; abierto.
+              Modifica los detalles del trabajo. Solo se puede editar mientras está abierto.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Info b&aacute;sica */}
+            {/* Info básica */}
             <section className="bg-white rounded-xl border border-gray-200 p-6 animate-stagger-pop">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-primary-light text-primary flex items-center justify-center text-sm font-bold">1</div>
                 <div>
-                  <h2 className="font-semibold text-dark">Informaci&oacute;n b&aacute;sica</h2>
-                  <p className="text-xs text-gray">T&iacute;tulo y descripci&oacute;n del trabajo</p>
+                  <h2 className="font-semibold text-dark">Información básica</h2>
+                  <p className="text-xs text-gray">Título y descripción del trabajo</p>
                 </div>
               </div>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-dark mb-1.5">
-                    T&iacute;tulo <span className="text-red-400">*</span>
+                    Título <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="text"
                     value={form.title}
                     onChange={(e) => update("title", e.target.value)}
-                    placeholder="Ej: Mesero para evento corporativo s&aacute;bado"
+                    placeholder="Ej: Mesero para evento corporativo sábado"
                     className="input-glow w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-primary outline-none transition-all text-sm bg-white"
                     maxLength={100}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-dark mb-1.5">
-                    Descripci&oacute;n <span className="text-red-400">*</span>
+                    Descripción <span className="text-red-400">*</span>
                   </label>
                   <textarea
                     value={form.description}
@@ -242,7 +242,7 @@ export default function EditJobPage() {
                   />
                   <div className="flex justify-between mt-1">
                     <p className={`text-xs ${descChars < 20 ? "text-red-400" : "text-gray"}`}>
-                      {descChars < 20 ? `M&iacute;nimo 20 caracteres (${descChars}/20)` : ""}
+                      {descChars < 20 ? `Mínimo 20 caracteres (${descChars}/20)` : ""}
                     </p>
                     <span className="text-xs text-gray">{descChars}/2000</span>
                   </div>
@@ -250,19 +250,19 @@ export default function EditJobPage() {
               </div>
             </section>
 
-            {/* Categor&iacute;a + Duraci&oacute;n */}
+            {/* Categoría + Duración */}
             <section className="bg-white rounded-xl border border-gray-200 p-6 animate-stagger-pop" style={{ animationDelay: "0.1s" }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-primary-light text-primary flex items-center justify-center text-sm font-bold">2</div>
                 <div>
-                  <h2 className="font-semibold text-dark">Categor&iacute;a y duraci&oacute;n</h2>
+                  <h2 className="font-semibold text-dark">Categoría y duración</h2>
                   <p className="text-xs text-gray">Clasifica tu trabajo</p>
                 </div>
               </div>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-dark mb-2">
-                    Categor&iacute;a <span className="text-red-400">*</span>
+                    Categoría <span className="text-red-400">*</span>
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {categories.map((cat) => (
@@ -284,40 +284,40 @@ export default function EditJobPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-dark mb-1.5">
-                    Duraci&oacute;n estimada <span className="text-red-400">*</span>
+                    Duración estimada <span className="text-red-400">*</span>
                   </label>
                   <select
                     value={form.duration}
                     onChange={(e) => update("duration", e.target.value)}
                     className="input-glow w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-primary outline-none transition-all text-sm bg-white"
                   >
-                    <option value="">Selecciona una duraci&oacute;n</option>
+                    <option value="">Selecciona una duración</option>
                     <option value="1-2 horas">1-2 horas</option>
                     <option value="2-4 horas">2-4 horas</option>
                     <option value="4-6 horas">4-6 horas</option>
                     <option value="6-8 horas">6-8 horas</option>
                     <option value="8+ horas">8+ horas</option>
                     <option value="Jornada completa">Jornada completa</option>
-                    <option value="Por d&iacute;as">Por d&iacute;as</option>
+                    <option value="Por días">Por días</option>
                     <option value="Por semanas">Por semanas</option>
                   </select>
                 </div>
               </div>
             </section>
 
-            {/* Ubicaci&oacute;n + Pago */}
+            {/* Ubicación + Pago */}
             <section className="bg-white rounded-xl border border-gray-200 p-6 animate-stagger-pop" style={{ animationDelay: "0.15s" }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-primary-light text-primary flex items-center justify-center text-sm font-bold">3</div>
                 <div>
-                  <h2 className="font-semibold text-dark">Ubicaci&oacute;n y pago</h2>
-                  <p className="text-xs text-gray">D&oacute;nde y cu&aacute;nto</p>
+                  <h2 className="font-semibold text-dark">Ubicación y pago</h2>
+                  <p className="text-xs text-gray">Dónde y cuánto</p>
                 </div>
               </div>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-dark mb-1.5">
-                    Ubicaci&oacute;n <span className="text-red-400">*</span>
+                    Ubicación <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="text"
