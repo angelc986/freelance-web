@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createJob } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import LocationPicker from "@/components/LocationPicker";
 import Logo from "@/components/Logo";
 
 // ─── CATEGORY SVGS ───
@@ -94,6 +95,7 @@ export default function NewJobPage() {
     budget: "",
     duration: "",
   });
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(false);
@@ -158,6 +160,8 @@ export default function NewJobPage() {
         location,
         budget: budgetNum,
         duration,
+        latitude: coords?.lat,
+        longitude: coords?.lng,
       });
       router.push(`/jobs/${job.id}`);
     } catch (e: any) {
@@ -334,12 +338,12 @@ export default function NewJobPage() {
                       <label className="block text-sm font-medium text-dark mb-1.5">
                         Ubicación <span className="text-red-400">*</span>
                       </label>
-                      <input
-                        type="text"
-                        value={form.location}
-                        onChange={(e) => update("location", e.target.value)}
-                        placeholder="Ej: Caracas, Distrito Capital"
-                        className="input-glow w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-primary outline-none transition-all text-sm bg-white"
+                      <LocationPicker
+                        address={form.location}
+                        onLocationChange={(data) => {
+                          setForm((p) => ({ ...p, location: data.address }));
+                          setCoords({ lat: data.lat, lng: data.lng });
+                        }}
                       />
                     </div>
 

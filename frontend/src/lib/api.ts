@@ -253,6 +253,8 @@ export interface Job {
   status: string;
   client_id: number;
   worker_id: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -287,6 +289,8 @@ export function createJob(data: {
   location: string;
   budget: number;
   duration: string;
+  latitude?: number;
+  longitude?: number;
 }): Promise<Job> {
   return request("/jobs/", {
     method: "POST",

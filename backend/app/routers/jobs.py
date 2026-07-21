@@ -43,6 +43,8 @@ def create_job(request: Request, job: JobCreate, db: Session = Depends(get_db), 
         budget=job.budget,
         duration=job.duration,
         client_id=current_user.id,
+        latitude=job.latitude,
+        longitude=job.longitude,
     )
     db.add(db_job)
     db.commit()

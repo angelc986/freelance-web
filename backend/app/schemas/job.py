@@ -10,6 +10,8 @@ class JobCreate(BaseModel):
     location: str
     budget: float
     duration: str
+    latitude: float | None = None
+    longitude: float | None = None
 
 
 class JobResponse(BaseModel):
@@ -23,6 +25,8 @@ class JobResponse(BaseModel):
     status: str
     client_id: int
     worker_id: Optional[int] = None
+    latitude: float | None = None
+    longitude: float | None = None
     created_at: datetime
     updated_at: datetime
     dispute_reason: Optional[str] = None
@@ -38,6 +42,8 @@ class JobUpdate(BaseModel):
     location: str
     budget: float
     duration: str
+    latitude: float | None = None
+    longitude: float | None = None
 
 class DisputeRequest(BaseModel):
     reason: str
