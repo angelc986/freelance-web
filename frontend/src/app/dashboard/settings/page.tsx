@@ -724,14 +724,14 @@ export default function SettingsPage() {
               </div>
               <h3 className="text-lg font-semibold text-dark">Verificar cambios</h3>
               <p className="text-sm text-gray mt-1.5 leading-relaxed">
-                Enviamos un c&oacute;digo de 6 d&iacute;gitos a <strong className="text-dark">{user.email}</strong>.
-                Ingresa el c&oacute;digo para confirmar {pendingChanges.new_wallet ? "tu nueva wallet" : "los cambios"}.
-            </div>
+                Enviamos un código de 6 dígitos a <strong className="text-dark">{user.email}</strong>.
+                Ingresa el código para confirmar {pendingChanges.new_wallet ? "tu nueva wallet" : "los cambios"}.
+              </p>
 
             <div className="px-6 py-5 space-y-5">
               {/* Input con diseño mejorado */}
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-2">C&oacute;digo de verificaci&oacute;n</label>
+                <label className="block text-xs font-medium text-gray-500 mb-2">Código de verificación</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -791,7 +791,7 @@ export default function SettingsPage() {
                 </button>
               </div>
 
-              <p className="text-xs text-gray-300 text-center pt-0.5">El c&oacute;digo expira en 15 minutos</p>
+              <p className="text-xs text-gray-300 text-center pt-0.5">El código expira en 15 minutos</p>
             </div>
           </div>
         </div>
