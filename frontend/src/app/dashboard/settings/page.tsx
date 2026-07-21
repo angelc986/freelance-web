@@ -81,6 +81,24 @@ function IconChat({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
+// ─── CARD REUSABLE COMPONENT ───
+function Card({ icon, title, desc, children }: { icon: React.ReactNode; title: string; desc?: string; children: React.ReactNode }) {
+  return (
+    <section className="bg-white rounded-2xl border border-gray-200/70 overflow-hidden shadow-sm shadow-gray-200/20">
+      <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100/80 bg-gradient-to-r from-blue-50/50 to-white">
+        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+          {icon}
+        </div>
+        <div>
+          <h2 className="font-semibold text-dark text-sm">{title}</h2>
+          {desc && <p className="text-xs text-gray mt-0.5">{desc}</p>}
+        </div>
+      </div>
+      {children}
+    </section>
+  );
+}
+
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth();
   const router = useRouter();
@@ -293,24 +311,6 @@ export default function SettingsPage() {
 
   const walletValid = /^0x[a-fA-F0-9]{40}$/.test(wallet);
   const walletChanged = wallet !== (user.wallet_address || "");
-
-  // ─── CARD REUSABLE COMPONENT ───
-  function Card({ icon, title, desc, children }: { icon: React.ReactNode; title: string; desc?: string; children: React.ReactNode }) {
-    return (
-      <section className="bg-white rounded-2xl border border-gray-200/70 overflow-hidden shadow-sm shadow-gray-200/20">
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100/80 bg-gradient-to-r from-blue-50/50 to-white">
-          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-            {icon}
-          </div>
-          <div>
-            <h2 className="font-semibold text-dark text-sm">{title}</h2>
-            {desc && <p className="text-xs text-gray mt-0.5">{desc}</p>}
-          </div>
-        </div>
-        {children}
-      </section>
-    );
-  }
 
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6 space-y-5 sm:space-y-6 w-full overflow-hidden">
