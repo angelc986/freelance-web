@@ -6,3 +6,4 @@ from .rating import Rating
 from .refresh_token import RefreshToken
 from .audit_log import AuditLog
 from .notification import Notification
+from .push_subscription import PushSubscription

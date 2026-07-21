@@ -7,3 +7,4 @@ from .verification import router as verification_router
 from .events import router as events_router
 from .notifications import router as notifications_router
 from .users import router as users_router
+from .push_subscriptions import router as push_subscriptions_router

@@ -8,7 +8,7 @@ from app.models.user import User
 from app.models.notification import Notification
 from app.services.auth import get_current_user
 from app.services.email_service import send_notification_email
-from app.services.push_service import send_push
+from app.services.push_service import send_push, send_to_user
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/v1", tags=["notifications"])
@@ -46,9 +46,8 @@ def create_notification(user_id: int, event: str, message: str, data: dict | Non
             if user.email_notifications:
                 send_notification_email(user.email, event, message)
 
-            # Web Push (si tiene suscripción guardada)
-            if user.push_subscription:
-                send_push(user.push_subscription, "TurnoGO", message, "/dashboard")
+            # Web Push (a todos los dispositivos)
+            send_to_user(user_id, "TurnoGO", message, "/dashboard", db=db)
 
     except Exception as e:
         print(f"Error creating notification: {e}")
@@ -142,14 +141,11 @@ def admin_send_test_notification(
     except Exception as e:
         results["email"] = f"ERROR: {str(e)[:300]}"
 
-    # 2. Push
+    # 2. Push (multi-dispositivo)
     try:
-        if target.push_subscription:
-            from app.services.push_service import send_push
-            ok = send_push(target.push_subscription, "TurnoGO", "¡Notificación de prueba!", "/dashboard")
-            results["push"] = "OK" if ok else "FAIL (ver logs)"
-        else:
-            results["push"] = "NO_SUBSCRIPTION"
+        from app.services.push_service import send_to_user
+        sent = send_to_user(user_id, "TurnoGO", "¡Notificación de prueba!", "/dashboard", db=db)
+        results["push"] = f"Enviado a {sent} dispositivo(s)" if sent > 0 else "SIN_SUSCRIPCIONES"
     except Exception as e:
         results["push"] = f"ERROR: {str(e)[:300]}"
 

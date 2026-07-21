@@ -43,7 +43,7 @@ def run_migrations():
 
 
 run_migrations()
-from app.routers import auth_router, jobs_router, payments_router, ratings_router, users_router, admin_router, events_router, notifications_router, verification_router
+from app.routers import auth_router, jobs_router, payments_router, ratings_router, users_router, admin_router, events_router, notifications_router, verification_router, push_subscriptions_router
 
 # Sentry - monitoreo de errores en produccion
 import sentry_sdk
@@ -86,6 +86,44 @@ try:
             conn.execute(text("ALTER TABLE users ADD COLUMN push_subscription TEXT"))
             conn.commit()
             print("✓ Migración: push_subscription agregado a users")
+
+    # Migrar push_subscriptions legacy → nueva tabla
+    try:
+        with engine.connect() as conn:
+            db_dialect = conn.dialect.name
+            if db_dialect == "postgresql":
+                table_rows = conn.execute(text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'")).fetchall()
+                table_names = [row[0] for row in table_rows]
+            else:
+                table_rows = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'")).fetchall()
+                table_names = [row[0] for row in table_rows]
+
+            if "push_subscriptions" in table_names:
+                rows = conn.execute(text("SELECT id, push_subscription FROM users WHERE push_subscription IS NOT NULL AND push_subscription != ''")).fetchall()
+                migrated = 0
+                for user_id, sub_json in rows:
+                    try:
+                        import json
+                        sub = json.loads(sub_json)
+                        endpoint = sub.get("endpoint", "")
+                        keys = sub.get("keys", {})
+                        auth = keys.get("auth", "")
+                        p256dh = keys.get("p256dh", "")
+                        if endpoint:
+                            existing = conn.execute(text("SELECT id FROM push_subscriptions WHERE endpoint = :ep"), {"ep": endpoint}).fetchone()
+                            if not existing:
+                                conn.execute(
+                                    text("INSERT INTO push_subscriptions (user_id, endpoint, auth, p256dh) VALUES (:uid, :ep, :auth, :p256dh)"),
+                                    {"uid": user_id, "ep": endpoint, "auth": auth, "p256dh": p256dh}
+                                )
+                                migrated += 1
+                    except Exception:
+                        pass
+                if migrated:
+                    conn.commit()
+                    print(f"✓ Migración: {migrated} push_subscriptions legacy migradas")
+    except Exception as e:
+        print(f"⚠️ Migración push_subscriptions omitida: {e}")
 except Exception as e:
     print(f"⚠️ Migración last_login_at omitida: {e}")
 
@@ -140,6 +178,7 @@ app.include_router(users_router)
 app.include_router(admin_router)
 app.include_router(events_router)
 app.include_router(notifications_router)
+app.include_router(push_subscriptions_router)
 app.include_router(verification_router)
 
 # Servir archivos subidos (avatares)

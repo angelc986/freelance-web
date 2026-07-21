@@ -516,3 +516,21 @@ export function updateNotificationPreferences(data: {
   if (data.push_subscription !== undefined) params.set("push_subscription", data.push_subscription ?? "");
   return request(`/auth/me/notification-preferences?${params}`, { method: "PATCH" });
 }
+
+// ─── Push Subscriptions (multi-dispositivo) ───
+
+export function addPushSubscription(data: {
+  endpoint: string;
+  keys: { auth: string; p256dh: string };
+}): Promise<{ ok: boolean; action: string }> {
+  return request("/push/subscribe", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function removePushSubscription(endpoint: string): Promise<{ ok: boolean }> {
+  return request(`/push/subscribe?endpoint=${encodeURIComponent(endpoint)}`, {
+    method: "DELETE",
+  });
+}

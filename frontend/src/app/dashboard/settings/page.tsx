@@ -161,23 +161,33 @@ export default function SettingsPage() {
     setNotifLoading(true);
     try {
       if (pushEnabled) {
-        // Unsubscribe
+        // Unsubscribe: remover esta suscripción del backend
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.getSubscription();
+        const endpoint = sub?.endpoint;
         if (sub) await sub.unsubscribe();
-        await updateNotificationPreferences({ push_subscription: "" });
+        if (endpoint) {
+          try { await removePushSubscription(endpoint); } catch {}
+        }
         setPushEnabled(false);
-        setNotifMsg({ ok: true, text: "Notificaciones push desactivadas." });
+        setNotifMsg({ ok: true, text: "Notificaciones push desactivadas en este dispositivo." });
       } else {
-        // Subscribe
+        // Subscribe: agregar este dispositivo
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY),
         });
-        await updateNotificationPreferences({ push_subscription: JSON.stringify(sub) });
+        const subJSON = sub.toJSON();
+        await addPushSubscription({
+          endpoint: subJSON.endpoint!,
+          keys: {
+            auth: subJSON.keys!.auth!,
+            p256dh: subJSON.keys!.p256dh!,
+          },
+        });
         setPushEnabled(true);
-        setNotifMsg({ ok: true, text: "¡Notificaciones push activadas!" });
+        setNotifMsg({ ok: true, text: "✅ Notificaciones push activadas! Recibirás en todos tus dispositivos." });
       }
     } catch (err: any) {
       if (err.name === "NotAllowedError") {
