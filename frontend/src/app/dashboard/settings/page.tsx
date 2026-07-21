@@ -133,6 +133,7 @@ export default function SettingsPage() {
   const [pendingChanges, setPendingChanges] = useState<{ new_email?: string; new_phone?: string; new_wallet?: string }>({});
   const [verifying, setVerifying] = useState(false);
   const [verifyMsg, setVerifyMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [editingWallet, setEditingWallet] = useState(false);
 
   const urlB64ToUint8Array = (base64String: string) => {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -263,7 +264,7 @@ export default function SettingsPage() {
       return;
     }
 
-    // Solo nombre/cedula — guardar directo
+    // Solo nombre/cedula - guardar directo
     setSavingProfile(true);
     try {
       await updateProfile({ full_name: name, phone, email, cedula: hasCedulaHash ? cedula : undefined });
@@ -321,7 +322,7 @@ export default function SettingsPage() {
       return;
     }
 
-    // Sin cambios — guardar directo
+    // Sin cambios - guardar directo
     setSavingWallet(true);
     try {
       await updateWallet(wallet);
@@ -496,25 +497,51 @@ export default function SettingsPage() {
       {/* ═══ WALLET ═══ */}
       <Card icon={<IconWallet className="w-5 h-5 text-primary" />} title="Wallet USDT" desc="Dirección Polygon para recibir pagos">
         <form onSubmit={handleSaveWallet} className="p-5 space-y-5">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1.5">Dirección de wallet</label>
-            <input type="text" value={wallet} onChange={(e) => setWallet(e.target.value)} placeholder="0x..."
-              className={"w-full px-3.5 py-2.5 border rounded-xl text-sm font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all " + (wallet && !walletValid ? "border-red-300 bg-red-50" : "border-gray-200")} />
-            {wallet && !walletValid && (
-              <p className="text-xs text-red-500 mt-1.5">Dirección inválida. Debe empezar con 0x y tener 42 caracteres.</p>
-            )}
-            <p className="text-xs text-gray mt-1.5">Solo direcciones Polygon. Verifica que sea correcta — los fondos no se pueden recuperar si envías a una dirección incorrecta.</p>
-          </div>
-
-          {user.wallet_address && (
-            <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-xs text-gray font-medium">Wallet actual:</p>
-                <button type="button" onClick={() => navigator.clipboard.writeText(user.wallet_address || '')} className="text-xs text-primary hover:underline inline-flex items-center gap-1">
-                  <IconCopy className="w-3.5 h-3.5" /> Copiar
-                </button>
+          {user.wallet_address && !editingWallet ? (
+            /* ── Wallet ya registrada: mostrar tarjeta limpia ── */
+            <div>
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50/50 border border-blue-100 rounded-2xl px-5 py-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700">Polygon</span>
+                  </div>
+                  <button type="button" onClick={() => navigator.clipboard.writeText(user.wallet_address || '')} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-500 hover:text-primary hover:border-primary/30 transition-all">
+                    <IconCopy className="w-3.5 h-3.5" />
+                    Copiar
+                  </button>
+                </div>
+                <p className="text-sm font-mono text-dark break-all tracking-wide">{user.wallet_address}</p>
               </div>
-              <p className="text-sm font-mono text-dark break-all">{user.wallet_address}</p>
+              <p className="text-xs text-gray mt-3">Los pagos se enviarán a esta dirección. No podrás recuperar fondos si cambias la dirección sin verificación.</p>
+              <button type="button" onClick={() => { setEditingWallet(true); setWallet(user.wallet_address || ""); }} className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary-dark transition-all">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                </svg>
+                Cambiar wallet
+              </button>
+            </div>
+          ) : (
+            /* ── Input para nueva wallet o cambio ── */
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Dirección de wallet</label>
+              <div className="relative">
+                <input type="text" value={wallet} onChange={(e) => setWallet(e.target.value)} placeholder="0x..."
+                  className={"w-full px-3.5 py-2.5 border rounded-xl text-sm font-mono focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all " + (wallet && !walletValid ? "border-red-300 bg-red-50" : "border-gray-200")} />
+                {user.wallet_address && (
+                  <button type="button" onClick={() => { setEditingWallet(false); setWallet(user.wallet_address || ""); }} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600 transition-all">
+                    Cancelar
+                  </button>
+                )}
+              </div>
+              {wallet && !walletValid && (
+                <p className="text-xs text-red-500 mt-1.5">Dirección inválida. Debe empezar con 0x y tener 42 caracteres.</p>
+              )}
+              <p className="text-xs text-gray mt-1.5">Solo direcciones Polygon. Verifica que sea correcta — los fondos no se pueden recuperar si envías a una dirección incorrecta.</p>
             </div>
           )}
 
@@ -524,11 +551,13 @@ export default function SettingsPage() {
             </div>
           )}
 
-          <button type="submit" disabled={savingWallet || !walletValid || !walletChanged} className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 md:py-2.5 rounded-xl text-sm font-medium hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
-            {savingWallet ? (
-              <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Guardando...</>
-            ) : user.wallet_address ? "Actualizar wallet" : "Registrar wallet"}
-          </button>
+          {(editingWallet || !user.wallet_address) && (
+            <button type="submit" disabled={savingWallet || !walletValid || (user.wallet_address ? !walletChanged : false)} className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 md:py-2.5 rounded-xl text-sm font-medium hover:bg-primary-dark hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+              {savingWallet ? (
+                <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Guardando...</>
+              ) : "Guardar wallet"}
+            </button>
+          )}
         </form>
       </Card>
 
