@@ -285,7 +285,12 @@ export default function SettingsPage() {
         ...pendingChanges,
       });
       setShowVerifyModal(false);
-      setProfileMsg({ ok: true, text: result.message });
+      // Mostrar mensaje en la sección correcta
+      if (pendingChanges.new_wallet) {
+        setWalletMsg({ ok: true, text: result.message });
+      } else {
+        setProfileMsg({ ok: true, text: result.message });
+      }
       await refreshUser?.();
     } catch (err: any) {
       setVerifyMsg({ ok: false, text: err.message });
@@ -297,6 +302,26 @@ export default function SettingsPage() {
   const handleSaveWallet = async (e: React.FormEvent) => {
     e.preventDefault();
     setWalletMsg(null);
+
+    // Si cambió la wallet, usar verificación
+    if (walletChanged) {
+      setSavingWallet(true);
+      try {
+        await requestChange({ new_wallet: wallet });
+        setPendingChanges({ new_wallet: wallet });
+        setVerifyCode("");
+        setVerifyMsg(null);
+        setShowVerifyModal(true);
+        setWalletMsg({ ok: true, text: "📧 Código enviado a tu correo. Revisa tu bandeja." });
+      } catch (err: any) {
+        setWalletMsg({ ok: false, text: err.message });
+      } finally {
+        setSavingWallet(false);
+      }
+      return;
+    }
+
+    // Sin cambios — guardar directo
     setSavingWallet(true);
     try {
       await updateWallet(wallet);
@@ -700,8 +725,7 @@ export default function SettingsPage() {
               <h3 className="text-lg font-semibold text-dark">Verificar cambios</h3>
               <p className="text-sm text-gray mt-1.5 leading-relaxed">
                 Enviamos un c&oacute;digo de 6 d&iacute;gitos a <strong className="text-dark">{user.email}</strong>.
-                Ingresa el c&oacute;digo para confirmar los cambios.
-              </p>
+                Ingresa el c&oacute;digo para confirmar {pendingChanges.new_wallet ? "tu nueva wallet" : "los cambios"}.
             </div>
 
             <div className="px-6 py-5 space-y-5">

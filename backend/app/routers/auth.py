@@ -478,8 +478,8 @@ def request_change(
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    if not request.new_email and not request.new_phone:
-        raise HTTPException(status_code=400, detail="Debes enviar al menos email o teléfono nuevo")
+    if not request.new_email and not request.new_phone and not request.new_wallet:
+        raise HTTPException(status_code=400, detail="Debes enviar al menos email, teléfono o wallet nuevo")
 
     # Validar que no estén ya registrados
     if request.new_email and request.new_email != user.email:
@@ -503,6 +503,7 @@ def request_change(
         token_hash=code_hash,
         new_email=request.new_email,
         new_phone=request.new_phone,
+        new_wallet=request.new_wallet,
         expires_at=expires_at,
     )
     db.add(change)
@@ -581,6 +582,10 @@ def confirm_change(
             raise HTTPException(status_code=400, detail="Ese teléfono ya está registrado")
         user.phone = change_request.new_phone
         cambios.append("teléfono")
+
+    if change_request.new_wallet and change_request.new_wallet != user.wallet_address:
+        user.wallet_address = change_request.new_wallet
+        cambios.append("wallet")
 
     # Marcar token como usado
     change_request.used = True

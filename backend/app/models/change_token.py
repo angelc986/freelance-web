@@ -10,6 +10,7 @@ class ChangeToken(Base):
     token_hash = Column(String, nullable=False)
     new_email = Column(String, nullable=True)
     new_phone = Column(String, nullable=True)
+    new_wallet = Column(String, nullable=True)
     expires_at = Column(DateTime, nullable=False)
     used = Column(Boolean, default=False)
     created_at = Column(DateTime, server_default=func.now())

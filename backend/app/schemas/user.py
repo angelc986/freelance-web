@@ -31,11 +31,13 @@ class UpdateProfileRequest(BaseModel):
 class RequestChangeRequest(BaseModel):
     new_email: str | None = None
     new_phone: str | None = None
+    new_wallet: str | None = None
 
 class ConfirmChangeRequest(BaseModel):
     token: str
     new_email: str | None = None
     new_phone: str | None = None
+    new_wallet: str | None = None
 
 class UpdateWalletRequest(BaseModel):
     wallet_address: str

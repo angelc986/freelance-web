@@ -196,6 +196,7 @@ export function updateProfile(data: {
 export function requestChange(data: {
   new_email?: string;
   new_phone?: string;
+  new_wallet?: string;
 }): Promise<{ message: string; expires_in: number }> {
   return request("/auth/request-change", {
     method: "POST",
@@ -207,6 +208,7 @@ export function confirmChange(data: {
   token: string;
   new_email?: string;
   new_phone?: string;
+  new_wallet?: string;
 }): Promise<{ message: string; user: User }> {
   return request("/auth/confirm-change", {
     method: "POST",
