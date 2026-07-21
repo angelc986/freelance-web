@@ -727,6 +727,7 @@ export default function SettingsPage() {
                 Enviamos un código de 6 dígitos a <strong className="text-dark">{user.email}</strong>.
                 Ingresa el código para confirmar {pendingChanges.new_wallet ? "tu nueva wallet" : "los cambios"}.
               </p>
+            </div>
 
             <div className="px-6 py-5 space-y-5">
               {/* Input con diseño mejorado */}
