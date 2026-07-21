@@ -75,6 +75,8 @@ const DEPOSIT_ADDRESS = "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18";
 export default function WalletPage() {
   const { user } = useAuth();
   const [balance, setBalance] = useState(0);
+  const [heldBalance, setHeldBalance] = useState(0);
+  const [availableBalance, setAvailableBalance] = useState(0);
   const [history, setHistory] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"deposit" | "withdraw">("deposit");
@@ -97,7 +99,7 @@ export default function WalletPage() {
   const loadData = useCallback(async () => {
     setLoading(true); setError("");
     await Promise.all([
-      getBalance().then((b) => setBalance(b.balance)).catch(() => {}),
+      getBalance().then((b) => { setBalance(b.balance); setHeldBalance(b.held_balance ?? 0); setAvailableBalance(b.available_balance ?? 0); }).catch(() => {}),
       getHistory().then(setHistory).catch(() => {}),
     ]);
     setLoading(false);
@@ -157,8 +159,14 @@ export default function WalletPage() {
                 <svg width="20" height="20" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="white" opacity="0.25"/><path d="M17 16h14M24 16v14" stroke="white" strokeWidth="3.5" strokeLinecap="round"/></svg>
               </div>
               <div>
-                <p className="text-[11px] sm:text-xs text-white/70">Balance disponible</p>
-                <p className="text-2xl sm:text-3xl font-bold tracking-tight">{formatUSD(balance)}</p>
+                <p className="text-[11px] sm:text-xs text-white/70">Saldo disponible</p>
+                <p className="text-2xl sm:text-3xl font-bold tracking-tight">{formatUSD(availableBalance)}</p>
+                {heldBalance > 0 && (
+                  <p className="text-[11px] text-white/60 mt-0.5">
+                    {formatUSD(heldBalance)} retenidos en trabajos activos
+                  </p>
+                )}
+                <p className="text-[10px] text-white/40 mt-1">Total: {formatUSD(balance)}</p>
               </div>
             </div>
 

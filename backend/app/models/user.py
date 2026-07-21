@@ -21,7 +21,8 @@ class User(Base):
     is_admin = Column(Boolean, default=False)
     wallet_address = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
-    balance = Column(Float, default=0.0)  # Saldo en USDT
+    balance = Column(Float, default=0.0)  # Saldo TOTAL en USDT (available + held)
+    held_balance = Column(Float, default=0.0)  # USDT retenido en trabajos activos (escrow)
     rating_avg = Column(Float, default=0.0)
     avatar_url = Column(String, nullable=True)
     avatar_verified = Column(Boolean, default=False)

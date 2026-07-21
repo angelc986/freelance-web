@@ -30,8 +30,13 @@ class JobResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     dispute_reason: Optional[str] = None
+    dispute_by: Optional[str] = None
+    disputed_at: Optional[datetime] = None
     review_requested_at: Optional[datetime] = None
+    timeout_at: Optional[datetime] = None
     completion_code: Optional[str] = None
+    correction_count: int = 0
+    correction_note: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -48,6 +53,10 @@ class JobUpdate(BaseModel):
 
 class DisputeRequest(BaseModel):
     reason: str
+
+
+class CorrectionRequest(BaseModel):
+    note: str  # Qué falta corregir
 
 
 class ApplicationBrief(BaseModel):

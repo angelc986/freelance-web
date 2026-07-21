@@ -137,6 +137,32 @@ try:
                     print(f"✓ Migración: {migrated} push_subscriptions legacy migradas")
     except Exception as e:
         print(f"⚠️ Migración push_subscriptions omitida: {e}")
+
+    # Migrar: held_balance, correction_count, correction_note, disputed_at, timeout_at, dispute_by
+    try:
+        with engine.connect() as conn:
+            inspector = inspect(engine)
+            # users
+            user_cols = [c["name"] for c in inspector.get_columns("users")]
+            if "held_balance" not in user_cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN held_balance DOUBLE PRECISION DEFAULT 0.0"))
+                conn.commit()
+                print("✓ Migración: held_balance agregado a users")
+            # jobs
+            job_cols = [c["name"] for c in inspector.get_columns("jobs")]
+            for col, col_type in [
+                ("correction_count", "INTEGER DEFAULT 0"),
+                ("correction_note", "VARCHAR(1000)"),
+                ("disputed_at", "TIMESTAMP WITH TIME ZONE"),
+                ("timeout_at", "TIMESTAMP WITH TIME ZONE"),
+                ("dispute_by", "VARCHAR(20)"),
+            ]:
+                if col not in job_cols:
+                    conn.execute(text(f"ALTER TABLE jobs ADD COLUMN {col} {col_type}"))
+                    conn.commit()
+                    print(f"✓ Migración: {col} agregado a jobs")
+    except Exception as e:
+        print(f"⚠ Migración escrow/corrección omitida: {e}")
 except Exception as e:
     print(f"⚠️ Migración last_login_at omitida: {e}")
 

@@ -47,7 +47,12 @@ class BalanceResponse(BaseModel):
     Saldo del usuario.
     """
     balance: float
+    held_balance: float = 0.0
+    available_balance: float = 0.0
     wallet_address: Optional[str] = None
+
+    class Config:
+        from_attributes = True
 
 
 class WithdrawRequest(BaseModel):

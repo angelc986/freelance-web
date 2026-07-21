@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getJob, updateJob, applyToJob, getApplications, getMyApplications, acceptApplication, checkIn, completeRequest, verifyCompletion, approveJob, cancelJob, rateJob, getJobRatings, type Job, type Application, type RatingInfo } from "@/lib/api";
+import { getJob, updateJob, applyToJob, getApplications, getMyApplications, acceptApplication, checkIn, completeRequest, verifyCompletion, approveJob, cancelJob, requestCorrection, disputeJob, rateJob, getJobRatings, type Job, type Application, type RatingInfo } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import Logo from "@/components/Logo";
 import NotificationBell from "@/components/NotificationBell";
@@ -99,6 +99,7 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   review_pending:{ label: "Revision",       color: "bg-violet-50 text-violet-600 border-violet-200" },
   completed:     { label: "Completado",     color: "bg-gray-100 text-gray-500 border-gray-200" },
   cancelled:     { label: "Cancelado",      color: "bg-red-50 text-red-500 border-red-200" },
+  disputed:      { label: "En disputa",     color: "bg-orange-50 text-orange-600 border-orange-200" },
 };
 
 // ─── HAVERSINE DISTANCE (meters) ───
@@ -700,16 +701,53 @@ export default function JobDetailPage() {
                     {/* Worker: Verify completion code (after requesting) */}
                     {isAssigned && job.status === "review_pending" && (
                       <div className="space-y-3">
+                        {/* Si el contractor pidio correccion */}
+                        {job.correction_note && (
+                          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+                            <span className="font-semibold">El contratista solicita:</span> {job.correction_note}
+                          </div>
+                        )}
                         <p className="text-sm text-gray">
-                          Solicitud enviada. El contratista recibió un código de verificación.
+                          Solicitud enviada. {job.completion_code ? "El contratista tiene tu código de verificación." : "Espera la respuesta del contratista."}
                         </p>
-                        <button
-                          onClick={() => setShowVerifyModal(true)}
-                          className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm"
-                        >
-                          <IconCheck className="w-5 h-5" />
-                          Ingresar código de verificación
-                        </button>
+                        {job.completion_code ? (
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <button
+                              onClick={() => setShowVerifyModal(true)}
+                              className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm flex-1"
+                            >
+                              <IconCheck className="w-5 h-5" />
+                              Ingresar código de verificación
+                            </button>
+                            <button
+                              onClick={() => {
+                                const reason = prompt("Motivo de la disputa:");
+                                if (reason?.trim()) handleAction(() => disputeJob(jobId, reason.trim()));
+                              }}
+                              className="btn-ripple flex items-center gap-2 px-4 py-2.5 border border-gray-200 text-gray text-sm font-medium rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                              </svg>
+                              Disputar
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                const reason = prompt("Motivo de la disputa:");
+                                if (reason?.trim()) handleAction(() => disputeJob(jobId, reason.trim()));
+                              }}
+                              className="btn-ripple flex items-center gap-2 px-4 py-2.5 border border-gray-200 text-gray text-sm font-medium rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                              </svg>
+                              Disputar
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -787,23 +825,106 @@ export default function JobDetailPage() {
                       </div>
                     )}
 
-                    {/* Owner: Approve */}
+                    {/* Owner: Review actions (codigo + correccion + disputa) */}
                     {isOwner && job.status === "review_pending" && (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         <p className="text-sm text-gray">
-                          El trabajador ha solicitado finalizar este trabajo. Comparte el código de verificación con él para completar.
+                          El trabajador ha solicitado finalizar este trabajo.
                         </p>
+
+                        {/* Codigo de verificacion */}
                         {job.completion_code && (
-                          <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl text-center">
-                            <p className="text-xs text-gray-500 mb-1">Código de verificación</p>
+                          <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl text-center">
+                            <p className="text-xs text-gray mb-1">Código de verificación</p>
                             <p className="text-2xl font-bold tracking-[0.3em] text-primary">{job.completion_code}</p>
-                            <p className="text-xs text-gray-400 mt-2">
-                              Comparte este código con el trabajador para que pueda completar el trabajo.
+                            <p className="text-xs text-gray mt-2">
+                              Si el trabajo está bien hecho, comparte este código con el trabajador.
                             </p>
                           </div>
                         )}
+
+                        {/* Si ya recibio una correccion antes, mostrar nota previa */}
+                        {(job.correction_count ?? 0) > 0 && job.correction_note && (
+                          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+                            <span className="font-semibold">Corrección solicitada anteriormente:</span> {job.correction_note}
+                          </div>
+                        )}
+
+                        {/* Botones de accion */}
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          {/* Solicitar correccion (siempre disponible cuando hay codigo) */}
+                          {job.completion_code && (
+                            <button
+                              onClick={() => {
+                                const note = prompt("¿Qué falta corregir o ajustar?");
+                                if (note?.trim()) handleAction(() => requestCorrection(jobId, note.trim()));
+                              }}
+                              className="btn-ripple flex items-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-700 font-medium text-sm rounded-xl hover:bg-amber-100 transition-all border border-amber-200"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                              </svg>
+                              Solicitar corrección
+                            </button>
+                          )}
+
+                          {/* Disputa (solo si ya se pidio correccion al menos 1 vez) */}
+                          {(job.correction_count ?? 0) >= 1 && job.completion_code && (
+                            <button
+                              onClick={() => {
+                                const reason = prompt("Motivo de la disputa:");
+                                if (reason?.trim()) handleAction(() => disputeJob(jobId, reason.trim()));
+                              }}
+                              className="btn-ripple flex items-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 font-medium text-sm rounded-xl hover:bg-red-100 transition-all border border-red-200"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                              </svg>
+                              Abrir disputa
+                            </button>
+                          )}
+
+                          {/* Aprobar directamente (alternativa al codigo) */}
+                          <button
+                            onClick={() => handleAction(() => approveJob(jobId))}
+                            className="btn-ripple flex items-center gap-2 px-4 py-2.5 bg-primary text-white font-semibold text-sm rounded-xl hover:bg-primary-dark transition-all shadow-sm ml-auto"
+                          >
+                            <IconCheck className="w-4 h-4" />
+                            Aprobar y liberar pago
+                          </button>
+                        </div>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Disputed info */}
+                {job.status === "disputed" && (user && (isOwner || isAssigned)) && (
+                  <div className="bg-white rounded-2xl p-6 border border-orange-200">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-dark">Trabajo en disputa</h3>
+                        <p className="text-sm text-gray mt-1">
+                          Abierta por el <strong>{job.dispute_by === "contractor" ? "contratista" : "trabajador"}</strong>.
+                          Los fondos (${job.budget.toFixed(2)} USDT) están retenidos hasta que un administrador resuelva.
+                        </p>
+                        {job.dispute_reason && (
+                          <p className="text-sm text-gray mt-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <span className="font-medium">Motivo:</span> {job.dispute_reason}
+                          </p>
+                        )}
+                        {job.disputed_at && (
+                          <p className="text-xs text-gray-400 mt-3">
+                            Abierta el {new Date(job.disputed_at).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
 

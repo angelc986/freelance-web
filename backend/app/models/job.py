@@ -22,8 +22,13 @@ class Job(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     dispute_reason = Column(String(1000), nullable=True)
+    dispute_by = Column(String(20), nullable=True)  # "contractor" o "worker" — quién abrió la disputa
+    disputed_at = Column(DateTime, nullable=True)    # Cuándo se abrió la disputa (24h lock)
     review_requested_at = Column(DateTime, nullable=True)  # Cuándo pidió completar el worker
+    timeout_at = Column(DateTime, nullable=True)     # Timeout para auto-release (72h después de review_pending)
     completion_code = Column(String(6), nullable=True)  # Código de verificación para completar
+    correction_count = Column(Integer, default=0)    # Veces que se pidió corrección
+    correction_note = Column(String(1000), nullable=True)  # Nota de qué falta corregir
 
     client = relationship("User", foreign_keys=[client_id])
     worker = relationship("User", foreign_keys=[worker_id])

@@ -256,6 +256,13 @@ export interface Job {
   latitude?: number | null;
   longitude?: number | null;
   completion_code?: string | null;
+  dispute_reason?: string | null;
+  dispute_by?: string | null;
+  disputed_at?: string | null;
+  correction_count?: number;
+  correction_note?: string | null;
+  review_requested_at?: string | null;
+  timeout_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -437,6 +444,20 @@ export function cancelJob(jobId: number): Promise<any> {
   });
 }
 
+export function requestCorrection(jobId: number, note: string): Promise<any> {
+  return request(`/jobs/${jobId}/request-correction`, {
+    method: "POST",
+    body: JSON.stringify({ note }),
+  });
+}
+
+export function disputeJob(jobId: number, reason: string): Promise<any> {
+  return request(`/jobs/${jobId}/dispute`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+}
+
 /* ===== PAYMENTS ===== */
 
 export interface Transaction {
@@ -454,7 +475,7 @@ export interface Transaction {
   created_at: string;
 }
 
-export function getBalance(): Promise<{ balance: number }> {
+export function getBalance(): Promise<{ balance: number; held_balance?: number; available_balance?: number }> {
   return request("/payments/balance");
 }
 

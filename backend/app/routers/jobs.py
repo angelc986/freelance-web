@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from app.database import SessionLocal
 from app.models.job import Job
 from app.models.application import Application
-from app.schemas.job import JobCreate, JobUpdate, JobResponse, DisputeRequest, JobWithApplicants, ApplicationBrief
+from app.schemas.job import JobCreate, JobUpdate, JobResponse, DisputeRequest, CorrectionRequest, JobWithApplicants, ApplicationBrief
 from app.schemas.application import ApplicationCreate, ApplicationResponse
 from app.services.auth import get_current_user
 from app.models.user import User
@@ -262,7 +262,7 @@ def list_applications(job_id: int, db: Session = Depends(get_db),
 @limiter.limit("20/minute")
 def accept_application(request: Request, job_id: int, application_id: int, db: Session = Depends(get_db),
                        current_user: User = Depends(get_current_user)):
-    """Aceptar un worker (solo el contractor dueño)"""
+    """Aceptar un worker (solo el contractor dueño). Bloquea los fondos en escrow."""
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Trabajo no encontrado")
@@ -270,6 +270,14 @@ def accept_application(request: Request, job_id: int, application_id: int, db: S
         raise HTTPException(status_code=403, detail="Solo el contratista puede aceptar aplicantes")
     if job.status != "open":
         raise HTTPException(status_code=400, detail="Este trabajo ya no está disponible")
+
+    # Verificar saldo disponible (available, no total)
+    available = current_user.balance - current_user.held_balance
+    if available < job.budget:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Saldo disponible insuficiente. Disponible: ${available:.2f}, Necesario: ${job.budget:.2f}"
+        )
 
     app = db.query(Application).filter(
         Application.id == application_id,
@@ -282,6 +290,9 @@ def accept_application(request: Request, job_id: int, application_id: int, db: S
     job.worker_id = app.worker_id
     job.status = "in_progress"
     app.status = "accepted"
+
+    # Bloquear fondos en escrow
+    current_user.held_balance += job.budget
 
     otras = db.query(Application).filter(
         Application.job_id == job_id,
@@ -327,6 +338,7 @@ def request_complete(request: Request, job_id: int, db: Session = Depends(get_db
     job.status = "review_pending"
     job.review_requested_at = datetime.now(timezone.utc)
     job.completion_code = code
+    job.timeout_at = datetime.now(timezone.utc) + timedelta(hours=72)  # Auto-release en 72h
     db.commit()
     db.refresh(job)
     publish(job.client_id, "job_review_pending", {
@@ -353,7 +365,9 @@ def verify_completion(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """El worker ingresa el codigo de verificacion para completar el trabajo"""
+    """El worker ingresa el codigo de verificacion. Si es correcto, libera el pago automaticamente."""
+    from app.models.transaction import Transaction
+
     code = body.get("code", "") if isinstance(body, dict) else ""
     if not code or len(str(code)) != 6:
         raise HTTPException(status_code=422, detail="Se requiere un código de 6 dígitos")
@@ -371,11 +385,41 @@ def verify_completion(
     if code != job.completion_code:
         raise HTTPException(status_code=400, detail="Código de verificación incorrecto")
 
+    # ─── Verificar que el contractor tiene fondos retenidos ───
+    contractor = db.query(User).filter(User.id == job.client_id).first()
+    if contractor.held_balance < job.budget:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error: fondos insuficientes en escrow. Held: ${contractor.held_balance:.2f}, Budget: ${job.budget:.2f}"
+        )
+
+    # ─── Completar trabajo ───
     job.status = "completed"
     job.review_requested_at = None
     job.completion_code = None
+    job.timeout_at = None
+    job.correction_note = None
+
+    # ─── Liberar pago automático: held → worker ───
+    worker = db.query(User).filter(User.id == job.worker_id).first()
+    contractor.held_balance -= job.budget
+    worker.balance += job.budget
+
+    # ─── Registrar transacción ───
+    transaction = Transaction(
+        user_id=contractor.id,
+        job_id=job.id,
+        type="release",
+        amount=job.budget,
+        network="polygon",
+        status="confirmed",
+        confirmed_at=datetime.now(timezone.utc),
+    )
+    db.add(transaction)
     db.commit()
     db.refresh(job)
+
+    # ─── Notificar ───
     publish(job.client_id, "job_completed", {
         "job_id": job.id,
         "job_title": job.title,
@@ -385,6 +429,10 @@ def verify_completion(
         "job_id": job.id,
         "job_title": job.title,
     })
+    create_notification(job.worker_id, "payment_received", f"Has recibido ${job.budget:.2f} USDT por {job.title}", {
+        "job_id": job.id,
+        "amount": job.budget,
+    })
     return job
 
 
@@ -392,7 +440,9 @@ def verify_completion(
 @limiter.limit("10/minute")
 def approve_job(request: Request, job_id: int, db: Session = Depends(get_db),
                 current_user: User = Depends(get_current_user)):
-    """El contractor aprueba que el trabajo está bien hecho"""
+    """El contractor aprueba directamente (sin codigo). Libera el pago automaticamente."""
+    from app.models.transaction import Transaction
+
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Trabajo no encontrado")
@@ -401,17 +451,85 @@ def approve_job(request: Request, job_id: int, db: Session = Depends(get_db),
     if job.client_id != current_user.id:
         raise HTTPException(status_code=403, detail="Solo el contratista puede aprobar")
 
+    # ─── Verificar fondos retenidos ───
+    contractor = db.query(User).filter(User.id == current_user.id).first()
+    if contractor.held_balance < job.budget:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error: fondos insuficientes en escrow. Held: ${contractor.held_balance:.2f}, Budget: ${job.budget:.2f}"
+        )
+
     job.status = "completed"
     job.review_requested_at = None
     job.completion_code = None
+    job.timeout_at = None
+    job.correction_note = None
+
+    # ─── Liberar pago ───
+    worker = db.query(User).filter(User.id == job.worker_id).first()
+    contractor.held_balance -= job.budget
+    worker.balance += job.budget
+
+    transaction = Transaction(
+        user_id=contractor.id,
+        job_id=job.id,
+        type="release",
+        amount=job.budget,
+        network="polygon",
+        status="confirmed",
+        confirmed_at=datetime.now(timezone.utc),
+    )
+    db.add(transaction)
     db.commit()
     db.refresh(job)
+
     publish(job.worker_id, "job_completed", {
         "job_id": job.id,
         "job_title": job.title,
         "message": f"{job.title} ha sido aprobado y completado exitosamente"
     })
     create_notification(job.worker_id, "job_completed", f"{job.title} ha sido aprobado y completado exitosamente", {
+        "job_id": job.id,
+        "job_title": job.title,
+    })
+    create_notification(job.client_id, "payment_sent", f"Has pagado ${job.budget:.2f} USDT por {job.title}", {
+        "job_id": job.id,
+        "amount": job.budget,
+    })
+    return job
+
+
+# ─── Corrección ──────────────────────────────────────
+
+
+@router.post("/{job_id}/request-correction", response_model=JobResponse)
+@limiter.limit("10/minute")
+def request_correction(request: Request, job_id: int, correction: CorrectionRequest, db: Session = Depends(get_db),
+                       current_user: User = Depends(get_current_user)):
+    """El contractor pide una corrección al worker antes de aprobar"""
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Trabajo no encontrado")
+    if job.status != "review_pending":
+        raise HTTPException(status_code=400, detail="El trabajo no está esperando revisión")
+    if job.client_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Solo el contratista puede pedir correcciones")
+
+    job.correction_count += 1
+    job.correction_note = correction.note
+    job.completion_code = None  # Invalidar código anterior
+    job.timeout_at = None  # Pausar timeout mientras corrigen
+
+    db.commit()
+    db.refresh(job)
+
+    publish(job.worker_id, "correction_requested", {
+        "job_id": job.id,
+        "job_title": job.title,
+        "note": correction.note,
+        "message": f"Corrección solicitada en '{job.title}': {correction.note}"
+    })
+    create_notification(job.worker_id, "correction_requested", f"Corrección solicitada en '{job.title}': {correction.note}", {
         "job_id": job.id,
         "job_title": job.title,
     })
@@ -422,26 +540,44 @@ def approve_job(request: Request, job_id: int, db: Session = Depends(get_db),
 @limiter.limit("10/minute")
 def dispute_job(request: Request, job_id: int, dispute: DisputeRequest, db: Session = Depends(get_db),
                 current_user: User = Depends(get_current_user)):
-    """El contractor disputa el trabajo"""
+    """Abrir disputa (contractor o worker). Fondos quedan retenidos 24h."""
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Trabajo no encontrado")
-    if job.status != "review_pending":
-        raise HTTPException(status_code=400, detail="El trabajo no está esperando revisión")
-    if job.client_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Solo el contratista puede disputar")
+    if job.status not in ("review_pending", "in_progress"):
+        raise HTTPException(status_code=400, detail="El trabajo no está en un estado que permita disputa")
+    if current_user.id not in (job.client_id, job.worker_id):
+        raise HTTPException(status_code=403, detail="Solo el contratista o el worker pueden abrir una disputa")
+
+    # Determinar quién abre la disputa
+    dispute_by = "contractor" if current_user.id == job.client_id else "worker"
 
     job.status = "disputed"
     job.dispute_reason = dispute.reason
+    job.dispute_by = dispute_by
+    job.disputed_at = datetime.now(timezone.utc)
     job.review_requested_at = None
+    job.completion_code = None
+    job.timeout_at = None  # Timeout pausado durante disputa
+
     db.commit()
     db.refresh(job)
+
+    # Notificar al admin y a la otra parte
+    other_id = job.client_id if dispute_by == "worker" else job.worker_id
+    msg = f"'{job.title}' ha sido disputado por el {dispute_by}: {dispute.reason}"
     publish(1, "job_disputed", {
         "job_id": job.id,
         "job_title": job.title,
         "reason": dispute.reason,
-        "message": f"'{job.title}' en disputa: {dispute.reason}"
+        "dispute_by": dispute_by,
+        "message": msg
     })
+    if other_id:
+        create_notification(other_id, "job_disputed", msg, {
+            "job_id": job.id,
+            "job_title": job.title,
+        })
     return job
 
 
@@ -449,7 +585,7 @@ def dispute_job(request: Request, job_id: int, dispute: DisputeRequest, db: Sess
 @limiter.limit("10/minute")
 def cancel_job(request: Request, job_id: int, db: Session = Depends(get_db),
                current_user: User = Depends(get_current_user)):
-    """El contratista cancela el trabajo"""
+    """El contratista cancela el trabajo. Libera fondos retenidos."""
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Trabajo no encontrado")
@@ -458,7 +594,13 @@ def cancel_job(request: Request, job_id: int, db: Session = Depends(get_db),
     if job.client_id != current_user.id:
         raise HTTPException(status_code=403, detail="Solo el contratista puede cancelar")
 
+    # ─── Liberar fondos si estaban bloqueados ───
+    contractor = db.query(User).filter(User.id == current_user.id).first()
+    if job.worker_id and contractor.held_balance >= job.budget:
+        contractor.held_balance -= job.budget
+
     job.status = "cancelled"
+    job.timeout_at = None
     db.commit()
     db.refresh(job)
     if job.worker_id:
@@ -501,26 +643,24 @@ def check_in(request: Request, job_id: int, db: Session = Depends(get_db),
 @limiter.limit("2/minute")
 def process_timeouts(request: Request, db: Session = Depends(get_db)):
     """
-    ⏰ TIMEOUT 48h
+    ⏰ TIMEOUT 72h
     
-    Busca trabajos en 'review_pending' donde hayan pasado más de 48h
-    desde que el worker pidió completar. Si el contractor no respondió,
-    el trabajo se completa automáticamente.
+    Busca trabajos en 'review_pending' donde haya pasado el timeout_at.
+    Si el contractor no respondió, libera el pago automáticamente al worker.
     
     Esto protege al worker de contractors que ignoran la solicitud.
     
     Llama a este endpoint manualmente o configúralo como tarea programada.
     """
-    # Calcular hace 48 horas
-    deadline = datetime.now(timezone.utc) - timedelta(hours=48)
+    now = datetime.now(timezone.utc)
     
-    # Buscar jobs expirados
+    # Buscar jobs con timeout vencido
     expired_jobs = (
         db.query(Job)
         .filter(
             Job.status == "review_pending",
-            Job.review_requested_at.isnot(None),
-            Job.review_requested_at <= deadline,
+            Job.timeout_at.isnot(None),
+            Job.timeout_at <= now,
         )
         .all()
     )
@@ -530,15 +670,16 @@ def process_timeouts(request: Request, db: Session = Depends(get_db)):
         # Completar el trabajo automáticamente
         job.status = "completed"
         job.review_requested_at = None
+        job.timeout_at = None
+        job.correction_note = None
         
-        # Liberar el pago (descontar del contractor, acreditar al worker)
+        # Liberar el pago desde held_balance
         contractor = db.query(User).filter(User.id == job.client_id).first()
         worker = db.query(User).filter(User.id == job.worker_id).first()
         
         if contractor and worker:
-            # Solo si el contractor tiene saldo suficiente
-            if contractor.balance >= job.budget:
-                contractor.balance -= job.budget
+            if contractor.held_balance >= job.budget:
+                contractor.held_balance -= job.budget
                 worker.balance += job.budget
                 
                 # Crear transacción de liberación automática
@@ -553,6 +694,14 @@ def process_timeouts(request: Request, db: Session = Depends(get_db)):
                     confirmed_at=datetime.now(timezone.utc),
                 )
                 db.add(tx)
+                
+                # Notificar a ambas partes
+                create_notification(worker.id, "payment_received",
+                    f"Pago automático de ${job.budget:.2f} USDT por '{job.title}' (timeout)",
+                    {"job_id": job.id, "amount": job.budget})
+                create_notification(contractor.id, "auto_released",
+                    f"Se liberó ${job.budget:.2f} USDT por inactividad en '{job.title}'",
+                    {"job_id": job.id})
         
         db.flush()
         processed.append({

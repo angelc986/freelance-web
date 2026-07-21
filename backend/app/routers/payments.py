@@ -199,6 +199,8 @@ def get_balance(request: Request,
     """
     return BalanceResponse(
         balance=current_user.balance,
+        held_balance=current_user.held_balance,
+        available_balance=current_user.balance - current_user.held_balance,
         wallet_address=current_user.wallet_address,
     )
 
@@ -232,7 +234,9 @@ def release_payment(request: Request,
         )
 
     contractor = db.query(User).filter(User.id == current_user.id).first()
-    if contractor.balance < job.budget:
+
+    # Verificar fondos en escrow (held_balance)
+    if contractor.held_balance < job.budget:
         raise HTTPException(
             status_code=400,
             detail=f"Saldo insuficiente. Tienes ${contractor.balance:.2f}, necesitas ${job.budget:.2f}",
@@ -241,6 +245,13 @@ def release_payment(request: Request,
     worker = db.query(User).filter(User.id == job.worker_id).first()
     if not worker:
         raise HTTPException(status_code=404, detail="Worker no encontrado")
+
+    # Verificar fondos en escrow (held_balance)
+    if contractor.held_balance < job.budget:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Saldo insuficiente. Tienes ${contractor.balance:.2f} (${contractor.held_balance:.2f} retenidos), necesitas ${job.budget:.2f}",
+        )
 
     # ─────────────────────────────────────────────────
     # ¿Requiere doble confirmación?
@@ -272,7 +283,7 @@ def release_payment(request: Request,
     # ─────────────────────────────────────────────────
     # Monto normal (< $100) — ejecutar directo
     # ─────────────────────────────────────────────────
-    contractor.balance -= job.budget
+    contractor.held_balance -= job.budget
     worker.balance += job.budget
 
     transaction = Transaction(

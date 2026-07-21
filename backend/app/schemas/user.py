@@ -53,6 +53,8 @@ class UserResponse(BaseModel):
     wallet_address: Optional[str] = None
     is_active: bool
     balance: float = 0.0
+    held_balance: float = 0.0
+    available_balance: float = 0.0
     rating_avg: float
     profile_completed: bool = False
     address: str | None = None
