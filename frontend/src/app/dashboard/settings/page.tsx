@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateProfile, updateWallet, uploadAvatar, updateNotificationPreferences, API_BASE } from "@/lib/api";
+import { updateProfile, updateWallet, uploadAvatar, updateNotificationPreferences, addPushSubscription, removePushSubscription, API_BASE } from "@/lib/api";
 
 // ─── SVG ICONS ───
 function IconArrowLeft({ className = "w-5 h-5" }: { className?: string }) {
