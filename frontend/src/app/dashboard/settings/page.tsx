@@ -208,7 +208,7 @@ export default function SettingsPage() {
           },
         });
         setPushEnabled(true);
-        setNotifMsg({ ok: true, text: "✅ Notificaciones push activadas! Recibirás en todos tus dispositivos." });
+        setNotifMsg({ ok: true, text: "Notificaciones push activadas. Recibiras alertas en todos tus dispositivos." });
       }
     } catch (err: any) {
       if (err.name === "NotAllowedError") {
@@ -250,7 +250,7 @@ export default function SettingsPage() {
         setVerifyCode("");
         setVerifyMsg(null);
         setShowVerifyModal(true);
-        setProfileMsg({ ok: true, text: "📧 Código enviado a tu correo actual. Revisa tu bandeja de entrada." });
+        setProfileMsg({ ok: true, text: "Código enviado a tu correo actual. Revisa tu bandeja de entrada." });
       } catch (err: any) {
         setProfileMsg({ ok: false, text: err.message });
       } finally {
@@ -308,7 +308,7 @@ export default function SettingsPage() {
         setVerifyCode("");
         setVerifyMsg(null);
         setShowVerifyModal(true);
-        setWalletMsg({ ok: true, text: "📧 Código enviado a tu correo. Revisa tu bandeja." });
+        setWalletMsg({ ok: true, text: "Código enviado a tu correo. Revisa tu bandeja." });
       } catch (err: any) {
         setWalletMsg({ ok: false, text: err.message });
       } finally {
@@ -590,25 +590,33 @@ export default function SettingsPage() {
         <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
         </svg>
-      } title="Notificaciones" desc="Email y notificaciones push">
-        <div className="p-5 space-y-5">
+      } title="Notificaciones" desc="Administra cómo quieres recibir las alertas">
+        <div className="p-5 space-y-1">
+
           {/* Push Notifications */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-dark">Notificaciones Push 🔔</p>
-              <p className="text-xs text-gray mt-0.5">
-                {!pushSupported
-                  ? "Tu navegador no soporta notificaciones push."
-                  : pushEnabled
-                    ? "Recibirás notificaciones aunque no tengas TurnoGO abierto."
-                    : "Actívalas para recibir alertas instantáneas."}
-              </p>
+          <div className="flex items-center justify-between py-4 px-4 rounded-xl hover:bg-gray-50/50 transition-colors">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${pushEnabled ? 'bg-primary/10' : 'bg-gray-100'}`}>
+                <svg className={`w-4.5 h-4.5 transition-colors ${pushEnabled ? 'text-primary' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-dark">Notificaciones Push</p>
+                <p className="text-xs text-gray mt-0.5 leading-relaxed">
+                  {!pushSupported
+                    ? "Tu navegador no soporta notificaciones push."
+                    : pushEnabled
+                      ? "Recibiras alertas al instante aunque no tengas TurnoGO abierto."
+                      : "Activalas para recibir alertas instantaneas en tu dispositivo."}
+                </p>
+              </div>
             </div>
             {pushSupported && (
               <button
                 onClick={togglePush}
                 disabled={notifLoading}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
                   pushEnabled ? "bg-primary" : "bg-gray-300"
                 }`}
               >
@@ -619,16 +627,30 @@ export default function SettingsPage() {
             )}
           </div>
 
+          {/* Divider */}
+          <div className="mx-4 border-t border-gray-100" />
+
           {/* Email Notifications */}
-          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-            <div>
-              <p className="text-sm font-medium text-dark">Notificaciones por Email ✉️</p>
-              <p className="text-xs text-gray mt-0.5">Recibe un correo cuando te contraten, paguen o envíen mensajes.</p>
+          <div className="flex items-center justify-between py-4 px-4 rounded-xl hover:bg-gray-50/50 transition-colors">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${emailNotif ? 'bg-primary/10' : 'bg-gray-100'}`}>
+                <svg className={`w-4.5 h-4.5 transition-colors ${emailNotif ? 'text-primary' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-dark">Notificaciones por Email</p>
+                <p className="text-xs text-gray mt-0.5 leading-relaxed">
+                  {emailNotif
+                    ? "Recibiras un correo cuando te contraten, paguen o envien mensajes."
+                    : "No recibiras correos electronicos de TurnoGO."}
+                </p>
+              </div>
             </div>
             <button
               onClick={() => toggleEmail(!emailNotif)}
               disabled={notifLoading}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
                 emailNotif ? "bg-primary" : "bg-gray-300"
               }`}
             >
@@ -639,7 +661,7 @@ export default function SettingsPage() {
           </div>
 
           {notifMsg && (
-            <div className={`text-sm px-4 py-3 rounded-xl border ${notifMsg.ok ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-red-50 text-red-600 border-red-200"}`}>
+            <div className={`mx-4 text-sm px-4 py-3 rounded-xl border ${notifMsg.ok ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-red-50 text-red-600 border-red-200"}`}>
               {notifMsg.text}
             </div>
           )}
