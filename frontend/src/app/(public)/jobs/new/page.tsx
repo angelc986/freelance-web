@@ -4,8 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createJob } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
-import LocationPicker from "@/components/LocationPicker";
+import dynamic from "next/dynamic";
 import Logo from "@/components/Logo";
+
+const LocationPicker = dynamic(() => import("@/components/LocationPicker"), { ssr: false });
 
 // ─── CATEGORY SVGS ───
 const categorySvgs: Record<string, string> = {
