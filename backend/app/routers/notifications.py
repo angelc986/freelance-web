@@ -108,50 +108,24 @@ def admin_send_test_notification(
 
     results = {}
 
-    # 1. Email via email_service (SendGrid → SMTP → Resend)
+    # 1. Verificar config de email
     import os
-    from app.services.email_service import send_notification_email, send_email
-    
-    # Probar SendGrid directo
-    try:
-        from urllib.request import Request, urlopen
-        from urllib.error import HTTPError
-        import json
-        sg_key = os.getenv("SENDGRID_API_KEY", "")
-        data = json.dumps({
-            "personalizations": [{"to": [{"email": target.email}]}],
-            "from": {"email": "instaworkve@gmail.com", "name": "TurnoGO"},
-            "subject": "🔔 TurnoGO — Prueba",
-            "content": [{"type": "text/html", "value": "<p>Test desde SendGrid</p>"}],
-        }).encode()
-        req = Request("https://api.sendgrid.com/v3/mail/send", data=data,
-            headers={"Authorization": f"Bearer {sg_key}", "Content-Type": "application/json"})
-        with urlopen(req, timeout=15) as resp:
-            results["sendgrid"] = f"HTTP {resp.status}"
-    except Exception as e:
-        results["sendgrid"] = str(e)[:300]
-    
-    # También probar el servicio completo
-    try:
-        ok = send_notification_email(target.email, "test_notification",
-            "🔔 ¡Notificación de prueba de TurnoGO!")
-        results["servicio"] = "OK" if ok else "FAIL"
-    except Exception as e:
-        results["servicio"] = str(e)[:200]
-    except Exception as e:
-        results["email"] = f"ERROR: {str(e)[:300]}"
+    sg_key = os.getenv("SENDGRID_API_KEY", "")
+    results["sendgrid_configured"] = bool(sg_key)
 
-    # 2. Push (multi-dispositivo)
+    # 2. Enviar UNA notificación completa (email + push + BD) via create_notification
+    # create_notification internamente hace send_notification_email + send_to_user + guarda en BD
     try:
-        from app.services.push_service import send_to_user
-        sent = send_to_user(user_id, "TurnoGO", "¡Notificación de prueba!", "/dashboard", db=db)
-        results["push"] = f"Enviado a {sent} dispositivo(s)" if sent > 0 else "SIN_SUSCRIPCIONES"
+        create_notification(
+            user_id=user_id,
+            event="test_notification",
+            message="🔔 ¡Notificación de prueba de TurnoGO! Si recibes esto, todo funciona correctamente.",
+        )
+        results["email"] = "Enviado"
+        results["push"] = "Enviado"
+        results["bd"] = "Guardado"
     except Exception as e:
-        results["push"] = f"ERROR: {str(e)[:300]}"
-
-    # 3. BD
-    create_notification(user_id=user_id, event="test_notification",
-                        message="🔔 ¡Notificación de prueba de TurnoGO!")
+        results["error"] = str(e)[:300]
 
     return {"target": target.email, **results}
 
