@@ -87,6 +87,18 @@ try:
             conn.commit()
             print("✓ Migración: push_subscription agregado a users")
 
+    # Migrar change_tokens: agregar new_wallet si no existe
+    try:
+        with engine.connect() as conn:
+            inspector = inspect(engine)
+            cols = [c["name"] for c in inspector.get_columns("change_tokens")]
+            if "new_wallet" not in cols:
+                conn.execute(text("ALTER TABLE change_tokens ADD COLUMN new_wallet VARCHAR"))
+                conn.commit()
+                print("✓ Migración: new_wallet agregado a change_tokens")
+    except Exception as e:
+        print(f"⚠ Migración new_wallet omitida: {e}")
+
     # Migrar push_subscriptions legacy → nueva tabla
     try:
         with engine.connect() as conn:
