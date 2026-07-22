@@ -161,6 +161,10 @@ try:
                     conn.execute(text(f"ALTER TABLE jobs ADD COLUMN {col} {col_type}"))
                     conn.commit()
                     print(f"✓ Migración: {col} agregado a jobs")
+            if "evidence_images" not in job_cols:
+                conn.execute(text("ALTER TABLE jobs ADD COLUMN evidence_images TEXT"))
+                conn.commit()
+                print("✓ Migración: evidence_images agregado a jobs")
     except Exception as e:
         print(f"⚠ Migración escrow/corrección omitida: {e}")
 except Exception as e:

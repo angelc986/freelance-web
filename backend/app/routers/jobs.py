@@ -1,6 +1,7 @@
 from fastapi import Request, Body, APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
+import json
 from datetime import datetime, timezone, timedelta
 from app.database import SessionLocal
 from app.models.job import Job
@@ -530,6 +531,7 @@ def request_correction(request: Request, job_id: int, correction: CorrectionRequ
 
     job.correction_count += 1
     job.correction_note = correction.note
+    job.evidence_images = json.dumps(correction.images) if correction.images else None
     job.completion_code = None  # Invalidar código anterior
     job.timeout_at = None  # Pausar timeout mientras corrigen
 
@@ -569,6 +571,7 @@ def dispute_job(request: Request, job_id: int, dispute: DisputeRequest, db: Sess
     job.dispute_reason = dispute.reason
     job.dispute_by = dispute_by
     job.disputed_at = datetime.now(timezone.utc)
+    job.evidence_images = json.dumps(dispute.images) if dispute.images else None
     job.review_requested_at = None
     job.completion_code = None
     job.timeout_at = None  # Timeout pausado durante disputa

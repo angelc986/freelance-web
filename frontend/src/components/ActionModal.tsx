@@ -107,7 +107,7 @@ export default function ActionModal({
           onChange={e => setText(e.target.value)}
           placeholder={placeholder}
           rows={3}
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-primary outline-none transition-all text-sm resize-none bg-gray-50"
+          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-primary outline-none transition-all text-sm resize-none bg-gray-50 max-h-32"
           autoFocus
         />
 

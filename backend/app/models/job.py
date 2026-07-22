@@ -29,6 +29,7 @@ class Job(Base):
     completion_code = Column(String(6), nullable=True)  # Código de verificación para completar
     correction_count = Column(Integer, default=0)    # Veces que se pidió corrección
     correction_note = Column(String(1000), nullable=True)  # Nota de qué falta corregir
+    evidence_images = Column(Text, nullable=True)  # JSON array de URLs de fotos subidas
 
     client = relationship("User", foreign_keys=[client_id])
     worker = relationship("User", foreign_keys=[worker_id])

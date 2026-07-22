@@ -37,6 +37,7 @@ class JobResponse(BaseModel):
     completion_code: Optional[str] = None
     correction_count: int = 0
     correction_note: Optional[str] = None
+    evidence_images: Optional[str] = None  # JSON array de fotos
 
     class Config:
         from_attributes = True
@@ -53,10 +54,12 @@ class JobUpdate(BaseModel):
 
 class DisputeRequest(BaseModel):
     reason: str
+    images: list[str] = []
 
 
 class CorrectionRequest(BaseModel):
     note: str  # Qué falta corregir
+    images: list[str] = []
 
 
 class ApplicationBrief(BaseModel):

@@ -718,6 +718,7 @@ export default function JobDetailPage() {
                                 <span className="font-semibold text-amber-800">El contratista solicita una corrección</span>
                               </div>
                               <p className="text-sm text-amber-700 ml-7">{job.correction_note}</p>
+                              {job.evidence_images && (() => { try { const imgs = JSON.parse(job.evidence_images); if (imgs.length) return (<div className="flex gap-2 mt-3 ml-7 flex-wrap">{imgs.map((url: string, i: number) => (<img key={i} src={url} alt="" className="w-16 h-16 rounded-lg object-cover border border-amber-200" />))}</div>); } catch {} return null; })()}
                             </div>
                             <button
                               onClick={() => handleAction(() => completeRequest(jobId), () => setShowVerifyModal(true))}
@@ -870,8 +871,11 @@ export default function JobDetailPage() {
 
                         {/* Si ya recibio una correccion antes, mostrar nota previa */}
                         {(job.correction_count ?? 0) > 0 && job.correction_note && (
-                          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
-                            <span className="font-semibold">Corrección solicitada anteriormente:</span> {job.correction_note}
+                          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                            <p className="text-sm text-amber-800">
+                              <span className="font-semibold">Corrección solicitada anteriormente:</span> {job.correction_note}
+                            </p>
+                            {job.evidence_images && (() => { try { const imgs = JSON.parse(job.evidence_images); if (imgs.length) return (<div className="flex gap-2 mt-2 flex-wrap">{imgs.map((url: string, i: number) => (<img key={i} src={url} alt="" className="w-16 h-16 rounded-lg object-cover border border-amber-200" />))}</div>); } catch {} return null; })()}
                           </div>
                         )}
 
@@ -924,9 +928,12 @@ export default function JobDetailPage() {
                           Los fondos (${job.budget.toFixed(2)} USDT) están retenidos hasta que un administrador resuelva.
                         </p>
                         {job.dispute_reason && (
-                          <p className="text-sm text-gray mt-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                            <span className="font-medium">Motivo:</span> {job.dispute_reason}
-                          </p>
+                          <div className="mt-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <p className="text-sm text-gray">
+                              <span className="font-medium">Motivo:</span> {job.dispute_reason}
+                            </p>
+                            {job.evidence_images && (() => { try { const imgs = JSON.parse(job.evidence_images); if (imgs.length) return (<div className="flex gap-2 mt-2 flex-wrap">{imgs.map((url: string, i: number) => (<img key={i} src={url} alt="" className="w-16 h-16 rounded-lg object-cover border border-gray-200" />))}</div>); } catch {} return null; })()}
+                          </div>
                         )}
                         {job.disputed_at && (
                           <p className="text-xs text-gray-400 mt-3">
@@ -1146,8 +1153,10 @@ export default function JobDetailPage() {
         open={showCorrectionModal}
         onClose={() => setShowCorrectionModal(false)}
         onSubmit={(text, images) => {
-          const note = images.length > 0 ? `${text}\n\n📷 ${images.join(" ")}` : text;
-          handleAction(() => requestCorrection(jobId, note));
+          setModalLoading(true);
+          requestCorrection(jobId, text, images)
+            .then(() => { setModalLoading(false); loadJob(); })
+            .catch(() => setModalLoading(false));
         }}
         title="Solicitar corrección"
         subtitle="Describe qué necesita ajustar o mejorar el trabajador"
@@ -1161,8 +1170,10 @@ export default function JobDetailPage() {
         open={showDisputeModal}
         onClose={() => setShowDisputeModal(false)}
         onSubmit={(text, images) => {
-          const reason = images.length > 0 ? `${text}\n\n📷 ${images.join(" ")}` : text;
-          handleAction(() => disputeJob(jobId, reason));
+          setModalLoading(true);
+          disputeJob(jobId, text, images)
+            .then(() => { setModalLoading(false); loadJob(); })
+            .catch(() => setModalLoading(false));
         }}
         title="Abrir disputa"
         subtitle="Explica el motivo de la disputa. Los fondos quedarán retenidos hasta que un administrador resuelva."

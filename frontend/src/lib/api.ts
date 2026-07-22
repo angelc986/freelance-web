@@ -261,6 +261,7 @@ export interface Job {
   disputed_at?: string | null;
   correction_count?: number;
   correction_note?: string | null;
+  evidence_images?: string | null;
   review_requested_at?: string | null;
   timeout_at?: string | null;
   created_at: string;
@@ -446,17 +447,17 @@ export function cancelJob(jobId: number): Promise<any> {
   });
 }
 
-export function requestCorrection(jobId: number, note: string): Promise<any> {
+export function requestCorrection(jobId: number, note: string, images: string[] = []): Promise<any> {
   return request(`/jobs/${jobId}/request-correction`, {
     method: "POST",
-    body: JSON.stringify({ note }),
+    body: JSON.stringify({ note, images }),
   });
 }
 
-export function disputeJob(jobId: number, reason: string): Promise<any> {
+export function disputeJob(jobId: number, reason: string, images: string[] = []): Promise<any> {
   return request(`/jobs/${jobId}/dispute`, {
     method: "POST",
-    body: JSON.stringify({ reason }),
+    body: JSON.stringify({ reason, images }),
   });
 }
 
