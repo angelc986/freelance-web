@@ -9,6 +9,17 @@ from app.limiter import limiter
 from app.database import engine, Base
 from sqlalchemy import text as sa_text
 
+# ═══════════════════════════════════════════════════════════
+# STARTUP VALIDATION — must run BEFORE app creation
+# ═══════════════════════════════════════════════════════════
+from app.config import get_settings
+from app.startup_validator import validate_startup
+
+_settings = get_settings()
+validate_startup(_settings)
+print(f"[STARTUP] Validation passed ({_settings.APP_NAME} v{_settings.APP_VERSION})")
+# ═══════════════════════════════════════════════════════════
+
 
 # Migraciones automáticas
 # Se ejecutan al iniciar el backend para evitar errores en Railway

@@ -11,9 +11,12 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 
 
+from app.config import get_settings
+
+
 def _send_sendgrid(to: str, subject: str, html: str) -> bool:
     """Envía vía SendGrid API. Gratis 100 emails/día, sin dominio necesario."""
-    key = os.getenv("SENDGRID_API_KEY", "")
+    key = get_settings().SENDGRID_API_KEY
     if not key:
         return False
     try:
@@ -72,7 +75,7 @@ def _send_smtp(to: str, subject: str, html: str) -> bool:
 
 def _send_resend(to: str, subject: str, html: str) -> bool:
     """Fallback vía Resend API."""
-    api_key = os.getenv("RESEND_API_KEY", "")
+    api_key = get_settings().RESEND_API_KEY
     if not api_key:
         return False
     try:

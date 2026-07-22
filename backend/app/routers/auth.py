@@ -25,10 +25,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SECRET_KEY = "***"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 15
-REFRESH_TOKEN_EXPIRE_DAYS = 7
+# ⚠️  SECRET_KEY and ALGORITHM are loaded from config (single source of truth).
+# Do NOT hardcode these values. Use get_settings() instead.
+_settings = get_settings()
+SECRET_KEY = _settings.SECRET_KEY
+ALGORITHM = _settings.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = _settings.ACCESS_TOKEN_EXPIRE_MINUTES
+REFRESH_TOKEN_EXPIRE_DAYS = _settings.REFRESH_TOKEN_EXPIRE_DAYS
 
 
 def get_db():

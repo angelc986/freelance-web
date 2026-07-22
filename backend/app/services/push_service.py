@@ -22,7 +22,7 @@ def _send_to_one(subscription_json: str, title: str, body: str, url: str = "/das
     """
     Envía a una única suscripción. Retorna True si OK, False si falló.
     """
-    vapid_private = os.getenv("VAPID_PRIVATE_KEY", "")
+    vapid_private = settings.VAPID_PRIVATE_KEY
     if not vapid_private:
         print("[PUSH] Sin VAPID_PRIVATE_KEY — push no enviado")
         return False

@@ -4,11 +4,13 @@ from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 from app.database import SessionLocal
 from app.models.user import User
+from app.config import get_settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
 
-SECRET_KEY = "***"
-ALGORITHM = "HS256"
+_settings = get_settings()
+SECRET_KEY = _settings.SECRET_KEY
+ALGORITHM = _settings.ALGORITHM
 
 
 def get_db():
