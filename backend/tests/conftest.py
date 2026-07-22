@@ -141,3 +141,29 @@ def unverified_user_token(client, db):
         "password": "Test123!",
     })
     return resp.json()["access_token"]
+
+
+@pytest.fixture
+def admin_token(client):
+    """Crea admin y devuelve token."""
+    db = SessionLocal()
+    user = User(
+        email="admin@test.com",
+        password_hash=pwd_context.hash("Test123!"),
+        full_name="Test Admin",
+        phone="+584145555555",
+        cedula="V-55555555",
+        role="contractor",
+        is_admin=True,
+        email_verified=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    db.close()
+
+    resp = client.post("/api/v1/auth/login", json={
+        "email": "admin@test.com",
+        "password": "Test123!",
+    })
+    return resp.json()["access_token"]
