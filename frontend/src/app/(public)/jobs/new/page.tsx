@@ -6,6 +6,7 @@ import { createJob } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import dynamic from "next/dynamic";
 import Logo from "@/components/Logo";
+import MiniMap from "@/components/MiniMap";
 
 const LocationPicker = dynamic(() => import("@/components/LocationPicker"), { ssr: false });
 
@@ -347,6 +348,16 @@ export default function NewJobPage() {
                           setCoords({ lat: data.lat, lng: data.lng });
                         }}
                       />
+                      {/* Mini-map preview when coordinates are set */}
+                      {coords && (
+                        <MiniMap
+                          lat={coords.lat}
+                          lng={coords.lng}
+                          label={form.location || `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`}
+                          className="mt-3"
+                          style={{ height: 160 }}
+                        />
+                      )}
                     </div>
 
                     <div>
