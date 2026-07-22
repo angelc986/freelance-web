@@ -313,6 +313,8 @@ export function updateJob(jobId: number, data: {
   location: string;
   budget: number;
   duration: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }): Promise<Job> {
   return request(`/jobs/${jobId}`, {
     method: "PUT",

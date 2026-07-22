@@ -4,8 +4,12 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getJob, updateJob } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import dynamic from "next/dynamic";
 import Logo from "@/components/Logo";
 import BackButton from "@/components/BackButton";
+
+const LocationPicker = dynamic(() => import("@/components/LocationPicker"), { ssr: false });
+const MiniMap = dynamic(() => import("@/components/MiniMap"), { ssr: false });
 
 // ─── CONSTANTS ───
 const categories = [
@@ -91,6 +95,7 @@ export default function EditJobPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -116,6 +121,10 @@ export default function EditJobPage() {
         budget: job.budget.toString(),
         duration: job.duration,
       });
+      // Cargar coordenadas existentes
+      if (job.latitude && job.longitude) {
+        setCoords({ lat: job.latitude, lng: job.longitude });
+      }
     }).catch(() => router.push("/jobs")).finally(() => setLoading(false));
   }, [jobId, user, authLoading]);
 
@@ -151,6 +160,8 @@ export default function EditJobPage() {
     try {
       const job = await updateJob(jobId, {
         title, description, category, location, budget: budgetNum, duration,
+        latitude: coords?.lat,
+        longitude: coords?.lng,
       });
       router.push(`/jobs/${job.id}`);
     } catch (e: any) {
@@ -305,13 +316,25 @@ export default function EditJobPage() {
                   <label className="block text-sm font-medium text-dark mb-1.5">
                     Ubicación <span className="text-red-400">*</span>
                   </label>
-                  <input
-                    type="text"
-                    value={form.location}
-                    onChange={(e) => update("location", e.target.value)}
-                    placeholder="Ej: Caracas, Distrito Capital"
-                    className="input-glow w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-primary outline-none transition-all text-sm bg-white"
+                  <LocationPicker
+                    lat={coords?.lat ?? undefined}
+                    lng={coords?.lng ?? undefined}
+                    address={form.location}
+                    onLocationChange={(data) => {
+                      setForm((p) => ({ ...p, location: data.address }));
+                      setCoords({ lat: data.lat, lng: data.lng });
+                    }}
                   />
+                  {/* Mini-map preview when coordinates are set */}
+                  {coords && (
+                    <MiniMap
+                      lat={coords.lat}
+                      lng={coords.lng}
+                      label={form.location || `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`}
+                      className="mt-3"
+                      style={{ height: 160 }}
+                    />
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-dark mb-1.5">
