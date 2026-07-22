@@ -8,6 +8,7 @@ os.environ["TESTING"] = "true"
 os.environ["DATABASE_URL"] = "sqlite:///./test_freelance.db"
 
 from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient
 from app.main import app
 from app.limiter import limiter
 from app.database import SessionLocal, engine, Base
@@ -19,6 +20,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @pytest.fixture(autouse=True)
 def cleanup_db():
+    """BD limpia por test: drop_all + create_all."""
     limiter.enabled = False
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
