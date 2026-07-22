@@ -240,6 +240,22 @@ export async function uploadAvatar(file: File): Promise<{ avatar_url: string }> 
   return body;
 }
 
+export async function uploadEvidence(file: File): Promise<{ url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const token = localStorage.getItem("access_token");
+  const res = await fetch(API_BASE + "/jobs/upload-evidence", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+  const body = await res.json();
+  if (!res.ok) {
+    throw new Error(body.detail || "Error al subir la foto");
+  }
+  return body;
+}
+
 /* ===== JOBS ===== */
 
 export interface Job {

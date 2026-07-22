@@ -1,4 +1,4 @@
-from fastapi import Request, Body, APIRouter, Depends, HTTPException, status
+from fastapi import Request, Body, APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
 import json
@@ -734,3 +734,21 @@ def process_timeouts(request: Request, db: Session = Depends(get_db)):
         "jobs": processed,
         "message": f"{len(processed)} trabajo(s) completados automáticamente por timeout",
     }
+
+
+# ─── UPLOAD EVIDENCE ───────────────────────────────
+
+@router.post("/upload-evidence")
+async def upload_evidence(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    """Subir foto como evidencia (correccion/disputa). No modifica el avatar."""
+    from app.services.cloudinary_service import upload_avatar as cloudinary_upload
+
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="La imagen no puede superar los 5MB")
+
+    url = cloudinary_upload(contents, current_user.id, f"evidence_{current_user.id}")
+    return {"url": url}

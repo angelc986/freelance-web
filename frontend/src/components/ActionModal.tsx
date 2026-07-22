@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { uploadAvatar } from "@/lib/api";
+import { uploadEvidence } from "@/lib/api";
 
 // ─── SVG ICONS ───
 function IconUpload({ className = "w-5 h-5" }: { className?: string }) {
@@ -60,8 +60,8 @@ export default function ActionModal({
     try {
       const urls: string[] = [];
       for (let i = 0; i < Math.min(files.length, 3); i++) {
-        const url = await uploadAvatar(files[i]);
-        urls.push(url.avatar_url);
+        const url = await uploadEvidence(files[i]);
+        urls.push(url.url);
       }
       setImages(prev => [...prev, ...urls]);
     } catch { /* ignore */ }
