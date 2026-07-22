@@ -342,7 +342,7 @@ def request_complete(request: Request, job_id: int, db: Session = Depends(get_db
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Trabajo no encontrado")
-    if job.status not in ("in_progress", "checked_in"):
+    if job.status not in ("in_progress", "checked_in", "review_pending"):
         raise HTTPException(status_code=400, detail="El trabajo no está en progreso")
     if job.worker_id != current_user.id:
         raise HTTPException(status_code=403, detail="Solo el worker asignado puede solicitar completar")
@@ -352,7 +352,9 @@ def request_complete(request: Request, job_id: int, db: Session = Depends(get_db
     job.status = "review_pending"
     job.review_requested_at = datetime.now(timezone.utc)
     job.completion_code = code
-    job.timeout_at = datetime.now(timezone.utc) + timedelta(hours=72)  # Auto-release en 72h
+    job.timeout_at = datetime.now(timezone.utc) + timedelta(hours=72)
+    job.correction_note = None  # Limpiar nota de correccion anterior
+    job.evidence_images = None  # Auto-release en 72h
     db.commit()
     db.refresh(job)
     publish(job.client_id, "job_review_pending", {
