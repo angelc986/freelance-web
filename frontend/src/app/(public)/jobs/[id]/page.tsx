@@ -261,8 +261,8 @@ function CheckinModal({
           </div>
         )}
 
-        {/* Normal info */}
-        {gpsStatus === "idle" && (
+        {/* Normal info — solo si no hay error y no hay otro estado */}
+        {!error && gpsStatus === "idle" && (
           <p className="text-sm text-gray text-center mb-6 leading-relaxed">
             Verificaremos que estés cerca de <strong>{jobLocation}</strong> antes de permitir el check-in.
           </p>

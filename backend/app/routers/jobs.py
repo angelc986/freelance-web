@@ -54,14 +54,23 @@ def create_job(request: Request, job: JobCreate, db: Session = Depends(get_db), 
 
 @router.put("/{job_id}", response_model=JobResponse)
 def update_job(job_id: int, job: JobUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """Editar un trabajo (solo el dueño, solo si está abierto)"""
+    """Editar un trabajo (solo el dueño, solo si está abierto). Coordenadas se pueden actualizar siempre."""
     db_job = db.query(Job).filter(Job.id == job_id).first()
     if not db_job:
         raise HTTPException(status_code=404, detail="Trabajo no encontrado")
     if db_job.client_id != current_user.id:
         raise HTTPException(status_code=403, detail="No eres el dueño de este trabajo")
     if db_job.status != "open":
-        raise HTTPException(status_code=400, detail="Solo se puede editar un trabajo abierto")
+        # Solo permitir actualizar coordenadas si no está abierto
+        if job.latitude is not None:
+            db_job.latitude = job.latitude
+        if job.longitude is not None:
+            db_job.longitude = job.longitude
+        if job.location:
+            db_job.location = job.location
+        db.commit()
+        db.refresh(db_job)
+        return db_job
 
     db_job.title = job.title
     db_job.description = job.description
