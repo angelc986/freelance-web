@@ -658,3 +658,37 @@ def add_test_balance(
         "new_balance": user.balance,
         "added": body.amount,
     }
+
+
+@router.post("/cleanup-test-data")
+def cleanup_test_data(
+    request: Request,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    """🧹 Borrar todos los trabajos, aplicaciones y transacciones de prueba"""
+    from app.models.job import Job
+    from app.models.application import Application
+    from app.models.transaction import Transaction
+
+    # Contar antes
+    job_count = db.query(Job).count()
+    app_count = db.query(Application).count()
+    tx_count = db.query(Transaction).filter(Transaction.tx_hash.startswith("TEST_")).count()
+
+    # Borrar aplicaciones
+    db.query(Application).delete()
+    # Borrar jobs
+    db.query(Job).delete()
+    # Borrar solo transacciones de prueba (las reales se mantienen)
+    db.query(Transaction).filter(Transaction.tx_hash.startswith("TEST_")).delete(synchronize_session=False)
+
+    db.commit()
+
+    return {
+        "ok": True,
+        "deleted_jobs": job_count,
+        "deleted_applications": app_count,
+        "deleted_test_transactions": tx_count,
+        "message": f"Limpiado: {job_count} trabajos, {app_count} aplicaciones, {tx_count} transacciones de prueba",
+    }
