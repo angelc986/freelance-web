@@ -69,6 +69,10 @@ def update_job(job_id: int, job: JobUpdate, db: Session = Depends(get_db), curre
     db_job.location = job.location
     db_job.budget = job.budget
     db_job.duration = job.duration
+    if job.latitude is not None:
+        db_job.latitude = job.latitude
+    if job.longitude is not None:
+        db_job.longitude = job.longitude
     db.commit()
     db.refresh(db_job)
     return db_job
