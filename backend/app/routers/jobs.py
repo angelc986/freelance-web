@@ -401,12 +401,22 @@ def verify_completion(
     if code != job.completion_code:
         raise HTTPException(status_code=400, detail="Código de verificación incorrecto")
 
-    # ─── Verificar que el contractor tiene fondos retenidos ───
+    # ─── Verificar fondos ───
     contractor = db.query(User).filter(User.id == job.client_id).first()
-    if contractor.held_balance < job.budget:
+    worker = db.query(User).filter(User.id == job.worker_id).first()
+    
+    if contractor.held_balance >= job.budget:
+        # Escrow normal: liberar fondos retenidos
+        contractor.held_balance -= job.budget
+        worker.balance += job.budget
+    elif contractor.balance >= job.budget:
+        # Fallback pre-escrow: usar balance directamente
+        contractor.balance -= job.budget
+        worker.balance += job.budget
+    else:
         raise HTTPException(
             status_code=400,
-            detail=f"Error: fondos insuficientes en escrow. Held: ${contractor.held_balance:.2f}, Budget: ${job.budget:.2f}"
+            detail=f"Fondos insuficientes. Balance: ${contractor.balance:.2f}, Retenido: ${contractor.held_balance:.2f}, Necesario: ${job.budget:.2f}"
         )
 
     # ─── Completar trabajo ───
@@ -415,11 +425,6 @@ def verify_completion(
     job.completion_code = None
     job.timeout_at = None
     job.correction_note = None
-
-    # ─── Liberar pago automático: held → worker ───
-    worker = db.query(User).filter(User.id == job.worker_id).first()
-    contractor.held_balance -= job.budget
-    worker.balance += job.budget
 
     # ─── Registrar transacción ───
     transaction = Transaction(
