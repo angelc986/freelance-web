@@ -227,3 +227,105 @@ class TestHeldBalanceRegression:
             json={},
             headers={"Authorization": f"Bearer {contractor_token}"})
         assert resp.status_code == 400
+
+
+
+# --- Additional coverage: list, my-jobs, cancel, approve ---
+
+class TestExtraCoverage:
+    """Coverage for list, my-jobs, cancel, my-applicants, approve."""
+
+    def test_list_open_jobs(self, client, contractor_token):
+        """GET /jobs/ returns open jobs."""
+        _create_job(client, contractor_token)
+        resp = client.get("/api/v1/jobs/?status_filter=open")
+        assert resp.status_code == 200
+        jobs = resp.json()
+        assert isinstance(jobs, list)
+
+    def test_my_jobs_contractor(self, client, contractor_token):
+        """GET /jobs/mine for contractor returns their jobs."""
+        _create_job(client, contractor_token)
+        resp = client.get("/api/v1/jobs/mine",
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        assert resp.status_code == 200
+
+    def test_my_jobs_worker(self, client, contractor_token, worker_token):
+        """GET /jobs/mine for worker returns applied jobs."""
+        jid = _create_job(client, contractor_token)
+        _apply(client, worker_token, jid)
+        resp = client.get("/api/v1/jobs/mine",
+            headers={"Authorization": f"Bearer {worker_token}"})
+        assert resp.status_code == 200
+
+    def test_my_applicants(self, client, contractor_token, worker_token):
+        """Contractor sees applicants for their jobs."""
+        jid = _create_job(client, contractor_token)
+        _apply(client, worker_token, jid)
+        resp = client.get("/api/v1/jobs/my-applicants",
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        assert resp.status_code == 200
+
+    def test_my_applications(self, client, contractor_token, worker_token):
+        """Worker sees their own applications."""
+        jid = _create_job(client, contractor_token)
+        _apply(client, worker_token, jid)
+        resp = client.get("/api/v1/jobs/my-applications",
+            headers={"Authorization": f"Bearer {worker_token}"})
+        assert resp.status_code == 200
+
+    def test_get_job_detail(self, client, contractor_token):
+        """Public job detail endpoint."""
+        jid = _create_job(client, contractor_token)
+        resp = client.get(f"/api/v1/jobs/{jid}")
+        assert resp.status_code == 200
+        assert resp.json()["title"] == JOB_PAYLOAD["title"]
+
+    def test_cancel_job(self, client, contractor_token, worker_token, db):
+        """Owner can cancel an open job."""
+        jid = _create_job(client, contractor_token)
+        resp = client.post(f"/api/v1/jobs/{jid}/cancel", json={},
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "cancelled"
+
+    def test_cancel_nonexistent_job(self, client, contractor_token):
+        """Cancelling nonexistent job returns 404."""
+        resp = client.post("/api/v1/jobs/99999/cancel", json={},
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        assert resp.status_code == 404
+
+    def test_approve_workflow(self, client, contractor_token, worker_token, db):
+        """Full approve: accept -> check-in -> complete-request -> approve."""
+        jid = _create_job(client, contractor_token)
+        _apply(client, worker_token, jid)
+        app_id = _get_first_app(client, contractor_token, jid)
+        resp = client.post(f"/api/v1/jobs/{jid}/accept/{app_id}", json={},
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        assert resp.status_code == 200
+
+        client.post(f"/api/v1/jobs/{jid}/check-in", json={},
+            headers={"Authorization": f"Bearer {worker_token}"})
+        client.post(f"/api/v1/jobs/{jid}/complete-request", json={},
+            headers={"Authorization": f"Bearer {worker_token}"})
+
+        resp = client.post(f"/api/v1/jobs/{jid}/approve", json={},
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "completed"
+
+    def test_approve_not_owner(self, client, contractor_token, worker_token, db):
+        """Worker cannot approve a job they do not own."""
+        jid = _create_job(client, contractor_token)
+        _apply(client, worker_token, jid)
+        app_id = _get_first_app(client, contractor_token, jid)
+        client.post(f"/api/v1/jobs/{jid}/accept/{app_id}", json={},
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        client.post(f"/api/v1/jobs/{jid}/check-in", json={},
+            headers={"Authorization": f"Bearer {worker_token}"})
+        client.post(f"/api/v1/jobs/{jid}/complete-request", json={},
+            headers={"Authorization": f"Bearer {worker_token}"})
+
+        resp = client.post(f"/api/v1/jobs/{jid}/approve", json={},
+            headers={"Authorization": f"Bearer {worker_token}"})
+        assert resp.status_code == 403
