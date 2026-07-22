@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getJob, updateJob, applyToJob, getApplications, getMyApplications, acceptApplication, checkIn, completeRequest, verifyCompletion, approveJob, cancelJob, requestCorrection, disputeJob, rateJob, getJobRatings, type Job, type Application, type RatingInfo } from "@/lib/api";
+import ActionModal from "@/components/ActionModal";
 import { useAuth } from "@/contexts/AuthContext";
 import Logo from "@/components/Logo";
 import NotificationBell from "@/components/NotificationBell";
@@ -371,6 +372,11 @@ export default function JobDetailPage() {
   const [appliedSuccess, setAppliedSuccess] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
 
+  // Correction / Dispute modals
+  const [showCorrectionModal, setShowCorrectionModal] = useState(false);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
+
   const jobId = parseInt(id);
 
   const loadJob = async (): Promise<Job | null> => {
@@ -702,51 +708,70 @@ export default function JobDetailPage() {
                     {isAssigned && job.status === "review_pending" && (
                       <div className="space-y-3">
                         {/* Si el contractor pidio correccion */}
-                        {job.correction_note && (
-                          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
-                            <span className="font-semibold">El contratista solicita:</span> {job.correction_note}
-                          </div>
-                        )}
-                        <p className="text-sm text-gray">
-                          Solicitud enviada. {job.completion_code ? "El contratista tiene tu código de verificación." : "Espera la respuesta del contratista."}
-                        </p>
-                        {job.completion_code ? (
-                          <div className="flex flex-col sm:flex-row gap-2">
+                        {job.correction_note ? (
+                          <>
+                            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                              <div className="flex items-center gap-2 mb-2">
+                                <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                </svg>
+                                <span className="font-semibold text-amber-800">El contratista solicita una corrección</span>
+                              </div>
+                              <p className="text-sm text-amber-700 ml-7">{job.correction_note}</p>
+                            </div>
                             <button
-                              onClick={() => setShowVerifyModal(true)}
-                              className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm flex-1"
+                              onClick={() => handleAction(() => completeRequest(jobId), () => setShowVerifyModal(true))}
+                              className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm w-full"
                             >
                               <IconCheck className="w-5 h-5" />
-                              Ingresar código de verificación
+                              Ya lo corregí — Solicitar código nuevo
                             </button>
                             <button
-                              onClick={() => {
-                                const reason = prompt("Motivo de la disputa:");
-                                if (reason?.trim()) handleAction(() => disputeJob(jobId, reason.trim()));
-                              }}
-                              className="btn-ripple flex items-center gap-2 px-4 py-2.5 border border-gray-200 text-gray text-sm font-medium rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
+                              onClick={() => setShowDisputeModal(true)}
+                              className="btn-ripple flex items-center gap-2 px-4 py-2.5 border border-gray-200 text-gray text-sm font-medium rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all w-full"
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                               </svg>
                               Disputar
                             </button>
-                          </div>
+                          </>
                         ) : (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => {
-                                const reason = prompt("Motivo de la disputa:");
-                                if (reason?.trim()) handleAction(() => disputeJob(jobId, reason.trim()));
-                              }}
-                              className="btn-ripple flex items-center gap-2 px-4 py-2.5 border border-gray-200 text-gray text-sm font-medium rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
-                            >
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                              </svg>
-                              Disputar
-                            </button>
-                          </div>
+                          <>
+                            <p className="text-sm text-gray">
+                              Solicitud enviada. El contratista tiene tu código de verificación.
+                            </p>
+                            {job.completion_code ? (
+                              <div className="flex flex-col sm:flex-row gap-2">
+                                <button
+                                  onClick={() => setShowVerifyModal(true)}
+                                  className="btn-ripple flex items-center gap-2 px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-sm flex-1"
+                                >
+                                  <IconCheck className="w-5 h-5" />
+                                  Ingresar código de verificación
+                                </button>
+                                <button
+                                  onClick={() => setShowDisputeModal(true)}
+                                  className="btn-ripple flex items-center gap-2 px-4 py-2.5 border border-gray-200 text-gray text-sm font-medium rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
+                                >
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                                  </svg>
+                                  Disputar
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setShowDisputeModal(true)}
+                                className="btn-ripple flex items-center gap-2 px-4 py-2.5 border border-gray-200 text-gray text-sm font-medium rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                                </svg>
+                                Disputar
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     )}
@@ -852,13 +877,10 @@ export default function JobDetailPage() {
 
                         {/* Botones de accion */}
                         <div className="flex flex-col sm:flex-row gap-2">
-                          {/* Solicitar correccion (siempre disponible cuando hay codigo) */}
+                          {/* Solicitar correccion */}
                           {job.completion_code && (
                             <button
-                              onClick={() => {
-                                const note = prompt("¿Qué falta corregir o ajustar?");
-                                if (note?.trim()) handleAction(() => requestCorrection(jobId, note.trim()));
-                              }}
+                              onClick={() => setShowCorrectionModal(true)}
                               className="btn-ripple flex items-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-700 font-medium text-sm rounded-xl hover:bg-amber-100 transition-all border border-amber-200"
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -871,10 +893,7 @@ export default function JobDetailPage() {
                           {/* Disputa (solo si ya se pidio correccion al menos 1 vez) */}
                           {(job.correction_count ?? 0) >= 1 && job.completion_code && (
                             <button
-                              onClick={() => {
-                                const reason = prompt("Motivo de la disputa:");
-                                if (reason?.trim()) handleAction(() => disputeJob(jobId, reason.trim()));
-                              }}
+                              onClick={() => setShowDisputeModal(true)}
                               className="btn-ripple flex items-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 font-medium text-sm rounded-xl hover:bg-red-100 transition-all border border-red-200"
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -883,15 +902,6 @@ export default function JobDetailPage() {
                               Abrir disputa
                             </button>
                           )}
-
-                          {/* Aprobar directamente (alternativa al codigo) */}
-                          <button
-                            onClick={() => handleAction(() => approveJob(jobId))}
-                            className="btn-ripple flex items-center gap-2 px-4 py-2.5 bg-primary text-white font-semibold text-sm rounded-xl hover:bg-primary-dark transition-all shadow-sm ml-auto"
-                          >
-                            <IconCheck className="w-4 h-4" />
-                            Aprobar y liberar pago
-                          </button>
                         </div>
                       </div>
                     )}
@@ -1130,6 +1140,38 @@ export default function JobDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Correction Modal */}
+      <ActionModal
+        open={showCorrectionModal}
+        onClose={() => setShowCorrectionModal(false)}
+        onSubmit={(text, images) => {
+          const note = images.length > 0 ? `${text}\n\n📷 ${images.join(" ")}` : text;
+          handleAction(() => requestCorrection(jobId, note));
+        }}
+        title="Solicitar corrección"
+        subtitle="Describe qué necesita ajustar o mejorar el trabajador"
+        placeholder="Ej: Falta limpiar la cocina, la pintura de la pared izquierda no quedó pareja..."
+        submitLabel="Enviar corrección"
+        loading={modalLoading}
+      />
+
+      {/* Dispute Modal */}
+      <ActionModal
+        open={showDisputeModal}
+        onClose={() => setShowDisputeModal(false)}
+        onSubmit={(text, images) => {
+          const reason = images.length > 0 ? `${text}\n\n📷 ${images.join(" ")}` : text;
+          handleAction(() => disputeJob(jobId, reason));
+        }}
+        title="Abrir disputa"
+        subtitle="Explica el motivo de la disputa. Los fondos quedarán retenidos hasta que un administrador resuelva."
+        placeholder="Describe por qué no estás de acuerdo con el resultado del trabajo..."
+        submitLabel="Abrir disputa"
+        submitDanger
+        loading={modalLoading}
+      />
+
     </>
   );
 }
