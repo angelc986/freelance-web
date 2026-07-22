@@ -93,3 +93,51 @@ def worker_token(client):
         "password": "Test123!",
     })
     return resp.json()["access_token"]
+
+
+# ── Security test fixtures ──
+
+@pytest.fixture
+def verified_user_token(client, db):
+    """Crea usuario con email verificado y devuelve token."""
+    user = User(
+        email="verified@test.com",
+        password_hash=pwd_context.hash("Test123!"),
+        full_name="Verified User",
+        phone="+584143000000",
+        cedula="V-30000000",
+        role="worker",
+        email_verified=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    resp = client.post("/api/v1/auth/login", json={
+        "email": "verified@test.com",
+        "password": "Test123!",
+    })
+    return resp.json()["access_token"]
+
+
+@pytest.fixture
+def unverified_user_token(client, db):
+    """Crea usuario sin verificar email y devuelve token."""
+    user = User(
+        email="unverified@test.com",
+        password_hash=pwd_context.hash("Test123!"),
+        full_name="Unverified User",
+        phone="+584144000000",
+        cedula="V-40000000",
+        role="worker",
+        email_verified=False,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    resp = client.post("/api/v1/auth/login", json={
+        "email": "unverified@test.com",
+        "password": "Test123!",
+    })
+    return resp.json()["access_token"]

@@ -16,6 +16,8 @@ from app.models.refresh_token import RefreshToken
 from app.models.change_token import ChangeToken
 from app.schemas.user import UserCreate, UserLogin, UserResponse, UpdateProfileRequest, UpdateWalletRequest, CompleteProfileRequest, RequestChangeRequest, ConfirmChangeRequest
 from app.services.audit import log_action
+from app.services.password_validator import validate_password_strength, is_password_common
+from app.services.auth import get_current_user
 from app.config import get_settings
 
 import requests as http_requests
@@ -70,6 +72,15 @@ def create_refresh_token(data: dict, db: Session):
 @limiter.limit("3/minute")
 def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     """Step 1: Register with just email + password + role"""
+    # Password strength validation
+    pw_error = validate_password_strength(user.password)
+    if pw_error:
+        raise HTTPException(status_code=400, detail=pw_error)
+
+    # Common password check
+    if is_password_common(user.password):
+        raise HTTPException(status_code=400, detail="Esa contrasena es demasiado comun. Elige una mas segura.")
+
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email ya registrado")
@@ -93,7 +104,32 @@ def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
 
-    log_action(db_user.id, "register_success", {"role": user.role}, ip=request.client.host)
+    # Send verification email
+    from app.services.email_service import send_email
+    verify_token = create_access_token({"sub": str(db_user.id), "purpose": "email_verify"})
+    db_user.email_verification_token = verify_token
+    db.commit()
+
+    settings = get_settings()
+    verify_link = f"{settings.APP_URL or 'http://localhost:8000'}/api/v1/auth/verify-email?token={verify_token}"
+    verify_html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:24px">
+<div style="background:#2563EB;padding:24px;border-radius:16px 16px 0 0;text-align:center">
+<span style="color:white;font-size:20px;font-weight:700">TurnoGO</span></div>
+<div style="background:#fff;padding:24px;border:1px solid #E2E8F0;border-top:0;border-radius:0 0 16px 16px">
+<h2 style="color:#1F2937;margin-top:0">Verifica tu cuenta</h2>
+<p style="color:#6B7280;font-size:14px">Gracias por registrarte en TurnoGO. Haz clic en el boton para verificar tu email:</p>
+<div style="text-align:center;margin:24px 0">
+<a href="{verify_link}" style="display:inline-block;background:#2563EB;color:white;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Verificar Email</a>
+</div>
+<p style="color:#9CA3AF;font-size:12px">O copia este enlace: {verify_link}</p>
+<p style="color:#9CA3AF;font-size:12px">Este enlace expira en 24 horas.</p>
+</div>
+</body></html>"""
+    send_email(db_user.email, "Verifica tu cuenta de TurnoGO", verify_html)
+
+    log_action(db_user.id, "register_success", {"role": user.role, "verification_sent": True}, ip=request.client.host)
     return db_user
 
 
@@ -103,21 +139,11 @@ def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
 def complete_profile(
     request: Request,
     data: CompleteProfileRequest,
-    token: str = Depends(oauth2_scheme),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Step 2: Complete user profile with name, phone, cedula"""
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Token invalido")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Token invalido")
-
-    user = db.query(User).filter(User.id == int(user_id)).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    user = current_user
 
     # Validate phone uniqueness
     existing = db.query(User).filter(User.phone == data.phone, User.id != user.id).first()
@@ -275,6 +301,7 @@ def login(request: Request, user: UserLogin, db: Session = Depends(get_db)):
 
 
 @router.post("/token")
+@limiter.limit("5/minute")
 def token_login(request: Request, form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """Endpoint para Swagger Authorize. Usa email como username."""
     db_user = db.query(User).filter(User.email == form.username).first()
@@ -303,20 +330,8 @@ def token_login(request: Request, form: OAuth2PasswordRequestForm = Depends(), d
 
 
 @router.get("/me", response_model=UserResponse)
-def get_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Token inválido")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Token inválido")
-
-    user = db.query(User).filter(User.id == int(user_id)).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-
-    return UserResponse.model_validate(user)
+def get_me(current_user: User = Depends(get_current_user)):
+    return UserResponse.model_validate(current_user)
 
 
 @router.post("/refresh")
@@ -355,7 +370,7 @@ def refresh(request: Request, refresh_token: str, db: Session = Depends(get_db))
 @router.patch("/me", response_model=UserResponse)
 def update_profile(
     request: UpdateProfileRequest,
-    token: str = Depends(oauth2_scheme),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -363,17 +378,7 @@ def update_profile(
     
     Actualiza tu nombre y/o teléfono.
     """
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Token inválido")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Token inválido")
-
-    user = db.query(User).filter(User.id == int(user_id)).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    user = current_user
 
     if request.full_name:
         user.full_name = request.full_name
@@ -401,7 +406,7 @@ def update_profile(
 @router.patch("/me/wallet", response_model=UserResponse)
 def update_wallet(
     request: UpdateWalletRequest,
-    token: str = Depends(oauth2_scheme),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -410,17 +415,7 @@ def update_wallet(
     Guarda tu dirección de wallet en tu perfil.
     Solo podrás retirar USDT a esta dirección.
     """
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Token inválido")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Token inválido")
-
-    user = db.query(User).filter(User.id == int(user_id)).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    user = current_user
 
     user.wallet_address = request.wallet_address
     db.commit()
@@ -432,21 +427,11 @@ def update_wallet(
 def update_notification_preferences(
     email_notifications: bool = None,
     push_subscription: str = None,
-    token: str = Depends(oauth2_scheme),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """🔔 Actualizar preferencias de notificación (email + web push)"""
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Token inválido")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Token inválido")
-
-    user = db.query(User).filter(User.id == int(user_id)).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    user = current_user
 
     if email_notifications is not None:
         user.email_notifications = email_notifications
@@ -461,7 +446,7 @@ def update_notification_preferences(
 @router.post("/request-change")
 def request_change(
     request: RequestChangeRequest,
-    token: str = Depends(oauth2_scheme),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -471,15 +456,7 @@ def request_change(
     El código expira en 15 minutos.
     """
     from app.services.email_service import send_email
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = int(payload.get("sub"))
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Token inválido")
-
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    user = current_user
 
     if not request.new_email and not request.new_phone and not request.new_wallet:
         raise HTTPException(status_code=400, detail="Debes enviar al menos email, teléfono o wallet nuevo")
@@ -537,23 +514,15 @@ TurnoGO — © 2026
 @router.post("/confirm-change")
 def confirm_change(
     request: ConfirmChangeRequest,
-    token: str = Depends(oauth2_scheme),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
     ✅ CONFIRMAR CAMBIO DE EMAIL/TELÉFONO
 
-    Verifica el código recibido por correo y aplica los cambios.
+    Verifica el codigo recibido por correo y aplica los cambios.
     """
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = int(payload.get("sub"))
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Token inválido")
-
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    user = current_user
 
     # Buscar el token pendiente más reciente
     change_request = db.query(ChangeToken).filter(
@@ -599,4 +568,102 @@ def confirm_change(
         "message": f"Cambios aplicados: {' y '.join(cambios)} actualizado(s) correctamente",
         "user": user,
     }
+
+
+# ═══════════════════════════════════════════════════════════
+# Email Verification
+# ═══════════════════════════════════════════════════════════
+
+
+@router.get("/verify-email")
+def verify_email(token: str, db: Session = Depends(get_db)):
+    """
+    Verify email address using the token sent after registration.
+    Token expires in 24 hours.
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("purpose") != "email_verify":
+            raise HTTPException(status_code=400, detail="Token invalido")
+        user_id = int(payload.get("sub"))
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Token invalido o expirado")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    if user.email_verified:
+        return {"message": "El email ya estaba verificado", "verified": True}
+
+    user.email_verified = True
+    user.email_verification_token = None
+    db.commit()
+
+    log_action(user.id, "email_verified", ip=None)
+
+    return {"message": "Email verificado correctamente", "verified": True}
+
+
+@router.post("/resend-verification")
+@limiter.limit("1/minute")
+def resend_verification(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Resend email verification link.
+    Limited to 1 request per minute to prevent abuse.
+    """
+    user = current_user
+
+    if user.email_verified:
+        return {"message": "El email ya esta verificado"}
+
+    from app.services.email_service import send_email
+    verify_token = create_access_token({"sub": str(user.id), "purpose": "email_verify"})
+    user.email_verification_token = verify_token
+    db.commit()
+
+    settings = get_settings()
+    verify_link = f"{settings.APP_URL or 'http://localhost:8000'}/api/v1/auth/verify-email?token={verify_token}"
+    verify_html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:24px">
+<div style="background:#2563EB;padding:24px;border-radius:16px 16px 0 0;text-align:center">
+<span style="color:white;font-size:20px;font-weight:700">TurnoGO</span></div>
+<div style="background:#fff;padding:24px;border:1px solid #E2E8F0;border-top:0;border-radius:0 0 16px 16px">
+<h2 style="color:#1F2937;margin-top:0">Verifica tu cuenta</h2>
+<p style="color:#6B7280;font-size:14px">Haz clic para verificar tu email:</p>
+<div style="text-align:center;margin:24px 0">
+<a href="{verify_link}" style="display:inline-block;background:#2563EB;color:white;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Verificar Email</a>
+</div>
+<p style="color:#9CA3AF;font-size:12px">Este enlace expira en 24 horas.</p>
+</div>
+</body></html>"""
+    send_email(user.email, "Verifica tu cuenta de TurnoGO", verify_html)
+
+    log_action(user.id, "verification_resent", ip=request.client.host)
+
+    return {"message": "Email de verificacion reenviado"}
+
+
+# ═══════════════════════════════════════════════════════════
+# Dependency: require verified email for critical actions
+# ═══════════════════════════════════════════════════════════
+
+
+def require_verified_email(current_user: User = Depends(get_current_user)) -> User:
+    """
+    Dependency that requires email to be verified before critical actions.
+    Allows all users to log in, but blocks critical actions for unverified emails.
+    """
+    if not current_user.email_verified:
+        raise HTTPException(
+            status_code=403,
+            detail="Debes verificar tu email antes de realizar esta accion. Revisa tu bandeja de entrada.",
+        )
+
+    return current_user
 

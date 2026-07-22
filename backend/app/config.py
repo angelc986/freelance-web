@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     # App
     APP_NAME: str = "Freelance App API"
     APP_VERSION: str = "0.2.0"
+    APP_URL: str = os.getenv("APP_URL", "")
     DEBUG: bool = True
 
     # Database
@@ -68,12 +69,21 @@ class Settings(BaseSettings):
     DIDIT_WEBHOOK_SECRET: str = os.getenv("DIDIT_WEBHOOK_SECRET", "")
     DIDIT_WORKFLOW_ID: str = os.getenv("DIDIT_WORKFLOW_ID", "")
 
+    # Environment
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+
+    # Webhooks
+    WEBHOOK_SECRET: str = os.getenv("WEBHOOK_SECRET", "")
+    WEBHOOK_ALLOWED_IPS: str = os.getenv("WEBHOOK_ALLOWED_IPS", "")  # comma-separated
+
     # Sentry
     SENTRY_DSN: str = os.getenv("SENTRY_DSN", "")
 
-    # Email (SendGrid / Resend)
+    # Email (SendGrid / Resend / SMTP)
     SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")
     RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
+    SMTP_USER: str = os.getenv("SMTP_USER", "")
+    SMTP_PASS: str = os.getenv("SMTP_PASS", "")
 
     # Web Push (VAPID)
     VAPID_PRIVATE_KEY: str = os.getenv("VAPID_PRIVATE_KEY", "")

@@ -6,8 +6,6 @@ import os
 import time
 from datetime import datetime, timezone
 
-import cloudinary
-import cloudinary.uploader
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
@@ -16,8 +14,8 @@ from app.config import get_settings
 from app.database import SessionLocal
 from app.limiter import limiter
 from app.models.user import User
-from app.routers.auth import SECRET_KEY, ALGORITHM
-from app.schemas.user import UserResponse
+from app.services.auth import get_current_user
+from app.services.audit import log_action
 
 logger = logging.getLogger(__name__)
 
@@ -31,53 +29,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
-
-def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
-    """Extract user from Bearer token (same logic as auth router)."""
-    from fastapi.security import OAuth2PasswordBearer
-    from jose import jwt, JWTError
-
-    oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
-    token = request.headers.get("Authorization", "").replace("Bearer ", "")
-    if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    # Dev mode: accept dev-token for testing with mock users
-    if token.startswith("dev-"):
-        # Return the first user (assumes at least one user in DB)
-        user = db.query(User).filter(User.is_active == True).first()
-        if user:
-            return user
-        # If no user exists, create a dev user
-        from app.database import SessionLocal
-        user = User(
-            email="dev@turnogo.com",
-            phone="+584140000000",
-            full_name="Dev User",
-            cedula="V-00000000",
-            password_hash="dev",
-            role="worker",
-            is_active=True,
-            is_verified=False,
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        return user
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-    user = db.query(User).filter(User.id == int(user_id)).first()
-    if not user or not user.is_active:
-        raise HTTPException(status_code=401, detail="User not found or inactive")
-    return user
 
 
 # ─── Shorten floats helper (for webhook HMAC) ───
@@ -96,12 +47,10 @@ def shorten_floats(data):
 
 def _extract_portrait_url(payload: dict) -> str | None:
     """Extract the user's portrait/selfie image URL from Didit webhook payload."""
-    # Try direct portrait_image field
     portrait = payload.get("portrait_image")
     if portrait:
         return portrait
 
-    # Try inside decision -> face_matches
     decision = payload.get("decision")
     if isinstance(decision, dict):
         for feature_list in ["face_matches", "liveness_checks", "id_verifications"]:
@@ -113,7 +62,6 @@ def _extract_portrait_url(payload: dict) -> str | None:
                         if img:
                             return img
 
-    # Try inside documents array
     documents = payload.get("documents")
     if isinstance(documents, list):
         for doc in documents:
@@ -127,6 +75,12 @@ def _extract_portrait_url(payload: dict) -> str | None:
 
 def _upload_avatar_from_url(image_url: str, user_id: int) -> str | None:
     """Download portrait from Didit and upload to Cloudinary. Returns Cloudinary URL."""
+    try:
+        import cloudinary
+        import cloudinary.uploader
+    except ImportError:
+        logger.warning("cloudinary not installed, skipping avatar upload")
+        return None
     settings = get_settings()
     if not all([settings.CLOUDINARY_CLOUD_NAME, settings.CLOUDINARY_API_KEY, settings.CLOUDINARY_API_SECRET]):
         logger.warning("Cloudinary not configured, skipping avatar upload")
@@ -139,12 +93,10 @@ def _upload_avatar_from_url(image_url: str, user_id: int) -> str | None:
     )
 
     try:
-        # Download from Didit (presigned URL, limited validity)
         with httpx.Client(timeout=30) as client:
             resp = client.get(image_url)
             resp.raise_for_status()
 
-        # Upload to Cloudinary
         result = cloudinary.uploader.upload(
             resp.content,
             public_id=f"avatars/user_{user_id}",
@@ -157,6 +109,7 @@ def _upload_avatar_from_url(image_url: str, user_id: int) -> str | None:
     except Exception as e:
         logger.error(f"Failed to upload avatar for user {user_id}: {e}")
         return None
+
 
 @router.post("/create")
 @limiter.limit("5/minute")
@@ -174,18 +127,15 @@ async def create_verification(
     if not settings.DIDIT_API_KEY:
         raise HTTPException(status_code=503, detail="Verification service not configured")
 
-    # If already verified, return early
     if current_user.is_verified:
         return {
             "status": "already_verified",
-            "message": "Tu identidad ya está verificada",
+            "message": "Tu identidad ya esta verificada",
         }
 
-    # Clear any stale session and always create a fresh one
     current_user.didit_session_id = None
     db.commit()
 
-    # Create new Didit session
     callback_url = f"{os.getenv('APP_URL', 'https://freelance-web-beta.vercel.app')}/verification-complete"
 
     async with httpx.AsyncClient() as client:
@@ -213,9 +163,10 @@ async def create_verification(
     session_id = session.get("session_id")
     verification_url = session.get("url")
 
-    # Save session_id to user
     current_user.didit_session_id = session_id
     db.commit()
+
+    log_action(current_user.id, "kyc_session_created", {"session_id": session_id}, ip=request.client.host)
 
     return {
         "status": "created",
@@ -248,16 +199,13 @@ async def didit_webhook(request: Request):
     signature = request.headers.get("X-Signature-V2")
     timestamp = request.headers.get("X-Timestamp")
 
-    # Verify signature
     if signature and timestamp:
-        # Check timestamp freshness (5 min max)
         try:
             if abs(int(time.time()) - int(timestamp)) > 300:
                 raise HTTPException(status_code=401, detail="Request too old")
         except ValueError:
             raise HTTPException(status_code=401, detail="Invalid timestamp")
 
-        # Recompute canonical JSON (same as Didit docs)
         try:
             payload = json.loads(raw_body)
             canonical = json.dumps(
@@ -277,21 +225,18 @@ async def didit_webhook(request: Request):
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="Invalid JSON body")
     else:
-        # If no signature, require DIDIT_API_KEY in header as fallback
         api_key = request.headers.get("x-api-key", "")
         if api_key != settings.DIDIT_API_KEY:
             raise HTTPException(status_code=403, detail="Forbidden")
 
-    # Parse payload
     payload = json.loads(raw_body)
     session_id = payload.get("session_id")
     status_val = payload.get("status")
     vendor_data = payload.get("vendor_data")
 
     if not session_id or not vendor_data:
-        return {"received": True}  # Acknowledge but ignore incomplete events
+        return {"received": True}
 
-    # Update user verification status
     db = SessionLocal()
     try:
         user = db.query(User).filter(User.id == int(vendor_data)).first()
@@ -299,16 +244,17 @@ async def didit_webhook(request: Request):
             if status_val == "Approved":
                 user.is_verified = True
                 user.verified_at = datetime.now(timezone.utc)
-                # Extract and upload portrait as avatar
                 portrait_url = _extract_portrait_url(payload)
                 if portrait_url:
                     cloud_url = _upload_avatar_from_url(portrait_url, user.id)
                     if cloud_url:
                         user.avatar_url = cloud_url
                         user.avatar_verified = True
+                log_action(user.id, "kyc_approved", {"session_id": session_id}, ip=request.client.host)
             elif status_val in ("Declined", "Expired", "Abandoned"):
                 user.is_verified = False
-                user.didit_session_id = None  # Allow re-verification
+                user.didit_session_id = None
+                log_action(user.id, "kyc_failed", {"session_id": session_id, "status": status_val}, ip=request.client.host)
             db.commit()
     except (ValueError, Exception):
         pass

@@ -21,6 +21,8 @@ class User(Base):
     is_admin = Column(Boolean, default=False)
     wallet_address = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
+    email_verified = Column(Boolean, default=False)  # Email verification status
+    email_verification_token = Column(String, nullable=True)  # JWT token for email verification
     balance = Column(Float, default=0.0)  # Saldo TOTAL en USDT (available + held)
     held_balance = Column(Float, default=0.0)  # USDT retenido en trabajos activos (escrow)
     rating_avg = Column(Float, default=0.0)

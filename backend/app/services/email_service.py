@@ -52,8 +52,8 @@ def _send_smtp(to: str, subject: str, html: str) -> bool:
     from email.mime.text import MIMEText
     from email.mime.multipart import MIMEMultipart
 
-    user = os.getenv("SMTP_USER", "")
-    password = os.getenv("SMTP_PASS", "")
+    user = get_settings().SMTP_USER
+    password = get_settings().SMTP_PASS
     if not user or not password:
         return False
     try:

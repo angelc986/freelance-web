@@ -19,7 +19,12 @@ out/
 
 # DB local
 *.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.bak
 *.sqlite
+*.sqlite3
 
 # IDE
 .vscode/
