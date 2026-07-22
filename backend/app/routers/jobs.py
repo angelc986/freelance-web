@@ -306,7 +306,10 @@ def accept_application(request: Request, job_id: int, application_id: int, db: S
     app.status = "accepted"
 
     # Bloquear fondos en escrow
-    current_user.held_balance += job.budget
+    # IMPORTANTE: current_user viene de la sesion de auth (get_current_user).
+    # Hay que usar el usuario de la sesion db para que el cambio persista.
+    contractor = db.query(User).filter(User.id == current_user.id).first()
+    contractor.held_balance += job.budget
 
     otras = db.query(Application).filter(
         Application.job_id == job_id,

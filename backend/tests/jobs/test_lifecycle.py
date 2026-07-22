@@ -40,16 +40,10 @@ def _get_first_app(client, contractor_token, job_id):
 
 
 def _accept(client, contractor_token, job_id, app_id, db=None):
-    """Accept worker. Optionally set held_balance via db to work around session bug."""
+    """Accept worker."""
     resp = client.post(f"/api/v1/jobs/{job_id}/accept/{app_id}",
         json={},
         headers={"Authorization": f"Bearer {contractor_token}"})
-    # Work around session bug: accept sets held_balance on a different session
-    if db and resp.status_code == 200:
-        contractor = db.query(User).filter(User.email == "contractor@test.com").first()
-        if contractor.held_balance < 50.0:
-            contractor.held_balance = 50.0
-            db.commit()
     return resp
 
 
