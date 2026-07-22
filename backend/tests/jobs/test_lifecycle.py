@@ -186,3 +186,44 @@ class TestLifecycle:
         assert resp.status_code == 200
         assert resp.json()["status"] == "disputed"
         assert resp.json()["dispute_reason"] == "Poor quality work"
+
+
+# --- Regression: BUG held_balance session ---
+
+class TestHeldBalanceRegression:
+    """Verify that BUG: held_balance not persisted after accept is fixed."""
+
+    def test_accept_persists_held_balance(self, client, contractor_token, worker_token, db):
+        """After accepting worker, held_balance must be persisted in DB."""
+        jid = _create_job(client, contractor_token)
+        _apply(client, worker_token, jid)
+        app_id = _get_first_app(client, contractor_token, jid)
+
+        resp = client.post(f"/api/v1/jobs/{jid}/accept/{app_id}",
+            json={},
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        assert resp.status_code == 200
+
+        from app.models.user import User
+        contractor = db.query(User).filter(
+            User.email == "contractor@test.com").first()
+        assert contractor.held_balance == 50.0, (
+            f"held_balance should be 50.0, got {contractor.held_balance}"
+        )
+
+    def test_accept_no_available_balance(self, client, contractor_token, worker_token, db):
+        """Accept fails if available < job budget."""
+        from app.models.user import User
+        contractor = db.query(User).filter(
+            User.email == "contractor@test.com").first()
+        contractor.balance = 30.0
+        db.commit()
+
+        jid = _create_job(client, contractor_token)
+        _apply(client, worker_token, jid)
+        app_id = _get_first_app(client, contractor_token, jid)
+
+        resp = client.post(f"/api/v1/jobs/{jid}/accept/{app_id}",
+            json={},
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        assert resp.status_code == 400
