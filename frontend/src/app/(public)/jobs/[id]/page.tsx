@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getJob, updateJob, applyToJob, getApplications, getMyApplications, acceptApplication, checkIn, completeRequest, verifyCompletion, approveJob, cancelJob, requestCorrection, disputeJob, rateJob, getJobRatings, type Job, type Application, type RatingInfo } from "@/lib/api";
 import ActionModal from "@/components/ActionModal";
+import EvidenceImages from "@/components/EvidenceImages";
 import { useAuth } from "@/contexts/AuthContext";
 import Logo from "@/components/Logo";
 import NotificationBell from "@/components/NotificationBell";
@@ -718,7 +719,7 @@ export default function JobDetailPage() {
                                 <span className="font-semibold text-amber-800">El contratista solicita una corrección</span>
                               </div>
                               <p className="text-sm text-amber-700 ml-7">{job.correction_note}</p>
-                              {job.evidence_images && (() => { try { const imgs = JSON.parse(job.evidence_images); if (imgs.length) return (<div className="flex gap-2 mt-3 ml-7 flex-wrap">{imgs.map((url: string, i: number) => (<img key={i} src={url} alt="" className="w-16 h-16 rounded-lg object-cover border border-amber-200" />))}</div>); } catch {} return null; })()}
+                              <EvidenceImages imagesJson={job.evidence_images} className="ml-7" />
                             </div>
                             <button
                               onClick={() => handleAction(() => completeRequest(jobId), () => setShowVerifyModal(true))}
@@ -875,7 +876,7 @@ export default function JobDetailPage() {
                             <p className="text-sm text-amber-800">
                               <span className="font-semibold">Corrección solicitada anteriormente:</span> {job.correction_note}
                             </p>
-                            {job.evidence_images && (() => { try { const imgs = JSON.parse(job.evidence_images); if (imgs.length) return (<div className="flex gap-2 mt-2 flex-wrap">{imgs.map((url: string, i: number) => (<img key={i} src={url} alt="" className="w-16 h-16 rounded-lg object-cover border border-amber-200" />))}</div>); } catch {} return null; })()}
+                            <EvidenceImages imagesJson={job.evidence_images} />
                           </div>
                         )}
 
@@ -932,7 +933,7 @@ export default function JobDetailPage() {
                             <p className="text-sm text-gray">
                               <span className="font-medium">Motivo:</span> {job.dispute_reason}
                             </p>
-                            {job.evidence_images && (() => { try { const imgs = JSON.parse(job.evidence_images); if (imgs.length) return (<div className="flex gap-2 mt-2 flex-wrap">{imgs.map((url: string, i: number) => (<img key={i} src={url} alt="" className="w-16 h-16 rounded-lg object-cover border border-gray-200" />))}</div>); } catch {} return null; })()}
+                            <EvidenceImages imagesJson={job.evidence_images} />
                           </div>
                         )}
                         {job.disputed_at && (
