@@ -162,8 +162,7 @@ class TestAdminUserStatus:
             headers={"Authorization": f"Bearer {contractor_token}"})
         uid = me.json()["id"]
 
-        resp = client.patch(f"/api/v1/admin/users/{uid}/status",
-            json={"is_active": False},
+        resp = client.patch(f"/api/v1/admin/users/{uid}/status?is_active=false",
             headers={"Authorization": f"Bearer {admin_token}"})
         assert resp.status_code == 200
 
@@ -172,7 +171,6 @@ class TestAdminUserStatus:
             headers={"Authorization": f"Bearer {contractor_token}"})
         uid = me.json()["id"]
 
-        resp = client.patch(f"/api/v1/admin/users/{uid}/status",
-            json={"is_active": False},
+        resp = client.patch(f"/api/v1/admin/users/{uid}/status?is_active=false",
             headers={"Authorization": f"Bearer {contractor_token}"})
         assert resp.status_code == 403

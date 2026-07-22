@@ -1,10 +1,9 @@
 """
-Configuración global de tests.
+Configuración de tests — drop_all + create_all por test.
 """
 import pytest
 import os
 
-# Modo test: desactivar rate limiting
 os.environ["TESTING"] = "true"
 os.environ["DATABASE_URL"] = "sqlite:///./test_freelance.db"
 
@@ -20,150 +19,64 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @pytest.fixture(autouse=True)
 def cleanup_db():
-    """Limpia BD antes de cada test."""
-    # Desactivar rate limiting
     limiter.enabled = False
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     yield
-    db = SessionLocal()
-    for table in reversed(Base.metadata.sorted_tables):
-        db.execute(table.delete())
-    db.commit()
-    db.close()
 
 
 @pytest.fixture(scope="session")
 def client():
-    """Cliente HTTP compartido."""
     return TestClient(app)
 
 
 @pytest.fixture
 def db():
-    """Conexión directa a BD."""
-    db = SessionLocal()
-    yield db
-    db.close()
+    session = SessionLocal()
+    yield session
+    session.close()
 
 
-@pytest.fixture
-def contractor_token(client):
-    """Crea contractor y devuelve token. Inserta directo en BD."""
-    db = SessionLocal()
-    user = User(
-        email="contractor@test.com",
-        password_hash=pwd_context.hash("Test123!"),
-        full_name="Test Contractor",
-        phone="+584141111111",
-        cedula="V-11111111",
-        role="contractor",
-        balance=10000,
-    )
+def _make_user(client, db, email, password, **extra):
+    user = User(email=email, password_hash=pwd_context.hash(password), **extra)
     db.add(user)
     db.commit()
     db.refresh(user)
-    db.close()
-
-    resp = client.post("/api/v1/auth/login", json={
-        "email": "contractor@test.com",
-        "password": "Test123!",
-    })
+    resp = client.post("/api/v1/auth/login", json={"email": email, "password": password})
     return resp.json()["access_token"]
 
 
 @pytest.fixture
-def worker_token(client):
-    """Crea worker y devuelve token."""
-    db = SessionLocal()
-    user = User(
-        email="worker@test.com",
-        password_hash=pwd_context.hash("Test123!"),
-        full_name="Test Worker",
-        phone="+584142222222",
-        cedula="V-22222222",
-        role="worker",
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    db.close()
-
-    resp = client.post("/api/v1/auth/login", json={
-        "email": "worker@test.com",
-        "password": "Test123!",
-    })
-    return resp.json()["access_token"]
+def contractor_token(client, db):
+    return _make_user(client, db, "contractor@test.com", "Test123!",
+        full_name="Test Contractor", phone="+584141111111",
+        cedula="V-11111111", role="contractor", balance=10000)
 
 
-# ── Security test fixtures ──
+@pytest.fixture
+def worker_token(client, db):
+    return _make_user(client, db, "worker@test.com", "Test123!",
+        full_name="Test Worker", phone="+584142222222",
+        cedula="V-22222222", role="worker")
+
 
 @pytest.fixture
 def verified_user_token(client, db):
-    """Crea usuario con email verificado y devuelve token."""
-    user = User(
-        email="verified@test.com",
-        password_hash=pwd_context.hash("Test123!"),
-        full_name="Verified User",
-        phone="+584143000000",
-        cedula="V-30000000",
-        role="worker",
-        email_verified=True,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-
-    resp = client.post("/api/v1/auth/login", json={
-        "email": "verified@test.com",
-        "password": "Test123!",
-    })
-    return resp.json()["access_token"]
+    return _make_user(client, db, "verified@test.com", "Test123!",
+        full_name="Verified User", phone="+584143000000",
+        cedula="V-30000000", role="worker", email_verified=True)
 
 
 @pytest.fixture
 def unverified_user_token(client, db):
-    """Crea usuario sin verificar email y devuelve token."""
-    user = User(
-        email="unverified@test.com",
-        password_hash=pwd_context.hash("Test123!"),
-        full_name="Unverified User",
-        phone="+584144000000",
-        cedula="V-40000000",
-        role="worker",
-        email_verified=False,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-
-    resp = client.post("/api/v1/auth/login", json={
-        "email": "unverified@test.com",
-        "password": "Test123!",
-    })
-    return resp.json()["access_token"]
+    return _make_user(client, db, "unverified@test.com", "Test123!",
+        full_name="Unverified User", phone="+584144000000",
+        cedula="V-40000000", role="worker", email_verified=False)
 
 
 @pytest.fixture
-def admin_token(client):
-    """Crea admin y devuelve token."""
-    db = SessionLocal()
-    user = User(
-        email="admin@test.com",
-        password_hash=pwd_context.hash("Test123!"),
-        full_name="Test Admin",
-        phone="+584145555555",
-        cedula="V-55555555",
-        role="contractor",
-        is_admin=True,
-        email_verified=True,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    db.close()
-
-    resp = client.post("/api/v1/auth/login", json={
-        "email": "admin@test.com",
-        "password": "Test123!",
-    })
-    return resp.json()["access_token"]
+def admin_token(client, db):
+    return _make_user(client, db, "admin@test.com", "Test123!",
+        full_name="Test Admin", phone="+584145555555",
+        cedula="V-55555555", role="contractor",
+        is_admin=True, email_verified=True)
