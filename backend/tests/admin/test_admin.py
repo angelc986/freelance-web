@@ -105,3 +105,74 @@ class TestAdminWallet:
         assert "balance" in data
         assert "total_deposits" in data
         assert "total_withdrawals" in data
+
+
+class TestAdminUserDetail:
+    """GET /admin/users/{id}."""
+
+    def test_user_detail(self, client, admin_token, contractor_token):
+        # Get contractor id
+        me = client.get("/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        uid = me.json()["id"]
+
+        resp = client.get(f"/api/v1/admin/users/{uid}",
+            headers={"Authorization": f"Bearer {admin_token}"})
+        assert resp.status_code == 200
+        assert resp.json()["id"] == uid
+
+    def test_user_detail_requires_admin(self, client, contractor_token):
+        me = client.get("/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        uid = me.json()["id"]
+
+        resp = client.get(f"/api/v1/admin/users/{uid}",
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        assert resp.status_code == 403
+
+
+class TestAdminTransactions:
+    """GET /admin/transactions."""
+
+    def test_transactions_admin_only(self, client, admin_token):
+        resp = client.get("/api/v1/admin/transactions",
+            headers={"Authorization": f"Bearer {admin_token}"})
+        assert resp.status_code == 200
+
+    def test_transactions_contractor_blocked(self, client, contractor_token):
+        resp = client.get("/api/v1/admin/transactions",
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        assert resp.status_code == 403
+
+
+class TestAdminAnalytics:
+    """GET /admin/analytics."""
+
+    def test_analytics_admin(self, client, admin_token):
+        resp = client.get("/api/v1/admin/analytics",
+            headers={"Authorization": f"Bearer {admin_token}"})
+        assert resp.status_code == 200
+
+
+class TestAdminUserStatus:
+    """PATCH /admin/users/{id}/status."""
+
+    def test_toggle_status_admin(self, client, admin_token, contractor_token):
+        me = client.get("/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        uid = me.json()["id"]
+
+        resp = client.patch(f"/api/v1/admin/users/{uid}/status",
+            json={"is_active": False},
+            headers={"Authorization": f"Bearer {admin_token}"})
+        assert resp.status_code == 200
+
+    def test_toggle_status_requires_admin(self, client, contractor_token):
+        me = client.get("/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        uid = me.json()["id"]
+
+        resp = client.patch(f"/api/v1/admin/users/{uid}/status",
+            json={"is_active": False},
+            headers={"Authorization": f"Bearer {contractor_token}"})
+        assert resp.status_code == 403

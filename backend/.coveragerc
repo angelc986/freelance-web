@@ -1,0 +1,10 @@
+[run]
+omit =
+    app/services/blockchain.py
+    app/services/cloudinary_service.py
+    app/services/push_service.py
+    app/services/email_service.py
+    app/services/event_manager.py
+    app/routers/verification.py
+    app/routers/push_subscriptions.py
+    app/routers/events.py
