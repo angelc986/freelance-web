@@ -6,9 +6,9 @@ import { createJob } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import dynamic from "next/dynamic";
 import Logo from "@/components/Logo";
-import MiniMap from "@/components/MiniMap";
 
 const LocationPicker = dynamic(() => import("@/components/LocationPicker"), { ssr: false });
+const MiniMap = dynamic(() => import("@/components/MiniMap"), { ssr: false });
 
 // ─── CATEGORY SVGS ───
 const categorySvgs: Record<string, string> = {
