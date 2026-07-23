@@ -32,7 +32,7 @@ jobs:
             echo "Manual deploy — bypassing CI gate."
             echo "proceed=true" >> $GITHUB_OUTPUT
           elif [ "${{ github.event.workflow_run.conclusion }}" = "success" ]; then
-            echo "CI passed. Proceeding."
+            echo "CI passed. Proceeding with Vercel deploy."
             echo "proceed=true" >> $GITHUB_OUTPUT
           else
             echo "::error::CI FAILED. Deploy BLOCKED."
@@ -40,7 +40,7 @@ jobs:
             exit 0
           fi
 
-  # ── Vercel: Deploy via CLI (full control, no race condition) ──
+  # ── Vercel: Deploy via CLI ──────────────────────────────
   deploy-frontend:
     name: Deploy Vercel
     needs: [gate]
@@ -53,53 +53,21 @@ jobs:
 
       - name: Deploy to Vercel
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_TOKEN: *** secrets.VERCEL_TOKEN }}
         run: |
           if [ -z "$VERCEL_TOKEN" ]; then
-            echo "::warning::VERCEL_TOKEN not set. How to fix:"
-            echo "  1. Vercel Dashboard → Settings → Tokens → Create"
-            echo "  2. Name: GitHub Actions, Scope: Full Account"
-            echo "  3. Add token as VERCEL_TOKEN in GitHub Secrets"
-            echo "  4. Vercel Settings → Git → DISCONNECT repo (stops auto-deploy)"
+            echo "::warning::VERCEL_TOKEN not set. Deploy skipped."
             exit 0
           fi
           cd frontend
-          echo "Deploying to Vercel production..."
-          npx vercel deploy --prod --token "$VERCEL_TOKEN" --yes
-          echo "::notice::Vercel deploy complete. https://freelance-web-beta.vercel.app"
-
-  # ── Railway: Deploy via CLI ─────────────────────────────
-  deploy-backend:
-    name: Deploy Railway
-    needs: [gate]
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: needs.gate.outputs.proceed == 'true'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Deploy to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          if [ -z "$RAILWAY_TOKEN" ]; then
-            echo "::warning::RAILWAY_TOKEN not set. How to fix:"
-            echo "  1. Railway Dashboard → Settings → Tokens → Create"
-            echo "  2. Add token as RAILWAY_TOKEN in GitHub Secrets"
-            echo "  3. Make sure auto-deploy is OFF in Railway"
-            exit 0
-          fi
-          cd backend
-          npm install -g @railway/cli
-          echo "Deploying to Railway..."
-          railway up --service backend --detach
-          echo "::notice::Railway deploy triggered. Check: https://railway.app/project"
+          echo "Deploying to Vercel..."
+          npx vercel deploy --prod --token "***" --yes
+          echo "::notice::Vercel deploy complete."
 
   # ── Summary ────────────────────────────────────────────
   deploy-summary:
     name: Deploy Summary
-    needs: [deploy-frontend, deploy-backend]
+    needs: [deploy-frontend]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -111,4 +79,7 @@ jobs:
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| CI Gate | ${{ needs.gate.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Vercel | ${{ needs.deploy-frontend.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Railway | ${{ needs.deploy-backend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Railway | native (CI-gated auto-deploy) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Vercel:** https://freelance-web-beta.vercel.app" >> $GITHUB_STEP_SUMMARY
+          echo "**Railway:** https://freelance-web-production-add4.up.railway.app" >> $GITHUB_STEP_SUMMARY
