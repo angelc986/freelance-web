@@ -85,6 +85,7 @@ class TestRelease:
 
         user = db.query(User).filter(User.email == "contractor@test.com").first()
         user.balance = 10000
+        user.held_balance = 10000
         db.commit()
 
         resp = client.post(

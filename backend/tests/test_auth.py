@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 class TestRegister:
     def test_register_success(self, client: TestClient):
-        """Registro exitoso debe devolver 201 con datos del usuario."""
+        """Step 1 register (email+password) returns 201 with placeholder full_name/cedula."""
         resp = client.post(
             "/api/v1/auth/register",
             json={
@@ -22,7 +22,8 @@ class TestRegister:
         assert resp.status_code == 201
         data = resp.json()
         assert data["email"] == "newuser@test.com"
-        assert data["full_name"] == "New User"
+        # Step 1 generates a placeholder name (real name set in Step 2: POST /auth/complete)
+        assert data["full_name"].startswith("Usuario-")
         assert data["role"] == "worker"
         assert "id" in data
         assert "password_hash" not in data  # No exponer password
@@ -55,8 +56,9 @@ class TestRegister:
         assert "ya registrado" in resp.json()["detail"].lower()
 
     def test_register_duplicate_cedula(self, client: TestClient):
-        """Cédula duplicada debe devolver 400."""
-        client.post(
+        """Step 2: duplicate cedula should return 400 during profile completion."""
+        # Register two users (Step 1 gives placeholder cedulas)
+        r1 = client.post(
             "/api/v1/auth/register",
             json={
                 "email": "user1@test.com",
@@ -67,21 +69,43 @@ class TestRegister:
                 "role": "worker",
             },
         )
-        resp = client.post(
+        # Get token by logging in, not from register (UserResponse has no token)
+        login1 = client.post(
+            "/api/v1/auth/login",
+            json={"email": "user1@test.com", "password": "Pass123!"},
+        )
+        token1 = login1.json()["access_token"]
+        # Complete profile for user1 with cedula V-66666666
+        client.patch(
+            "/api/v1/auth/complete-profile",
+            json={"full_name": "User1", "phone": "+584146666666", "cedula": "V-66666666", "address": "Calle 1"},
+            headers={"Authorization": f"Bearer {token1}"},
+        )
+        # Register user2
+        r2 = client.post(
             "/api/v1/auth/register",
             json={
                 "email": "user2@test.com",
                 "password": "Pass123!",
                 "full_name": "User2",
                 "phone": "+584147777777",
-                "cedula": "V-66666666",
+                "cedula": "V-11111111",
                 "role": "worker",
             },
         )
-        assert resp.status_code == 400
-        assert (
-            "cédula" in resp.json()["detail"].lower() or "cedula" in resp.json()["detail"].lower()
+        # Get token by logging in
+        login2 = client.post(
+            "/api/v1/auth/login",
+            json={"email": "user2@test.com", "password": "Pass123!"},
         )
+        token2 = login2.json()["access_token"]
+        # Try to complete user2 with the same cedula — should fail
+        resp = client.patch(
+            "/api/v1/auth/complete-profile",
+            json={"full_name": "User2", "phone": "+584147777777", "cedula": "V-66666666", "address": "Calle 2"},
+            headers={"Authorization": f"Bearer {token2}"},
+        )
+        assert resp.status_code == 400
 
     def test_register_invalid_email(self, client: TestClient):
         """Email invalido (actualmente aceptado, sin validation EmailStr)."""

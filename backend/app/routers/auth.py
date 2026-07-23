@@ -159,9 +159,7 @@ def complete_profile(
     db: Session = Depends(get_db),
 ):
     """Step 2: Complete user profile with name, phone, cedula"""
-    user = current_user
-
-    # Validate phone uniqueness
+    user = db.query(User).filter(User.id == current_user.id).first()
     existing = db.query(User).filter(User.phone == data.phone, User.id != user.id).first()
     if existing:
         raise HTTPException(status_code=400, detail="Telefono ya registrado por otro usuario")
@@ -402,7 +400,7 @@ def update_profile(
 
     Actualiza tu nombre y/o teléfono.
     """
-    user = current_user
+    user = db.query(User).filter(User.id == current_user.id).first()
 
     if request.full_name:
         user.full_name = request.full_name
