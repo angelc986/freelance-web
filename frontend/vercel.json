@@ -2,6 +2,5 @@
   "framework": "nextjs",
   "buildCommand": "npx next build",
   "outputDirectory": ".next",
-  "installCommand": "npm install",
-  "ignoreCommand": "echo 'Auto-deploy blocked. Deploy via GitHub Actions Deploy Hook.' && exit 0"
+  "installCommand": "npm install"
 }
