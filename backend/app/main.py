@@ -1,4 +1,5 @@
 import os
+import time
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,6 +15,7 @@ from app.config import get_settings
 from app.database import Base, engine
 from app.limiter import limiter
 from app.logging_config import configure_logging, get_logger
+from app.request_context import generate_request_id, set_request_id
 from app.startup_validator import validate_startup
 
 _settings = get_settings()
@@ -77,6 +79,33 @@ app = FastAPI(
     title="TurnoGO API",
     version="1.0.1",  # test persistencia PostgreSQL
 )
+
+
+# ── Request ID middleware ──
+# Must be FIRST to capture every request before any other middleware.
+@app.middleware("http")
+async def request_id_middleware(request: Request, call_next):
+    # Accept existing request_id from frontend or generate one
+    request_id = request.headers.get("X-Request-ID", generate_request_id())
+    set_request_id(request_id)
+    request.state.request_id = request_id
+
+    start = time.time()
+    response = await call_next(request)
+    duration_ms = round((time.time() - start) * 1000)
+
+    response.headers["X-Request-ID"] = request_id
+
+    logger.debug(
+        "Request completed",
+        extra={
+            "method": request.method,
+            "path": request.url.path,
+            "status": response.status_code,
+            "duration_ms": duration_ms,
+        },
+    )
+    return response
 
 
 # Security headers middleware
