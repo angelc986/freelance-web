@@ -12,6 +12,17 @@ import os
 
 from pythonjsonlogger import jsonlogger
 
+from app.request_context import get_request_id
+
+
+class _RequestIdFilter(logging.Filter):
+    """Injects request_id from contextvars into every log record automatically."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        rid = get_request_id()
+        record.request_id = rid if rid else "-"
+        return True
+
 
 class _SanitizingFormatter(logging.Formatter):
     """Strip sensitive fields from log records before formatting."""
@@ -65,6 +76,7 @@ class _SanitizingJsonFormatter(jsonlogger.JsonFormatter):
         super().add_fields(log_record, record, message_dict)
         log_record["service"] = "turnogo-api"
         log_record["environment"] = os.getenv("ENVIRONMENT", "development")
+        log_record["request_id"] = getattr(record, "request_id", "-")
         # Redact sensitive keys in extra fields
         for key in list(log_record.keys()):
             for sensitive in self._SENSITIVE_KEYS:
@@ -91,16 +103,17 @@ def configure_logging(level: str = "INFO", json_format: bool = False):
 
     if json_format:
         formatter: logging.Formatter = _SanitizingJsonFormatter(
-            "%(asctime)s %(name)s %(levelname)s %(message)s",
+            "%(asctime)s %(name)s %(levelname)s %(request_id)s %(message)s",
             datefmt="%Y-%m-%dT%H:%M:%SZ",
         )
     else:
         formatter = logging.Formatter(
-            "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            "%(asctime)s [%(levelname)s] [%(request_id)s] %(name)s: %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
 
     handler.setFormatter(formatter)
+    handler.addFilter(_RequestIdFilter())
     root.addHandler(handler)
 
     # Quiet noisy third-party loggers
