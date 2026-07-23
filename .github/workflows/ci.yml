@@ -49,6 +49,7 @@ jobs:
         env:
           TESTING: "true"
           SECRET_KEY: "ci-smoke-test-key-not-for-production"
+          SYSTEM_WALLET_PRIVATE_KEY: "0x0000000000000000000000000000000000000000000000000000000000000000"
           SENTRY_DSN: ""
 
       - name: Upload coverage artifact
