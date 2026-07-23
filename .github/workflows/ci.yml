@@ -90,9 +90,11 @@ jobs:
         run: ruff check .
 
       - name: Run Ruff (format check)
+        if: always()
         run: ruff format --check .
 
       - name: Run Mypy (type check)
+        if: always()
         run: mypy
 
   # ═══════════════════════════════════════════════════════════
