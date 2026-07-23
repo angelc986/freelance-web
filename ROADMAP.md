@@ -1,7 +1,7 @@
 # 🦞 TurnoGO — Roadmap Integral v2.0
 > Consolidación de 4 análisis: OpenClaw + GPT + Devin (Cascade) + Gemini
 > Proyecto activo de Ángel — Prioridad máxima
-> Inicio: 9 julio 2026 | Última actualización: 22 julio 2026
+> Inicio: 9 julio 2026 | Última actualización: 23 julio 2026
 
 ---
 
@@ -22,7 +22,7 @@ Monitoreo:      Sentry 2.64.0 ✅ CONFIGURADO
 PWA:            Service Worker + manifest.json ✅
 Hosting:        Vercel (frontend) + Railway Docker (backend) ✅
 Testing:        pytest 9.1.1 — 137 tests ✅ (5 suites, cobertura ~65%)
-CI/CD:          GitHub Actions — FASE 9.3 (siguiente)
+CI/CD:          GitHub Actions — FASE 9.3 ✅ COMPLETADA (23 Jul 2026)
 ```
 
 ---
@@ -161,17 +161,24 @@ CI/CD:          GitHub Actions — FASE 9.3 (siguiente)
 - [x] Aislamiento estable con drop_all + create_all por test
 - [x] TESTING.md con guía completa
 
-### 9.3 CI/CD con GitHub Actions
-- [ ] Workflow: `test.yml` — correr tests en cada PR/push a main
-- [ ] Workflow: `lint.yml` — ESLint + mypy + ruff
-- [ ] Workflow: `deploy.yml` — deploy automático a Railway + Vercel
-- [ ] Agregar badge de status en README
+### 9.3 CI/CD con GitHub Actions ✅
+- [x] Workflow: `ci.yml` — 3 jobs (backend tests 163/163, ruff+mypy, ESLint+TypeScript)
+- [x] Workflow: `deploy.yml` — gated via `workflow_run`, solo corre tras CI verde
+- [x] Badge de status en README
+- [x] Arquitectura final de deploy (sin duplicación):
+  - Vercel: auto-deploy on push (Git conectado → freelance-web-beta.vercel.app)
+  - Railway: auto-deploy con "Wait for CI" (nativo de Railway)
+  - Sin `ignoreCommand`, sin Deploy Hooks, sin race conditions
+- [x] 15+ runs exitosos en GitHub Actions
 
-### 9.4 Logging Estructurado
-- [ ] Reemplazar todos los `print()` en `blockchain.py` con `logging`
-- [ ] Configurar logging estructurado (JSON) para producción
-- [ ] Niveles: DEBUG en dev, INFO/WARNING/ERROR en prod
-- [ ] No loggear datos sensibles (passwords, tokens, private keys)
+### 9.4 Observabilidad Profesional ✅
+- [x] **Logging estructurado**: 24 `print()` eliminados → structlog JSON (9 archivos)
+- [x] **Request ID tracing**: `X-Request-ID` header, UUID por request, correlación en logs y Sentry
+- [x] **Health checks**: `/live` (200, sin DB), `/ready` (200/503 con DB check), `/api/v1/health` (compatibilidad)
+- [x] **Métricas Prometheus**: `/metrics` endpoint, 5 métricas (`turnogo_http_requests_total`, `turnogo_http_request_duration_seconds`, `turnogo_http_errors_total`, `turnogo_database_status`, `turnogo_app_info`)
+- [x] **Sentry hardening**: `send_default_pii=False`, `request_id` tag en `before_send`, sanitización de passwords/tokens/keys
+- [x] **Documentación**: `docs/observability.md` — guía operativa con Grafana dashboards, 5 AlertManager rules, playbook de debugging
+- [x] 5 commits, 18 archivos, ~700 líneas
 
 ### 9.5 Backups y DRP
 - [ ] Configurar backups automáticos de Supabase (diarios, 7 días retención)
@@ -517,16 +524,17 @@ CI/CD:          GitHub Actions — FASE 9.3 (siguiente)
 | Fase | Prioridad | Tiempo Estimado | Dependencias |
 |------|-----------|-----------------|--------------|
 | **Fase 8** — Seguridad Crítica | ✅ Completada | 19-22 Jul 2026 | Ninguna |
-| **Fase 9** — Infraestructura | 🟡 En progreso | 1-2 semanas | Fase 8 |
+| **Fase 9** — Infraestructura | ✅ Completada | 19-23 Jul 2026 | Fase 8 |
 | **Fase 9.1** — Alembic | ✅ Completada | 22 Jul 2026 | |
 | **Fase 9.2** — Tests | ✅ Completada | 22 Jul 2026 | |
-| **Fase 9.3** — CI/CD | 🔴 Siguiente | 1-2 días | Fase 9.2 |
-| **Fase 10** — Bloqueantes Producción | 🟠 2-3 sem | 2-3 semanas | Fase 8 |
+| **Fase 9.3** — CI/CD | ✅ Completada | 23 Jul 2026 | Fase 9.2 |
+| **Fase 9.4** — Observabilidad | ✅ Completada | 23 Jul 2026 | Fase 9.3 |
+| **Fase 10** — Bloqueantes Producción | 🟠 2-3 sem | 2-3 semanas | Fase 9 |
 | **Fase 11** — Chat + Comunicación | 🟠 2-3 sem | 2-3 semanas | Fase 10 (email) |
 | **Fase 12** — UX y Completitud | 🟡 3-4 sem | 3-4 semanas | Fase 11 |
 | **Fase 13** — Búsqueda + Recomendaciones | 🟡 2-3 sem | 2-3 semanas | Fase 12 |
 | **Fase 14** — Seguridad Avanzada | 🟡 2-3 sem | 2-3 semanas | Fase 11 |
-| **Fase 15** — Observabilidad | 🟡 1-2 sem | 1-2 semanas | Fase 9 |
+| **Fase 15** — Observabilidad | ✅ Completada | 23 Jul 2026 | Fase 9 |
 | **Fase 16** — Crecimiento | 🟢 3-4 sem | 3-4 semanas | Fase 12 |
 | **Fase 17** — Escalabilidad | 🟢 2-3 sem | 2-3 semanas | Fase 9 |
 | **Fase 18** — Venezuela | 🟢 2-3 sem | 2-3 semanas | Fase 10 |
@@ -539,7 +547,8 @@ CI/CD:          GitHub Actions — FASE 9.3 (siguiente)
 Jul 2026 ──── Fase 8 ✅  (Seguridad Crítica) ──────────────── ✅
 Jul 2026 ──── Fase 9.1 ✅ (Alembic Migraciones) ──────────── ✅
 Jul 2026 ──── Fase 9.2 ✅ (Tests Automatizados 137) ──────── ✅
-Jul 2026 ──── Fase 9.3   (CI/CD GitHub Actions) ──────────── 🔴 NEXT
+Jul 2026 ──── Fase 9.3 ✅ (CI/CD GitHub Actions) ──────────── ✅
+Jul 2026 ──── Fase 9.4 ✅ (Observabilidad Profesional) ─────── ✅
 Aug 2026 ──── Fase 10    (Bloqueantes producción) ────────── 🟠
 Aug-Sep 2026 ─ Fase 11-12 (Chat + UX) ───────────────────── 🟠🟡
 Sep-Oct 2026 ─ Fase 13-15 (Búsqueda + Seguridad + Metrics)  🟡
@@ -564,8 +573,10 @@ Nov-Dec 2026 ─ Fase 18-19 (Venezuela + Docs) ───────────
 | 19-22 jul 2026 | **Fase 8 completa**. SECRET_KEY, startup validator, dev-token eliminado, webhook HMAC, CORS strict, passwords, email verification, security headers, audit logs, gitignore. 60 tests de seguridad. |
 | 22 jul 2026 | **Fase 9.1 completa**. Alembic migrations (10 tablas), baseline, Railway Start Command con `alembic upgrade head`. |
 | 22 jul 2026 | **Fase 9.2 completa**. 137 tests estables (5 suites), aislamiento con `drop_all/create_all`, `.coveragerc`, `TESTING.md`, sesión `db` compartida. Cobertura ~65% core. |
-| 22 jul 2026 | **Nueva metodología**: desarrollo 100% local, tests antes de push, 1 solo deploy por fase. |
+| 23 jul 2026 | **Fase 9.3 completa**. CI/CD pipeline: `ci.yml` (3 jobs: backend tests 163/163, ruff+mypy, ESLint+TypeScript) + `deploy.yml` (workflow_run gate). Arquitectura limpia: Vercel auto-deploy on push + Railway "Wait for CI" nativo. Sin duplicación. |
+| 23 jul 2026 | **Fase 9.4 completa**. Observabilidad profesional en 5 bloques: logging estructurado (structlog, 24 prints eliminados), request ID tracing (X-Request-ID), health checks (/live, /ready, /health), métricas Prometheus (/metrics, 5 métricas), Sentry hardening (PII off, request_id tag, sanitización). `docs/observability.md` con playbook de debugging. |
+| 23 jul 2026 | **Lecciones de deploy**: Vercel `ignoreCommand` bloquea Deploy Hooks. Railway "Wait for CI" es la solución correcta. Arquitectura final: 1 deploy por commit por plataforma. |
 
 ---
 
-*Versión 2.0 — Consolidación de 4 análisis de IA | 19 julio 2026*
+*Versión 2.0 — Consolidación de 4 análisis de IA | Última actualización: 23 julio 2026*
