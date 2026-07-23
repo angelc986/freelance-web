@@ -15,13 +15,10 @@ permissions:
   contents: read
 
 jobs:
-  # Gate: only proceed if CI passed
   gate:
     name: Verify CI Passed
     runs-on: ubuntu-latest
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     outputs:
       proceed: ${{ steps.check.outputs.proceed }}
     steps:
@@ -32,7 +29,7 @@ jobs:
             echo "Manual deploy - bypassing CI gate."
             echo "proceed=true" >> $GITHUB_OUTPUT
           elif [ "${{ github.event.workflow_run.conclusion }}" = "success" ]; then
-            echo "CI passed. Proceeding with Vercel deploy."
+            echo "CI passed. Proceeding."
             echo "proceed=true" >> $GITHUB_OUTPUT
           else
             echo "::error::CI FAILED. Deploy BLOCKED."
@@ -40,7 +37,6 @@ jobs:
             exit 0
           fi
 
-  # Vercel: Deploy via CLI
   deploy-frontend:
     name: Deploy Vercel
     needs: [gate]
@@ -64,7 +60,6 @@ jobs:
           npx vercel deploy --prod --token "***" --yes
           echo "::notice::Vercel deploy complete."
 
-  # Summary
   deploy-summary:
     name: Deploy Summary
     needs: [deploy-frontend]
