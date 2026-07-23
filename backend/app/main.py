@@ -3,10 +3,11 @@ import time
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from sqlalchemy import text
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # STARTUP VALIDATION â€” must run BEFORE app creation
@@ -202,4 +203,41 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.get("/api/v1/health")
 def health():
+    """General health check — fast, no dependencies."""
     return {"status": "ok"}
+
+
+@app.get("/live")
+def live():
+    """Liveness probe — confirms the process is running. No external checks.
+
+    Use for: Railway health check, process monitor.
+    """
+    return {"status": "alive"}
+
+
+@app.get("/ready")
+def ready():
+    """Readiness probe — confirms the app can serve traffic.
+
+    Checks: database connectivity.
+    Use for: load balancer, ingress controller.
+    """
+    checks = {}
+    healthy = True
+
+    # Database check
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        checks["database"] = "ok"
+    except Exception as e:
+        checks["database"] = "unavailable"
+        healthy = False
+        logger.error("Readiness check failed: database unavailable", extra={"error": str(e)})
+
+    status_code = 200 if healthy else 503
+    return JSONResponse(
+        content={"status": "ready" if healthy else "not_ready", "checks": checks},
+        status_code=status_code,
+    )
