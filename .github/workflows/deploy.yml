@@ -40,33 +40,26 @@ jobs:
             exit 0
           fi
 
-  # ── Vercel: Deploy via CLI (full control, no race condition) ──
+  # ── Vercel: Deploy via Deploy Hook (bypasses ignoreCommand) ──
   deploy-frontend:
     name: Deploy Vercel
     needs: [gate]
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     if: needs.gate.outputs.proceed == 'true'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Deploy to Vercel
+      - name: Trigger Vercel Deploy
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
         run: |
-          if [ -z "$VERCEL_TOKEN" ]; then
-            echo "::warning::VERCEL_TOKEN not set. How to fix:"
-            echo "  1. Vercel Dashboard → Settings → Tokens → Create"
-            echo "  2. Name: GitHub Actions, Scope: Full Account"
-            echo "  3. Add token as VERCEL_TOKEN in GitHub Secrets"
-            echo "  4. Vercel Settings → Git → DISCONNECT repo (stops auto-deploy)"
+          if [ -z "$VERCEL_DEPLOY_HOOK" ]; then
+            echo "::warning::VERCEL_DEPLOY_HOOK not set. Deploy skipped."
             exit 0
           fi
-          cd frontend
-          echo "Deploying to Vercel production..."
-          npx vercel deploy --prod --token "$VERCEL_TOKEN" --yes
-          echo "::notice::Vercel deploy complete. https://freelance-web-beta.vercel.app"
+          echo "Triggering Vercel deploy via Deploy Hook..."
+          RESPONSE=$(curl -sf -X POST "$VERCEL_DEPLOY_HOOK")
+          echo "$RESPONSE"
+          echo "::notice::Vercel deploy triggered."
 
   # Railway: Native auto-deploy with Wait for CI enabled
   deploy-backend:
