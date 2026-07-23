@@ -2,5 +2,6 @@
   "framework": "nextjs",
   "buildCommand": "npx next build",
   "outputDirectory": ".next",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "ignoreCommand": "echo 'Auto-deploy off. Deploy via GitHub Actions after CI.' && exit 0"
 }
