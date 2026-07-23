@@ -2,12 +2,16 @@
 Migración mínima: agrega columna google_id a la tabla users.
 SQLite soporta ALTER TABLE ADD COLUMN para columnas nullable.
 """
-import sys
+
 import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from sqlalchemy import text
+
 from app.database import engine
+
 
 def migrate():
     conn = engine.connect()
@@ -22,6 +26,7 @@ def migrate():
         else:
             print(f"[WARN] {e}")
     conn.close()
+
 
 if __name__ == "__main__":
     migrate()

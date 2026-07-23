@@ -4,18 +4,18 @@ import json
 import logging
 import os
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.database import SessionLocal
 from app.limiter import limiter
 from app.models.user import User
-from app.services.auth import get_current_user
 from app.services.audit import log_action
+from app.services.auth import get_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +45,7 @@ def shorten_floats(data):
 
 # ─── Endpoints ───
 
+
 def _extract_portrait_url(payload: dict) -> str | None:
     """Extract the user's portrait/selfie image URL from Didit webhook payload."""
     portrait = payload.get("portrait_image")
@@ -58,7 +59,11 @@ def _extract_portrait_url(payload: dict) -> str | None:
             if isinstance(items, list):
                 for item in items:
                     if isinstance(item, dict):
-                        img = item.get("portrait_image") or item.get("face_image") or item.get("image")
+                        img = (
+                            item.get("portrait_image")
+                            or item.get("face_image")
+                            or item.get("image")
+                        )
                         if img:
                             return img
 
@@ -82,7 +87,13 @@ def _upload_avatar_from_url(image_url: str, user_id: int) -> str | None:
         logger.warning("cloudinary not installed, skipping avatar upload")
         return None
     settings = get_settings()
-    if not all([settings.CLOUDINARY_CLOUD_NAME, settings.CLOUDINARY_API_KEY, settings.CLOUDINARY_API_SECRET]):
+    if not all(
+        [
+            settings.CLOUDINARY_CLOUD_NAME,
+            settings.CLOUDINARY_API_KEY,
+            settings.CLOUDINARY_API_SECRET,
+        ]
+    ):
         logger.warning("Cloudinary not configured, skipping avatar upload")
         return None
 
@@ -136,7 +147,9 @@ async def create_verification(
     current_user.didit_session_id = None
     db.commit()
 
-    callback_url = f"{os.getenv('APP_URL', 'https://freelance-web-beta.vercel.app')}/verification-complete"
+    callback_url = (
+        f"{os.getenv('APP_URL', 'https://freelance-web-beta.vercel.app')}/verification-complete"
+    )
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
@@ -166,7 +179,9 @@ async def create_verification(
     current_user.didit_session_id = session_id
     db.commit()
 
-    log_action(current_user.id, "kyc_session_created", {"session_id": session_id}, ip=request.client.host)
+    log_action(
+        current_user.id, "kyc_session_created", {"session_id": session_id}, ip=request.client.host
+    )
 
     return {
         "status": "created",
@@ -243,18 +258,25 @@ async def didit_webhook(request: Request):
         if user:
             if status_val == "Approved":
                 user.is_verified = True
-                user.verified_at = datetime.now(timezone.utc)
+                user.verified_at = datetime.now(UTC)
                 portrait_url = _extract_portrait_url(payload)
                 if portrait_url:
                     cloud_url = _upload_avatar_from_url(portrait_url, user.id)
                     if cloud_url:
                         user.avatar_url = cloud_url
                         user.avatar_verified = True
-                log_action(user.id, "kyc_approved", {"session_id": session_id}, ip=request.client.host)
+                log_action(
+                    user.id, "kyc_approved", {"session_id": session_id}, ip=request.client.host
+                )
             elif status_val in ("Declined", "Expired", "Abandoned"):
                 user.is_verified = False
                 user.didit_session_id = None
-                log_action(user.id, "kyc_failed", {"session_id": session_id, "status": status_val}, ip=request.client.host)
+                log_action(
+                    user.id,
+                    "kyc_failed",
+                    {"session_id": session_id, "status": status_val},
+                    ip=request.client.host,
+                )
             db.commit()
     except (ValueError, Exception):
         pass

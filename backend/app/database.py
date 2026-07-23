@@ -1,6 +1,7 @@
 import os
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 # Lee DATABASE_URL del entorno; fallback a SQLite local
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./freelance.db")

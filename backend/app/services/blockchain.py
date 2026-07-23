@@ -10,10 +10,11 @@ Este módulo se encarga de:
 En desarrollo: usamos Polygon Amoy Testnet (dinero falso)
 En producción: Polygon Mainnet (dinero real)
 """
+
+from eth_account import Account
 from web3 import Web3
 from web3.middleware import ExtraDataToPOAMiddleware
-from eth_account import Account
-from typing import Optional
+
 from app.config import get_settings
 
 settings = get_settings()
@@ -97,7 +98,7 @@ def get_system_wallet_balance() -> float:
         balance_wei = contract.functions.balanceOf(
             Web3.to_checksum_address(settings.SYSTEM_WALLET_ADDRESS)
         ).call()
-        return balance_wei / (10 ** decimals)
+        return balance_wei / (10**decimals)
     except Exception as e:
         print(f"Error obteniendo balance: {e}")
         return 0.0
@@ -111,10 +112,8 @@ def get_wallet_balance(wallet_address: str) -> float:
     try:
         contract = _get_usdt_contract()
         decimals = contract.functions.decimals().call()
-        balance_wei = contract.functions.balanceOf(
-            Web3.to_checksum_address(wallet_address)
-        ).call()
-        return balance_wei / (10 ** decimals)
+        balance_wei = contract.functions.balanceOf(Web3.to_checksum_address(wallet_address)).call()
+        return balance_wei / (10**decimals)
     except Exception as e:
         print(f"Error obteniendo balance de {wallet_address}: {e}")
         return 0.0
@@ -123,12 +122,12 @@ def get_wallet_balance(wallet_address: str) -> float:
 def verify_transaction(tx_hash: str, expected_amount: float, expected_to: str) -> dict:
     """
     VERIFICA EN LA BLOCKCHAIN que una transacción es real.
-    
+
     Args:
         tx_hash: Hash de la transacción en Polygon
         expected_amount: Monto que debería haber enviado
         expected_to: Dirección que debería recibir (nuestra wallet)
-    
+
     Returns:
         dict con:
             - verified: bool
@@ -165,18 +164,14 @@ def verify_transaction(tx_hash: str, expected_amount: float, expected_to: str) -
 
         # La transacción debe tener al menos MIN_CONFIRMATIONS
         if confirmations < settings.MIN_CONFIRMATIONS:
-            result["error"] = (
-                f"Pocas confirmaciones: {confirmations}/{settings.MIN_CONFIRMATIONS}"
-            )
+            result["error"] = f"Pocas confirmaciones: {confirmations}/{settings.MIN_CONFIRMATIONS}"
             return result
 
         # Verificar dirección de destino
         tx_to = tx.get("to", "").lower()
         expected = Web3.to_checksum_address(expected_to).lower()
         if tx_to != expected:
-            result["error"] = (
-                f"Destino incorrecto: {tx_to} (esperado: {expected})"
-            )
+            result["error"] = f"Destino incorrecto: {tx_to} (esperado: {expected})"
             return result
 
         # Para transacciones USDT (ERC-20), el monto está en los logs
@@ -194,24 +189,24 @@ def verify_transaction(tx_hash: str, expected_amount: float, expected_to: str) -
         return result
 
 
-def send_usdt(to_address: str, amount: float) -> Optional[str]:
+def send_usdt(to_address: str, amount: float) -> str | None:
     """
     Envía USDT desde la wallet del sistema a una dirección externa.
-    
+
     Args:
         to_address: Wallet destino
         amount: Cantidad de USDT a enviar
-    
+
     Returns:
         tx_hash (str) si success, None si falló
-    
+
     ADVERTENCIA: Esta función FIRMA transacciones reales.
     Solo llamarla cuando estemos seguros (trabajo completado).
     """
     try:
         contract = _get_usdt_contract()
         decimals = contract.functions.decimals().call()
-        amount_wei = int(amount * (10 ** decimals))
+        amount_wei = int(amount * (10**decimals))
 
         account = Account.from_key(settings.SYSTEM_WALLET_PRIVATE_KEY)
 
@@ -219,14 +214,16 @@ def send_usdt(to_address: str, amount: float) -> Optional[str]:
         tx = contract.functions.transfer(
             Web3.to_checksum_address(to_address),
             amount_wei,
-        ).build_transaction({
-            "from": settings.SYSTEM_WALLET_ADDRESS,
-            "nonce": w3.eth.get_transaction_count(
-                Web3.to_checksum_address(settings.SYSTEM_WALLET_ADDRESS)
-            ),
-            "gas": 100000,
-            "gasPrice": w3.eth.gas_price,
-        })
+        ).build_transaction(
+            {
+                "from": settings.SYSTEM_WALLET_ADDRESS,
+                "nonce": w3.eth.get_transaction_count(
+                    Web3.to_checksum_address(settings.SYSTEM_WALLET_ADDRESS)
+                ),
+                "gas": 100000,
+                "gasPrice": w3.eth.gas_price,
+            }
+        )
 
         # Firmar y enviar
         signed_tx = account.sign_transaction(tx)
@@ -243,7 +240,8 @@ def send_usdt(to_address: str, amount: float) -> Optional[str]:
 # ESCANEO AUTOMÁTICO DE DEPÓSITOS
 # ──────────────────────────────────────────────
 
-def scan_deposits(from_block: Optional[int] = None, to_block: Optional[int] = None) -> list[dict]:
+
+def scan_deposits(from_block: int | None = None, to_block: int | None = None) -> list[dict]:
     """
     🔍 ESCANEA LA BLOCKCHAIN buscando depósitos USDT entrantes
     a la wallet del sistema que no hayan sido registrados aún.
@@ -296,10 +294,12 @@ def scan_deposits(from_block: Optional[int] = None, to_block: Optional[int] = No
         for event in events:
             args = event.get("args", {})
             amount_raw = args.get("value", 0)
-            amount = amount_raw / (10 ** decimals) if amount_raw else 0
+            amount = amount_raw / (10**decimals) if amount_raw else 0
 
             deposit = {
-                "tx_hash": event.get("transactionHash", "").hex() if hasattr(event.get("transactionHash", ""), "hex") else str(event.get("transactionHash", "")),
+                "tx_hash": event.get("transactionHash", "").hex()
+                if hasattr(event.get("transactionHash", ""), "hex")
+                else str(event.get("transactionHash", "")),
                 "from_address": str(args.get("from", "")),
                 "amount": amount,
                 "block_number": event.get("blockNumber", 0),

@@ -1,17 +1,18 @@
 import os
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from app.limiter import limiter
-from app.database import engine, Base
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # STARTUP VALIDATION â€” must run BEFORE app creation
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 from app.config import get_settings
+from app.database import Base, engine
+from app.limiter import limiter
 from app.startup_validator import validate_startup
 
 _settings = get_settings()
@@ -20,12 +21,23 @@ print(f"[STARTUP] Validation passed ({_settings.APP_NAME} v{_settings.APP_VERSIO
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 
-from app.routers import auth_router, jobs_router, payments_router, ratings_router, users_router, admin_router, events_router, notifications_router, verification_router, push_subscriptions_router
-
 # Sentry - monitoreo de errores en produccion
 import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+
+from app.routers import (
+    admin_router,
+    auth_router,
+    events_router,
+    jobs_router,
+    notifications_router,
+    payments_router,
+    push_subscriptions_router,
+    ratings_router,
+    users_router,
+    verification_router,
+)
 
 sentry_dsn = os.getenv("SENTRY_DSN", "")
 if sentry_dsn:
@@ -56,6 +68,7 @@ app = FastAPI(
     version="1.0.1",  # test persistencia PostgreSQL
 )
 
+
 # Security headers middleware
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
@@ -68,6 +81,7 @@ async def security_headers(request: Request, call_next):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
+
 # Middleware para mantener HTTPS detrÃ¡s del proxy de Railway
 @app.middleware("http")
 async def https_redirect(request: Request, call_next):
@@ -79,6 +93,7 @@ async def https_redirect(request: Request, call_next):
             location = location.replace("http://", "https://", 1)
             return RedirectResponse(location, status_code=307)
     return response
+
 
 # Rate limiting
 app.state.limiter = limiter
@@ -149,4 +164,3 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 @app.get("/api/v1/health")
 def health():
     return {"status": "ok"}
-

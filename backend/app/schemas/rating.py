@@ -1,11 +1,11 @@
-from pydantic import BaseModel, Field
-from typing import Optional
 from datetime import datetime
+
+from pydantic import BaseModel, Field
 
 
 class RatingCreate(BaseModel):
     rating: float = Field(..., ge=1, le=5, description="Calificación del 1 al 5")
-    comment: Optional[str] = None
+    comment: str | None = None
 
 
 class RatingResponse(BaseModel):
@@ -14,7 +14,7 @@ class RatingResponse(BaseModel):
     rater_id: int
     rated_id: int
     rating: float
-    comment: Optional[str] = None
+    comment: str | None = None
     created_at: datetime
 
     class Config:

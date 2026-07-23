@@ -1,5 +1,4 @@
 import psycopg2
-import os
 
 # Connection from MEMORY - Supabase pooler
 conn = psycopg2.connect(
@@ -7,7 +6,7 @@ conn = psycopg2.connect(
     port=5432,
     dbname="postgres",
     user="postgres.kojuiugfdhspdblfcmvm",
-    password="28659265An$"
+    password="28659265An$",
 )
 conn.autocommit = True
 cur = conn.cursor()

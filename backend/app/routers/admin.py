@@ -1,25 +1,22 @@
 """Panel de administración — solo usuarios con is_admin=True"""
-from datetime import datetime, timezone, timedelta
-from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from datetime import UTC, datetime, timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
-from app.models.user import User
-from app.models.job import Job
-from app.models.transaction import Transaction
-from app.models.refresh_token import RefreshToken
-from app.models.notification import Notification
+from app.limiter import limiter
 from app.models.application import Application
 from app.models.audit_log import AuditLog
+from app.models.job import Job
+from app.models.notification import Notification
 from app.models.rating import Rating
-from app.schemas.user import UserResponse
-from app.schemas.job import JobResponse
-from app.schemas.payment import TransactionResponse
-from app.services.auth import get_current_admin
+from app.models.refresh_token import RefreshToken
+from app.models.transaction import Transaction
+from app.models.user import User
 from app.services.audit import log_action
-from app.limiter import limiter
+from app.services.auth import get_current_admin
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
 
@@ -83,19 +80,26 @@ def _job_to_response(j: Job) -> dict:
 
 @router.get("/stats")
 @limiter.limit("30/minute")
-def admin_stats(request: Request, db: Session = Depends(get_db), admin: User = Depends(get_current_admin)):
+def admin_stats(
+    request: Request, db: Session = Depends(get_db), admin: User = Depends(get_current_admin)
+):
     """📊 Estadísticas generales de la plataforma"""
     total_users = db.query(User).count()
     total_workers = db.query(User).filter(User.role.in_(["worker", "both"])).count()
     total_contractors = db.query(User).filter(User.role.in_(["contractor", "both"])).count()
     total_jobs = db.query(Job).count()
-    active_jobs = db.query(Job).filter(Job.status.in_(["open", "in_progress", "checked_in"])).count()
+    active_jobs = (
+        db.query(Job).filter(Job.status.in_(["open", "in_progress", "checked_in"])).count()
+    )
     disputed_jobs = db.query(Job).filter(Job.status == "disputed").count()
     completed_jobs = db.query(Job).filter(Job.status == "completed").count()
     total_transactions = db.query(Transaction).count()
-    total_volume = db.query(Transaction).filter(Transaction.status == "confirmed").with_entities(
-        Transaction.amount
-    ).all()
+    total_volume = (
+        db.query(Transaction)
+        .filter(Transaction.status == "confirmed")
+        .with_entities(Transaction.amount)
+        .all()
+    )
     total_volume_sum = sum(t.amount for t in total_volume) if total_volume else 0
 
     return {
@@ -138,7 +142,9 @@ def admin_list_users(
         )
 
     total = query.count()
-    users = query.order_by(User.created_at.desc()).offset((page - 1) * per_page).limit(per_page).all()
+    users = (
+        query.order_by(User.created_at.desc()).offset((page - 1) * per_page).limit(per_page).all()
+    )
 
     return {
         "total": total,
@@ -182,7 +188,12 @@ def admin_toggle_user_status(
     user.is_active = is_active
     db.commit()
 
-    log_action(admin_user.id, f"admin_{'activate' if is_active else 'suspend'}_user", {"target_user_id": user_id}, ip=request.client.host)
+    log_action(
+        admin_user.id,
+        f"admin_{'activate' if is_active else 'suspend'}_user",
+        {"target_user_id": user_id},
+        ip=request.client.host,
+    )
     return {"message": f"Usuario {'activado' if is_active else 'suspendido'} exitosamente"}
 
 
@@ -203,7 +214,12 @@ def admin_toggle_admin_role(
     user.is_admin = is_admin
     db.commit()
 
-    log_action(admin_user.id, f"admin_{'grant' if is_admin else 'revoke'}_admin", {"target_user_id": user_id}, ip=request.client.host)
+    log_action(
+        admin_user.id,
+        f"admin_{'grant' if is_admin else 'revoke'}_admin",
+        {"target_user_id": user_id},
+        ip=request.client.host,
+    )
     return {"message": f"Permisos de admin {'otorgados' if is_admin else 'revocados'} exitosamente"}
 
 
@@ -237,7 +253,12 @@ def admin_delete_user(
     db.delete(user)
     db.commit()
 
-    log_action(admin_user.id, "delete_user", {"target_user_id": user_id, "email": user.email}, ip=request.client.host)
+    log_action(
+        admin_user.id,
+        "delete_user",
+        {"target_user_id": user_id, "email": user.email},
+        ip=request.client.host,
+    )
     return {"message": "Usuario y todos sus datos eliminados exitosamente"}
 
 
@@ -257,11 +278,21 @@ def admin_list_transactions(
     """💳 Listar todas las transacciones"""
     query = db.query(Transaction)
 
-    if status_filter and status_filter in ("pending", "confirmed", "failed", "pending_confirmation"):
+    if status_filter and status_filter in (
+        "pending",
+        "confirmed",
+        "failed",
+        "pending_confirmation",
+    ):
         query = query.filter(Transaction.status == status_filter)
 
     total = query.count()
-    txs = query.order_by(Transaction.created_at.desc()).offset((page - 1) * per_page).limit(per_page).all()
+    txs = (
+        query.order_by(Transaction.created_at.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+        .all()
+    )
 
     return {
         "total": total,
@@ -319,7 +350,9 @@ def admin_list_disputes(
                 "dispute_reason": j.dispute_reason,
                 "status": j.status,
                 "created_at": j.created_at.isoformat() if j.created_at else None,
-                "updated_at": j.updated_at.isoformat() if hasattr(j, 'updated_at') and j.updated_at else None,
+                "updated_at": j.updated_at.isoformat()
+                if hasattr(j, "updated_at") and j.updated_at
+                else None,
             }
             for j in jobs
         ],
@@ -360,11 +393,23 @@ def admin_resolve_dispute(
         job.status = "cancelled"
 
     else:
-        raise HTTPException(status_code=400, detail="Resolución inválida. Usa: approve, cancel, refund")
+        raise HTTPException(
+            status_code=400, detail="Resolución inválida. Usa: approve, cancel, refund"
+        )
 
     db.commit()
 
-    log_action(admin.id, "admin_resolve_dispute", {"job_id": job_id, "resolution": resolution, "client_id": job.client_id, "worker_id": job.worker_id}, ip=request.client.host)
+    log_action(
+        admin.id,
+        "admin_resolve_dispute",
+        {
+            "job_id": job_id,
+            "resolution": resolution,
+            "client_id": job.client_id,
+            "worker_id": job.worker_id,
+        },
+        ip=request.client.host,
+    )
     return {"message": f"Disputa resuelta: {resolution}", "job_status": job.status}
 
 
@@ -381,6 +426,7 @@ def admin_refund(
 ):
     """💸 Reembolso forzado por admin (usa el mismo endpoint de payments pero con auth admin)"""
     from app.routers.payments import refund_payment
+
     return refund_payment(job_id, db, admin)
 
 
@@ -396,6 +442,7 @@ def admin_wallet_info(
 ):
     """🏦 Informacion de la wallet del sistema"""
     from app.config import get_settings
+
     settings = get_settings()
 
     total_deposits = (
@@ -410,11 +457,7 @@ def admin_wallet_info(
         .with_entities(Transaction.amount)
         .all()
     )
-    pending = (
-        db.query(Transaction)
-        .filter(Transaction.status == "pending_confirmation")
-        .count()
-    )
+    pending = db.query(Transaction).filter(Transaction.status == "pending_confirmation").count()
 
     deposits_sum = sum(t.amount for t in total_deposits) if total_deposits else 0
     withdrawals_sum = sum(t.amount for t in total_withdrawals) if total_withdrawals else 0
@@ -439,40 +482,67 @@ def admin_analytics(
     admin: User = Depends(get_current_admin),
 ):
     """📈 Analiticas avanzadas"""
+    from datetime import date
+
     from sqlalchemy import func
-    from datetime import date, timedelta
+
     from app.models.rating import Rating
 
     today = date.today()
     thirty_days_ago = today - timedelta(days=30)
 
     # User growth
-    user_growth = db.query(
-        func.date(User.created_at).label("date"),
-        func.count(User.id).label("count"),
-    ).filter(User.created_at >= thirty_days_ago).group_by(func.date(User.created_at)).order_by(func.date(User.created_at)).all()
+    user_growth = (
+        db.query(
+            func.date(User.created_at).label("date"),
+            func.count(User.id).label("count"),
+        )
+        .filter(User.created_at >= thirty_days_ago)
+        .group_by(func.date(User.created_at))
+        .order_by(func.date(User.created_at))
+        .all()
+    )
     user_growth_data = [{"date": str(r.date), "count": r.count} for r in user_growth]
 
     # Job trends
-    job_trends = db.query(
-        func.date(Job.created_at).label("date"),
-        Job.status, func.count(Job.id).label("count"),
-    ).filter(Job.created_at >= thirty_days_ago).group_by(func.date(Job.created_at), Job.status).order_by(func.date(Job.created_at)).all()
+    job_trends = (
+        db.query(
+            func.date(Job.created_at).label("date"),
+            Job.status,
+            func.count(Job.id).label("count"),
+        )
+        .filter(Job.created_at >= thirty_days_ago)
+        .group_by(func.date(Job.created_at), Job.status)
+        .order_by(func.date(Job.created_at))
+        .all()
+    )
     jmap: dict = {}
     for r in job_trends:
         d = str(r.date)
         if d not in jmap:
-            jmap[d] = {"date": d, "open": 0, "in_progress": 0, "completed": 0, "disputed": 0, "cancelled": 0}
+            jmap[d] = {
+                "date": d,
+                "open": 0,
+                "in_progress": 0,
+                "completed": 0,
+                "disputed": 0,
+                "cancelled": 0,
+            }
         jmap[d][r.status] = r.count
     job_trend_data = sorted(jmap.values(), key=lambda x: x["date"])
 
     # Revenue timeline
-    rev = db.query(
-        func.date(Transaction.created_at).label("date"),
-        Transaction.type, func.coalesce(func.sum(Transaction.amount), 0).label("total"),
-    ).filter(Transaction.created_at >= thirty_days_ago, Transaction.status == "confirmed").group_by(
-        func.date(Transaction.created_at), Transaction.type
-    ).order_by(func.date(Transaction.created_at)).all()
+    rev = (
+        db.query(
+            func.date(Transaction.created_at).label("date"),
+            Transaction.type,
+            func.coalesce(func.sum(Transaction.amount), 0).label("total"),
+        )
+        .filter(Transaction.created_at >= thirty_days_ago, Transaction.status == "confirmed")
+        .group_by(func.date(Transaction.created_at), Transaction.type)
+        .order_by(func.date(Transaction.created_at))
+        .all()
+    )
     rmap: dict = {}
     for r in rev:
         d = str(r.date)
@@ -483,21 +553,36 @@ def admin_analytics(
     rev_data = sorted(rmap.values(), key=lambda x: x["date"])
 
     # Top workers
-    top_workers = db.query(
-        User.id, User.full_name, User.rating_avg,
-        func.coalesce(func.sum(Transaction.amount), 0).label("earnings"),
-        func.count(Job.id).label("jobs_completed"),
-    ).join(Transaction, Transaction.user_id == User.id).join(
-        Job, Job.worker_id == User.id
-    ).filter(
-        Transaction.type == "payment", Transaction.status == "confirmed", Job.status == "completed"
-    ).group_by(User.id).order_by(func.sum(Transaction.amount).desc()).limit(10).all()
-    top_workers_data = [{
-        "id": w.id, "name": w.full_name,
-        "earnings": round(float(w.earnings), 2),
-        "jobs": w.jobs_completed,
-        "rating": round(float(w.rating_avg), 1),
-    } for w in top_workers]
+    top_workers = (
+        db.query(
+            User.id,
+            User.full_name,
+            User.rating_avg,
+            func.coalesce(func.sum(Transaction.amount), 0).label("earnings"),
+            func.count(Job.id).label("jobs_completed"),
+        )
+        .join(Transaction, Transaction.user_id == User.id)
+        .join(Job, Job.worker_id == User.id)
+        .filter(
+            Transaction.type == "payment",
+            Transaction.status == "confirmed",
+            Job.status == "completed",
+        )
+        .group_by(User.id)
+        .order_by(func.sum(Transaction.amount).desc())
+        .limit(10)
+        .all()
+    )
+    top_workers_data = [
+        {
+            "id": w.id,
+            "name": w.full_name,
+            "earnings": round(float(w.earnings), 2),
+            "jobs": w.jobs_completed,
+            "rating": round(float(w.rating_avg), 1),
+        }
+        for w in top_workers
+    ]
 
     # Rating distribution
     rating_dist = db.query(Rating.rating, func.count(Rating.id)).group_by(Rating.rating).all()
@@ -507,7 +592,9 @@ def admin_analytics(
             rating_data[str(i)] = 0
 
     # Today
-    users_yesterday = db.query(User).filter(func.date(User.created_at) == today - timedelta(days=1)).count()
+    users_yesterday = (
+        db.query(User).filter(func.date(User.created_at) == today - timedelta(days=1)).count()
+    )
     users_today = db.query(User).filter(func.date(User.created_at) == today).count()
     growth_rate = round(((users_today - users_yesterday) / max(users_yesterday, 1)) * 100, 1)
     active_today = users_today  # simplified
@@ -536,8 +623,9 @@ def admin_user_detail(
     admin: User = Depends(get_current_admin),
 ):
     """👤 Perfil completo de usuario"""
-    from app.models.rating import Rating
     from sqlalchemy import func
+
+    from app.models.rating import Rating
 
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -545,22 +633,44 @@ def admin_user_detail(
 
     jobs_as_client = db.query(Job).filter(Job.client_id == user_id).all()
     jobs_as_worker = db.query(Job).filter(Job.worker_id == user_id).all()
-    txns = db.query(Transaction).filter(Transaction.user_id == user_id).order_by(Transaction.created_at.desc()).limit(50).all()
+    txns = (
+        db.query(Transaction)
+        .filter(Transaction.user_id == user_id)
+        .order_by(Transaction.created_at.desc())
+        .limit(50)
+        .all()
+    )
 
-    total_earned = db.query(func.coalesce(func.sum(Transaction.amount), 0)).filter(
-        Transaction.user_id == user_id, Transaction.type == "payment", Transaction.status == "confirmed"
-    ).scalar()
-    total_spent = db.query(func.coalesce(func.sum(Transaction.amount), 0)).filter(
-        Transaction.user_id == user_id, Transaction.type.in_(["deposit", "withdraw"]), Transaction.status == "confirmed"
-    ).scalar()
-    jobs_completed = db.query(Job).filter(Job.worker_id == user_id, Job.status == "completed").count()
+    total_earned = (
+        db.query(func.coalesce(func.sum(Transaction.amount), 0))
+        .filter(
+            Transaction.user_id == user_id,
+            Transaction.type == "payment",
+            Transaction.status == "confirmed",
+        )
+        .scalar()
+    )
+    total_spent = (
+        db.query(func.coalesce(func.sum(Transaction.amount), 0))
+        .filter(
+            Transaction.user_id == user_id,
+            Transaction.type.in_(["deposit", "withdraw"]),
+            Transaction.status == "confirmed",
+        )
+        .scalar()
+    )
+    jobs_completed = (
+        db.query(Job).filter(Job.worker_id == user_id, Job.status == "completed").count()
+    )
     ratings_received = db.query(Rating).filter(Rating.rated_id == user_id).all()
 
     # Last login from audit logs (fallback for users who haven't logged in since last_login_at was added)
-    last_login = db.query(AuditLog.created_at).filter(
-        AuditLog.user_id == user_id,
-        AuditLog.action == "login_success"
-    ).order_by(AuditLog.created_at.desc()).first()
+    last_login = (
+        db.query(AuditLog.created_at)
+        .filter(AuditLog.user_id == user_id, AuditLog.action == "login_success")
+        .order_by(AuditLog.created_at.desc())
+        .first()
+    )
     last_login_at = user.last_login_at or (last_login[0] if last_login else None)
 
     return {
@@ -576,16 +686,26 @@ def admin_user_detail(
         },
         "jobs_as_client": [_job_to_response(j) for j in jobs_as_client],
         "jobs_as_worker": [_job_to_response(j) for j in jobs_as_worker],
-        "transactions": [{
-            "id": t.id, "type": t.type, "amount": t.amount,
-            "status": t.status,
-            "created_at": t.created_at.isoformat() if t.created_at else None,
-        } for t in txns],
-        "ratings": [{
-            "id": r.id, "rating": r.rating, "comment": r.comment,
-            "rater_id": r.rater_id,
-            "created_at": r.created_at.isoformat() if r.created_at else None,
-        } for r in ratings_received],
+        "transactions": [
+            {
+                "id": t.id,
+                "type": t.type,
+                "amount": t.amount,
+                "status": t.status,
+                "created_at": t.created_at.isoformat() if t.created_at else None,
+            }
+            for t in txns
+        ],
+        "ratings": [
+            {
+                "id": r.id,
+                "rating": r.rating,
+                "comment": r.comment,
+                "rater_id": r.rater_id,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+            }
+            for r in ratings_received
+        ],
     }
 
 
@@ -604,12 +724,21 @@ def admin_list_jobs(
 ):
     """📋 Listar trabajos (admin)"""
     query = db.query(Job)
-    if status_filter and status_filter in ("open", "in_progress", "completed", "disputed", "cancelled", "checked_in"):
+    if status_filter and status_filter in (
+        "open",
+        "in_progress",
+        "completed",
+        "disputed",
+        "cancelled",
+        "checked_in",
+    ):
         query = query.filter(Job.status == status_filter)
     total = query.count()
     jobs = query.order_by(Job.created_at.desc()).offset((page - 1) * per_page).limit(per_page).all()
     return {
-        "total": total, "page": page, "per_page": per_page,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
         "jobs": [_job_to_response(j) for j in jobs],
     }
 
@@ -618,9 +747,11 @@ def admin_list_jobs(
 
 from pydantic import BaseModel
 
+
 class AddTestBalanceRequest(BaseModel):
     user_id: int
     amount: float  # USDT a añadir
+
 
 @router.post("/add-test-balance")
 def add_test_balance(
@@ -646,7 +777,7 @@ def add_test_balance(
         network="polygon",
         tx_hash=f"TEST_DEPOSIT_{body.user_id}_{body.amount}",
         status="confirmed",
-        confirmed_at=datetime.now(timezone.utc),
+        confirmed_at=datetime.now(UTC),
     )
     db.add(tx)
     db.commit()
@@ -667,8 +798,8 @@ def cleanup_test_data(
     admin: User = Depends(get_current_admin),
 ):
     """🧹 Borrar todos los trabajos, aplicaciones y transacciones de prueba"""
-    from app.models.job import Job
     from app.models.application import Application
+    from app.models.job import Job
     from app.models.transaction import Transaction
 
     # Contar antes
@@ -681,7 +812,9 @@ def cleanup_test_data(
     # Borrar jobs
     db.query(Job).delete()
     # Borrar solo transacciones de prueba (las reales se mantienen)
-    db.query(Transaction).filter(Transaction.tx_hash.startswith("TEST_")).delete(synchronize_session=False)
+    db.query(Transaction).filter(Transaction.tx_hash.startswith("TEST_")).delete(
+        synchronize_session=False
+    )
 
     db.commit()
 

@@ -1,26 +1,34 @@
 import hashlib
-import secrets
 import random
-from datetime import datetime, timedelta, timezone
-
-from fastapi import APIRouter, Depends, HTTPException, status, Request
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
-from jose import jwt, JWTError
-from passlib.context import CryptContext
-
-from app.database import SessionLocal
-from app.limiter import limiter
-from app.models.user import User
-from app.models.refresh_token import RefreshToken
-from app.models.change_token import ChangeToken
-from app.schemas.user import UserCreate, UserLogin, UserResponse, UpdateProfileRequest, UpdateWalletRequest, CompleteProfileRequest, RequestChangeRequest, ConfirmChangeRequest
-from app.services.audit import log_action
-from app.services.password_validator import validate_password_strength, is_password_common
-from app.services.auth import get_current_user
-from app.config import get_settings
+import secrets
+from datetime import UTC, datetime, timedelta
 
 import requests as http_requests
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+
+from app.config import get_settings
+from app.database import SessionLocal
+from app.limiter import limiter
+from app.models.change_token import ChangeToken
+from app.models.refresh_token import RefreshToken
+from app.models.user import User
+from app.schemas.user import (
+    CompleteProfileRequest,
+    ConfirmChangeRequest,
+    RequestChangeRequest,
+    UpdateProfileRequest,
+    UpdateWalletRequest,
+    UserCreate,
+    UserLogin,
+    UserResponse,
+)
+from app.services.audit import log_action
+from app.services.auth import get_current_user
+from app.services.password_validator import is_password_common, validate_password_strength
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
@@ -55,7 +63,7 @@ def create_refresh_token(data: dict, db: Session):
     """Crea un refresh token aleatorio, lo hashea y lo guarda en BD."""
     token = secrets.token_urlsafe(64)
     token_hash = hashlib.sha256(token.encode()).hexdigest()
-    expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    expire = datetime.now(UTC) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
     db_token = RefreshToken(
         user_id=int(data["sub"]),
@@ -79,7 +87,9 @@ def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
 
     # Common password check
     if is_password_common(user.password):
-        raise HTTPException(status_code=400, detail="Esa contrasena es demasiado comun. Elige una mas segura.")
+        raise HTTPException(
+            status_code=400, detail="Esa contrasena es demasiado comun. Elige una mas segura."
+        )
 
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user:
@@ -87,6 +97,7 @@ def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
 
     hashed_password = pwd_context.hash(user.password)
     import secrets as _secrets
+
     random_suffix = _secrets.token_hex(4)
     placeholder_phone = f"+pending_{random_suffix}"
     placeholder_cedula = f"PENDING-{random_suffix}"
@@ -106,6 +117,7 @@ def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
 
     # Send verification email
     from app.services.email_service import send_email
+
     verify_token = create_access_token({"sub": str(db_user.id), "purpose": "email_verify"})
     db_user.email_verification_token = verify_token
     db.commit()
@@ -129,9 +141,13 @@ def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
 </body></html>"""
     send_email(db_user.email, "Verifica tu cuenta de TurnoGO", verify_html)
 
-    log_action(db_user.id, "register_success", {"role": user.role, "verification_sent": True}, ip=request.client.host)
+    log_action(
+        db_user.id,
+        "register_success",
+        {"role": user.role, "verification_sent": True},
+        ip=request.client.host,
+    )
     return db_user
-
 
 
 @router.patch("/complete-profile", response_model=UserResponse)
@@ -170,7 +186,10 @@ def complete_profile(
 
     log_action(user.id, "profile_completed", {"full_name": data.full_name}, ip=request.client.host)
     return user
+
+
 from pydantic import BaseModel
+
 
 class GoogleLoginRequest(BaseModel):
     access_token: str
@@ -210,9 +229,7 @@ def google_login(request: Request, body: GoogleLoginRequest, db: Session = Depen
         raise HTTPException(status_code=400, detail="La cuenta de Google no tiene email")
 
     # Buscar usuario existente por Google ID o email
-    user = db.query(User).filter(
-        (User.google_id == google_id) | (User.email == email)
-    ).first()
+    user = db.query(User).filter((User.google_id == google_id) | (User.email == email)).first()
 
     if user:
         # Actualizar google_id si el usuario existe pero no lo tiene
@@ -227,6 +244,7 @@ def google_login(request: Request, body: GoogleLoginRequest, db: Session = Depen
         # Crear usuario nuevo desde Google
         # Generar placeholders para phone y cédula (el usuario puede cambiarlos después)
         import secrets as _secrets
+
         random_suffix = _secrets.token_hex(4)
         placeholder_phone = f"+google_{random_suffix}"
         placeholder_cedula = f"GOOGLE-{google_id[:12]}"
@@ -251,7 +269,7 @@ def google_login(request: Request, body: GoogleLoginRequest, db: Session = Depen
         db.refresh(user)
 
     # Generar JWT tokens
-    user.last_login_at = datetime.now(timezone.utc)
+    user.last_login_at = datetime.now(UTC)
     db.commit()
     db.refresh(user)
 
@@ -287,7 +305,7 @@ def login(request: Request, user: UserLogin, db: Session = Depends(get_db)):
     refresh_token = create_refresh_token({"sub": str(db_user.id)}, db)
 
     # Track last login
-    db_user.last_login_at = datetime.now(timezone.utc)
+    db_user.last_login_at = datetime.now(UTC)
     db.commit()
 
     log_action(db_user.id, "login_success", ip=request.client.host)
@@ -302,7 +320,9 @@ def login(request: Request, user: UserLogin, db: Session = Depends(get_db)):
 
 @router.post("/token")
 @limiter.limit("5/minute")
-def token_login(request: Request, form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def token_login(
+    request: Request, form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+):
     """Endpoint para Swagger Authorize. Usa email como username."""
     db_user = db.query(User).filter(User.email == form.username).first()
     if not db_user:
@@ -317,7 +337,7 @@ def token_login(request: Request, form: OAuth2PasswordRequestForm = Depends(), d
     refresh_token = create_refresh_token({"sub": str(db_user.id)}, db)
 
     # Track last login
-    db_user.last_login_at = datetime.now(timezone.utc)
+    db_user.last_login_at = datetime.now(UTC)
     db.commit()
 
     log_action(db_user.id, "login_success", ip=request.client.host)
@@ -338,11 +358,15 @@ def get_me(current_user: User = Depends(get_current_user)):
 def refresh(request: Request, refresh_token: str, db: Session = Depends(get_db)):
     """Refresca tokens. Valida contra BD y revoca el token anterior (rotación)."""
     token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
-    db_token = db.query(RefreshToken).filter(
-        RefreshToken.token_hash == token_hash,
-        RefreshToken.is_revoked == False,
-        RefreshToken.expires_at > datetime.now(timezone.utc),
-    ).first()
+    db_token = (
+        db.query(RefreshToken)
+        .filter(
+            RefreshToken.token_hash == token_hash,
+            RefreshToken.is_revoked == False,
+            RefreshToken.expires_at > datetime.now(UTC),
+        )
+        .first()
+    )
 
     if not db_token:
         raise HTTPException(status_code=401, detail="Token inválido o expirado")
@@ -375,7 +399,7 @@ def update_profile(
 ):
     """
     👤 EDITAR PERFIL
-    
+
     Actualiza tu nombre y/o teléfono.
     """
     user = current_user
@@ -391,7 +415,9 @@ def update_profile(
     # Cedula: se puede actualizar solo si no está bloqueada
     if request.cedula:
         if user.cedula_locked:
-            raise HTTPException(status_code=400, detail="La cédula ya fue registrada y no se puede modificar")
+            raise HTTPException(
+                status_code=400, detail="La cédula ya fue registrada y no se puede modificar"
+            )
         existing = db.query(User).filter(User.cedula == request.cedula, User.id != user.id).first()
         if existing:
             raise HTTPException(status_code=400, detail="Cédula ya registrada por otro usuario")
@@ -411,7 +437,7 @@ def update_wallet(
 ):
     """
     💼 REGISTRAR WALLET
-    
+
     Guarda tu dirección de wallet en tu perfil.
     Solo podrás retirar USDT a esta dirección.
     """
@@ -456,28 +482,35 @@ def request_change(
     El código expira en 15 minutos.
     """
     from app.services.email_service import send_email
+
     user = current_user
 
     if not request.new_email and not request.new_phone and not request.new_wallet:
-        raise HTTPException(status_code=400, detail="Debes enviar al menos email, teléfono o wallet nuevo")
+        raise HTTPException(
+            status_code=400, detail="Debes enviar al menos email, teléfono o wallet nuevo"
+        )
 
     # Validar que no estén ya registrados
     if request.new_email and request.new_email != user.email:
         existing = db.query(User).filter(User.email == request.new_email).first()
         if existing:
-            raise HTTPException(status_code=400, detail="Ese email ya está registrado por otro usuario")
+            raise HTTPException(
+                status_code=400, detail="Ese email ya está registrado por otro usuario"
+            )
 
     if request.new_phone and request.new_phone != user.phone:
         existing = db.query(User).filter(User.phone == request.new_phone).first()
         if existing:
-            raise HTTPException(status_code=400, detail="Ese teléfono ya está registrado por otro usuario")
+            raise HTTPException(
+                status_code=400, detail="Ese teléfono ya está registrado por otro usuario"
+            )
 
     # Generar código de 6 dígitos
     code = str(random.randint(100000, 999999))
     code_hash = hashlib.sha256(code.encode()).hexdigest()
 
     # Guardar en BD (expira 15 min)
-    expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
+    expires_at = datetime.now(UTC) + timedelta(minutes=15)
     change = ChangeToken(
         user_id=user_id,
         token_hash=code_hash,
@@ -525,11 +558,16 @@ def confirm_change(
     user = current_user
 
     # Buscar el token pendiente más reciente
-    change_request = db.query(ChangeToken).filter(
-        ChangeToken.user_id == user_id,
-        ChangeToken.used == False,
-        ChangeToken.expires_at > datetime.now(timezone.utc),
-    ).order_by(ChangeToken.created_at.desc()).first()
+    change_request = (
+        db.query(ChangeToken)
+        .filter(
+            ChangeToken.user_id == user_id,
+            ChangeToken.used == False,
+            ChangeToken.expires_at > datetime.now(UTC),
+        )
+        .order_by(ChangeToken.created_at.desc())
+        .first()
+    )
 
     if not change_request:
         raise HTTPException(status_code=400, detail="No hay cambios pendientes o el código expiró")
@@ -622,6 +660,7 @@ def resend_verification(
         return {"message": "El email ya esta verificado"}
 
     from app.services.email_service import send_email
+
     verify_token = create_access_token({"sub": str(user.id), "purpose": "email_verify"})
     user.email_verification_token = verify_token
     db.commit()
@@ -666,4 +705,3 @@ def require_verified_email(current_user: User = Depends(get_current_user)) -> Us
         )
 
     return current_user
-

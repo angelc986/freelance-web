@@ -5,15 +5,17 @@ Covers: completed job release, insufficient funds, non-owner rejected
 Note: The job flow (create→approve) has a pre-existing bug (approve returns 400).
       These tests bypass it by creating completed jobs directly in the DB.
 """
-from app.models.user import User
+
 from app.models.job import Job
-from app.models.transaction import Transaction
+from app.models.user import User
 
 
-def _create_completed_job_db(db, contractor_email="contractor@test.com",
-                             worker_email="worker@test.com", budget=50.0):
+def _create_completed_job_db(
+    db, contractor_email="contractor@test.com", worker_email="worker@test.com", budget=50.0
+):
     """Create a completed job directly in DB (bypasses broken job flow)."""
     from passlib.context import CryptContext
+
     pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     contractor = db.query(User).filter(User.email == contractor_email).first()
@@ -60,8 +62,10 @@ class TestRelease:
         """Contractor releases payment for completed job."""
         jid = _create_completed_job_db(db)
 
-        resp = client.post(f"/api/v1/payments/release/{jid}",
-                          headers={"Authorization": f"Bearer {contractor_token}"})
+        resp = client.post(
+            f"/api/v1/payments/release/{jid}",
+            headers={"Authorization": f"Bearer {contractor_token}"},
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["type"] == "release"
@@ -71,8 +75,9 @@ class TestRelease:
         """Worker cannot release payment for job they don't own."""
         jid = _create_completed_job_db(db)
 
-        resp = client.post(f"/api/v1/payments/release/{jid}",
-                          headers={"Authorization": f"Bearer {worker_token}"})
+        resp = client.post(
+            f"/api/v1/payments/release/{jid}", headers={"Authorization": f"Bearer {worker_token}"}
+        )
         assert resp.status_code == 403
 
     def test_release_insufficient_held_balance(self, client, contractor_token, db):
@@ -84,6 +89,8 @@ class TestRelease:
         contractor.held_balance = 10.0  # Not enough for 200 budget
         db.commit()
 
-        resp = client.post(f"/api/v1/payments/release/{jid}",
-                          headers={"Authorization": f"Bearer {contractor_token}"})
+        resp = client.post(
+            f"/api/v1/payments/release/{jid}",
+            headers={"Authorization": f"Bearer {contractor_token}"},
+        )
         assert resp.status_code == 400

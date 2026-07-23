@@ -5,11 +5,10 @@ Configuración por variables de entorno:
   SMTP_USER / SMTP_PASS (fallback Gmail app password)
   RESEND_API_KEY (fallback, requiere dominio verificado)
 """
-import os
-import json
-from urllib.request import Request, urlopen
-from urllib.error import HTTPError
 
+import json
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 
 from app.config import get_settings
 
@@ -20,12 +19,14 @@ def _send_sendgrid(to: str, subject: str, html: str) -> bool:
     if not key:
         return False
     try:
-        data = json.dumps({
-            "personalizations": [{"to": [{"email": to}]}],
-            "from": {"email": "instaworkve@gmail.com", "name": "TurnoGO"},
-            "subject": subject,
-            "content": [{"type": "text/html", "value": html}],
-        }).encode("utf-8")
+        data = json.dumps(
+            {
+                "personalizations": [{"to": [{"email": to}]}],
+                "from": {"email": "instaworkve@gmail.com", "name": "TurnoGO"},
+                "subject": subject,
+                "content": [{"type": "text/html", "value": html}],
+            }
+        ).encode("utf-8")
         req = Request(
             "https://api.sendgrid.com/v3/mail/send",
             data=data,
@@ -49,8 +50,8 @@ def _send_sendgrid(to: str, subject: str, html: str) -> bool:
 def _send_smtp(to: str, subject: str, html: str) -> bool:
     """Fallback vía SMTP Gmail."""
     import smtplib
-    from email.mime.text import MIMEText
     from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
 
     user = get_settings().SMTP_USER
     password = get_settings().SMTP_PASS
@@ -80,11 +81,16 @@ def _send_resend(to: str, subject: str, html: str) -> bool:
         return False
     try:
         import resend
+
         resend.api_key = api_key
-        resend.Emails.send({
-            "from": "TurnoGO <onboarding@resend.dev>",
-            "to": to, "subject": subject, "html": html,
-        })
+        resend.Emails.send(
+            {
+                "from": "TurnoGO <onboarding@resend.dev>",
+                "to": to,
+                "subject": subject,
+                "html": html,
+            }
+        )
         print(f"[EMAIL] Resend -> {to}: {subject}")
         return True
     except Exception as e:

@@ -1,18 +1,27 @@
-from fastapi import Request, Body, APIRouter, Depends, HTTPException, status, UploadFile, File
-from sqlalchemy.orm import Session
-from typing import List
 import json
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
+
+from fastapi import APIRouter, Body, Depends, File, HTTPException, Request, UploadFile, status
+from sqlalchemy.orm import Session
+
 from app.database import SessionLocal
-from app.models.job import Job
-from app.models.application import Application
-from app.schemas.job import JobCreate, JobUpdate, JobResponse, DisputeRequest, CorrectionRequest, JobWithApplicants, ApplicationBrief
-from app.schemas.application import ApplicationCreate, ApplicationResponse
-from app.services.auth import get_current_user
-from app.models.user import User
-from app.services.event_manager import publish
-from app.routers.notifications import create_notification
 from app.limiter import limiter
+from app.models.application import Application
+from app.models.job import Job
+from app.models.user import User
+from app.routers.notifications import create_notification
+from app.schemas.application import ApplicationCreate, ApplicationResponse
+from app.schemas.job import (
+    ApplicationBrief,
+    CorrectionRequest,
+    DisputeRequest,
+    JobCreate,
+    JobResponse,
+    JobUpdate,
+    JobWithApplicants,
+)
+from app.services.auth import get_current_user
+from app.services.event_manager import publish
 
 router = APIRouter(prefix="/api/v1/jobs", tags=["jobs"])
 
@@ -29,9 +38,16 @@ def get_db():
 
 
 @router.post("/", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
-@router.post("", include_in_schema=False, response_model=JobResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", include_in_schema=False, response_model=JobResponse, status_code=status.HTTP_201_CREATED
+)
 @limiter.limit("10/minute")
-def create_job(request: Request, job: JobCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def create_job(
+    request: Request,
+    job: JobCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Crear un trabajo (solo contractors)"""
     if current_user.role not in ("contractor", "both"):
         raise HTTPException(status_code=403, detail="Solo contractors pueden crear trabajos")
@@ -54,7 +70,12 @@ def create_job(request: Request, job: JobCreate, db: Session = Depends(get_db), 
 
 
 @router.put("/{job_id}", response_model=JobResponse)
-def update_job(job_id: int, job: JobUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def update_job(
+    job_id: int,
+    job: JobUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Editar un trabajo (solo el dueño, solo si está abierto). Coordenadas se pueden actualizar siempre."""
     db_job = db.query(Job).filter(Job.id == job_id).first()
     if not db_job:
@@ -88,17 +109,22 @@ def update_job(job_id: int, job: JobUpdate, db: Session = Depends(get_db), curre
     return db_job
 
 
-@router.get("/mine", response_model=List[JobResponse])
+@router.get("/mine", response_model=list[JobResponse])
 def my_jobs(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     📋 MIS TRABAJOS
-    
+
     Devuelve los trabajos del usuario actual:
     - Contractors: trabajos que publicaron
     - Workers: trabajos donde son worker_asignado + trabajos a los que aplicaron (pending)
     """
     if current_user.role == "contractor":
-        jobs = db.query(Job).filter(Job.client_id == current_user.id).order_by(Job.created_at.desc()).all()
+        jobs = (
+            db.query(Job)
+            .filter(Job.client_id == current_user.id)
+            .order_by(Job.created_at.desc())
+            .all()
+        )
         return jobs
 
     # Workers: trabajos asignados + trabajos a los que aplicaron
@@ -106,9 +132,7 @@ def my_jobs(db: Session = Depends(get_db), current_user: User = Depends(get_curr
 
     # También buscar aplicaciones pendientes/rechazadas
     app_job_ids = (
-        db.query(Application.job_id)
-        .filter(Application.worker_id == current_user.id)
-        .subquery()
+        db.query(Application.job_id).filter(Application.worker_id == current_user.id).subquery()
     )
     applied_jobs = db.query(Job).filter(Job.id.in_(app_job_ids)).all()
 
@@ -125,8 +149,8 @@ def my_jobs(db: Session = Depends(get_db), current_user: User = Depends(get_curr
     return result
 
 
-@router.get("/", response_model=List[JobResponse])
-@router.get("", include_in_schema=False, response_model=List[JobResponse])
+@router.get("/", response_model=list[JobResponse])
+@router.get("", include_in_schema=False, response_model=list[JobResponse])
 def list_jobs(status_filter: str = "open", db: Session = Depends(get_db)):
     """Listar trabajos (filtro por status, default: open)"""
     jobs = db.query(Job).filter(Job.status == status_filter).all()
@@ -142,17 +166,23 @@ def my_applicants(db: Session = Depends(get_db), current_user: User = Depends(ge
     if current_user.role != "contractor":
         raise HTTPException(status_code=403, detail="Solo contratistas")
 
-    jobs = db.query(Job).filter(
-        Job.client_id == current_user.id,
-        Job.status.in_(["open", "in_progress"])
-    ).order_by(Job.created_at.desc()).all()
+    jobs = (
+        db.query(Job)
+        .filter(Job.client_id == current_user.id, Job.status.in_(["open", "in_progress"]))
+        .order_by(Job.created_at.desc())
+        .all()
+    )
 
     result = []
     for job in jobs:
-        apps = db.query(Application).filter(
-            Application.job_id == job.id,
-            Application.status.in_(["pending", "accepted", "rejected"])
-        ).all()
+        apps = (
+            db.query(Application)
+            .filter(
+                Application.job_id == job.id,
+                Application.status.in_(["pending", "accepted", "rejected"]),
+            )
+            .all()
+        )
 
         applicants = []
         for app in apps:
@@ -160,35 +190,36 @@ def my_applicants(db: Session = Depends(get_db), current_user: User = Depends(ge
             if not worker:
                 continue
             # Contar trabajos completados como worker
-            jobs_done = db.query(Job).filter(
-                Job.worker_id == worker.id,
-                Job.status == "completed"
-            ).count()
-            applicants.append(ApplicationBrief(
-                id=app.id,
-                worker_id=app.worker_id,
-                worker_name=worker.full_name,
-                worker_rating=worker.rating_avg or 0.0,
-                worker_email=worker.email or "",
-                worker_phone=worker.phone or "",
-                worker_cedula=worker.cedula or "",
-                worker_since=worker.created_at,
-                jobs_completed=jobs_done,
-                message=app.message,
-                status=app.status,
-                created_at=app.created_at,
-            ))
+            jobs_done = (
+                db.query(Job).filter(Job.worker_id == worker.id, Job.status == "completed").count()
+            )
+            applicants.append(
+                ApplicationBrief(
+                    id=app.id,
+                    worker_id=app.worker_id,
+                    worker_name=worker.full_name,
+                    worker_rating=worker.rating_avg or 0.0,
+                    worker_email=worker.email or "",
+                    worker_phone=worker.phone or "",
+                    worker_cedula=worker.cedula or "",
+                    worker_since=worker.created_at,
+                    jobs_completed=jobs_done,
+                    message=app.message,
+                    status=app.status,
+                    created_at=app.created_at,
+                )
+            )
 
         result.append(JobWithApplicants(job=job, applicants=applicants))
 
     return result
 
 
-@router.get("/my-applications", response_model=List[ApplicationResponse])
+@router.get("/my-applications", response_model=list[ApplicationResponse])
 def my_applications(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     📋 MIS POSTULACIONES
-    
+
     Devuelve todas las aplicaciones del usuario actual (worker).
     """
     apps = (
@@ -212,10 +243,17 @@ def get_job(job_id: int, db: Session = Depends(get_db)):
 # ─── Sistema de aplicar / aceptar ──────────────────────────────────
 
 
-@router.post("/{job_id}/apply", response_model=ApplicationResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{job_id}/apply", response_model=ApplicationResponse, status_code=status.HTTP_201_CREATED
+)
 @limiter.limit("10/minute")
-def apply_to_job(request: Request, job_id: int, application: ApplicationCreate, db: Session = Depends(get_db),
-                 current_user: User = Depends(get_current_user)):
+def apply_to_job(
+    request: Request,
+    job_id: int,
+    application: ApplicationCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Un worker aplica a un trabajo"""
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
@@ -225,11 +263,15 @@ def apply_to_job(request: Request, job_id: int, application: ApplicationCreate, 
     if job.client_id == current_user.id:
         raise HTTPException(status_code=400, detail="No puedes aplicar a tu propio trabajo")
 
-    existing = db.query(Application).filter(
-        Application.job_id == job_id,
-        Application.worker_id == current_user.id,
-        Application.status == "pending"
-    ).first()
+    existing = (
+        db.query(Application)
+        .filter(
+            Application.job_id == job_id,
+            Application.worker_id == current_user.id,
+            Application.status == "pending",
+        )
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="Ya aplicaste a este trabajo")
 
@@ -242,22 +284,32 @@ def apply_to_job(request: Request, job_id: int, application: ApplicationCreate, 
     db.add(db_app)
     db.commit()
     db.refresh(db_app)
-    publish(job.client_id, "job_applied", {
-        "job_id": job.id,
-        "job_title": job.title,
-        "worker_name": current_user.full_name,
-        "message": f"{current_user.full_name} ha solicitado el puesto de {job.title}"
-    })
-    create_notification(job.client_id, "job_applied", f"{current_user.full_name} ha solicitado el puesto de {job.title}", {
-        "job_id": job.id,
-        "job_title": job.title,
-    })
+    publish(
+        job.client_id,
+        "job_applied",
+        {
+            "job_id": job.id,
+            "job_title": job.title,
+            "worker_name": current_user.full_name,
+            "message": f"{current_user.full_name} ha solicitado el puesto de {job.title}",
+        },
+    )
+    create_notification(
+        job.client_id,
+        "job_applied",
+        f"{current_user.full_name} ha solicitado el puesto de {job.title}",
+        {
+            "job_id": job.id,
+            "job_title": job.title,
+        },
+    )
     return db_app
 
 
-@router.get("/{job_id}/applications", response_model=List[ApplicationResponse])
-def list_applications(job_id: int, db: Session = Depends(get_db),
-                      current_user: User = Depends(get_current_user)):
+@router.get("/{job_id}/applications", response_model=list[ApplicationResponse])
+def list_applications(
+    job_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+):
     """Ver aplicantes (solo el contractor dueño)"""
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
@@ -265,17 +317,23 @@ def list_applications(job_id: int, db: Session = Depends(get_db),
     if job.client_id != current_user.id:
         raise HTTPException(status_code=403, detail="Solo el contratista puede ver los aplicantes")
 
-    applications = db.query(Application).filter(
-        Application.job_id == job_id,
-        Application.status == "pending"
-    ).all()
+    applications = (
+        db.query(Application)
+        .filter(Application.job_id == job_id, Application.status == "pending")
+        .all()
+    )
     return applications
 
 
 @router.post("/{job_id}/accept/{application_id}", response_model=JobResponse)
 @limiter.limit("20/minute")
-def accept_application(request: Request, job_id: int, application_id: int, db: Session = Depends(get_db),
-                       current_user: User = Depends(get_current_user)):
+def accept_application(
+    request: Request,
+    job_id: int,
+    application_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Aceptar un worker (solo el contractor dueño). Bloquea los fondos en escrow."""
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
@@ -290,14 +348,18 @@ def accept_application(request: Request, job_id: int, application_id: int, db: S
     if available < job.budget:
         raise HTTPException(
             status_code=400,
-            detail=f"Saldo disponible insuficiente. Disponible: ${available:.2f}, Necesario: ${job.budget:.2f}"
+            detail=f"Saldo disponible insuficiente. Disponible: ${available:.2f}, Necesario: ${job.budget:.2f}",
         )
 
-    app = db.query(Application).filter(
-        Application.id == application_id,
-        Application.job_id == job_id,
-        Application.status == "pending"
-    ).first()
+    app = (
+        db.query(Application)
+        .filter(
+            Application.id == application_id,
+            Application.job_id == job_id,
+            Application.status == "pending",
+        )
+        .first()
+    )
     if not app:
         raise HTTPException(status_code=404, detail="Aplicación no encontrada o ya fue procesada")
 
@@ -311,25 +373,38 @@ def accept_application(request: Request, job_id: int, application_id: int, db: S
     contractor = db.query(User).filter(User.id == current_user.id).first()
     contractor.held_balance += job.budget
 
-    otras = db.query(Application).filter(
-        Application.job_id == job_id,
-        Application.id != application_id,
-        Application.status == "pending"
-    ).all()
+    otras = (
+        db.query(Application)
+        .filter(
+            Application.job_id == job_id,
+            Application.id != application_id,
+            Application.status == "pending",
+        )
+        .all()
+    )
     for otra in otras:
         otra.status = "rejected"
 
     db.commit()
     db.refresh(job)
-    publish(job.worker_id, "job_accepted", {
-        "job_id": job.id,
-        "job_title": job.title,
-        "message": f"Has sido seleccionado para: {job.title}"
-    })
-    create_notification(job.worker_id, "job_accepted", f"Has sido seleccionado para: {job.title}", {
-        "job_id": job.id,
-        "job_title": job.title,
-    })
+    publish(
+        job.worker_id,
+        "job_accepted",
+        {
+            "job_id": job.id,
+            "job_title": job.title,
+            "message": f"Has sido seleccionado para: {job.title}",
+        },
+    )
+    create_notification(
+        job.worker_id,
+        "job_accepted",
+        f"Has sido seleccionado para: {job.title}",
+        {
+            "job_id": job.id,
+            "job_title": job.title,
+        },
+    )
     return job
 
 
@@ -338,39 +413,52 @@ def accept_application(request: Request, job_id: int, application_id: int, db: S
 
 @router.post("/{job_id}/complete-request", response_model=JobResponse)
 @limiter.limit("10/minute")
-def request_complete(request: Request, job_id: int, db: Session = Depends(get_db),
-                     current_user: User = Depends(get_current_user)):
+def request_complete(
+    request: Request,
+    job_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """El worker solicita marcar el trabajo como terminado. Genera codigo de verificacion."""
     import random
+
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Trabajo no encontrado")
     if job.status not in ("in_progress", "checked_in", "review_pending"):
         raise HTTPException(status_code=400, detail="El trabajo no está en progreso")
     if job.worker_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Solo el worker asignado puede solicitar completar")
+        raise HTTPException(
+            status_code=403, detail="Solo el worker asignado puede solicitar completar"
+        )
 
     # Generar código de verificación de 6 dígitos
     code = str(random.randint(100000, 999999))
     job.status = "review_pending"
-    job.review_requested_at = datetime.now(timezone.utc)
+    job.review_requested_at = datetime.now(UTC)
     job.completion_code = code
-    job.timeout_at = datetime.now(timezone.utc) + timedelta(hours=72)
+    job.timeout_at = datetime.now(UTC) + timedelta(hours=72)
     job.correction_note = None  # Limpiar nota de correccion anterior
     job.evidence_images = None  # Auto-release en 72h
     db.commit()
     db.refresh(job)
-    publish(job.client_id, "job_review_pending", {
-        "job_id": job.id,
-        "job_title": job.title,
-        "message": f"{current_user.full_name} ha marcado {job.title} como finalizado. El código de verificación está disponible en la página del trabajo."
-    })
-    create_notification(job.client_id, "job_review_pending",
+    publish(
+        job.client_id,
+        "job_review_pending",
+        {
+            "job_id": job.id,
+            "job_title": job.title,
+            "message": f"{current_user.full_name} ha marcado {job.title} como finalizado. El código de verificación está disponible en la página del trabajo.",
+        },
+    )
+    create_notification(
+        job.client_id,
+        "job_review_pending",
         f"{current_user.full_name} ha marcado {job.title} como finalizado. El código de verificación está disponible en la página del trabajo.",
         {
             "job_id": job.id,
             "job_title": job.title,
-        }
+        },
     )
     return job
 
@@ -407,7 +495,7 @@ def verify_completion(
     # ─── Verificar fondos ───
     contractor = db.query(User).filter(User.id == job.client_id).first()
     worker = db.query(User).filter(User.id == job.worker_id).first()
-    
+
     if contractor.held_balance >= job.budget:
         # Escrow normal: liberar fondos retenidos
         contractor.held_balance -= job.budget
@@ -419,7 +507,7 @@ def verify_completion(
     else:
         raise HTTPException(
             status_code=400,
-            detail=f"Fondos insuficientes. Balance: ${contractor.balance:.2f}, Retenido: ${contractor.held_balance:.2f}, Necesario: ${job.budget:.2f}"
+            detail=f"Fondos insuficientes. Balance: ${contractor.balance:.2f}, Retenido: ${contractor.held_balance:.2f}, Necesario: ${job.budget:.2f}",
         )
 
     # ─── Completar trabajo ───
@@ -437,33 +525,51 @@ def verify_completion(
         amount=job.budget,
         network="polygon",
         status="confirmed",
-        confirmed_at=datetime.now(timezone.utc),
+        confirmed_at=datetime.now(UTC),
     )
     db.add(transaction)
     db.commit()
     db.refresh(job)
 
     # ─── Notificar ───
-    publish(job.client_id, "job_completed", {
-        "job_id": job.id,
-        "job_title": job.title,
-        "message": f"{job.title} ha sido verificado y completado exitosamente"
-    })
-    create_notification(job.client_id, "job_completed", f"{job.title} ha sido verificado y completado exitosamente", {
-        "job_id": job.id,
-        "job_title": job.title,
-    })
-    create_notification(job.worker_id, "payment_received", f"Has recibido ${job.budget:.2f} USDT por {job.title}", {
-        "job_id": job.id,
-        "amount": job.budget,
-    })
+    publish(
+        job.client_id,
+        "job_completed",
+        {
+            "job_id": job.id,
+            "job_title": job.title,
+            "message": f"{job.title} ha sido verificado y completado exitosamente",
+        },
+    )
+    create_notification(
+        job.client_id,
+        "job_completed",
+        f"{job.title} ha sido verificado y completado exitosamente",
+        {
+            "job_id": job.id,
+            "job_title": job.title,
+        },
+    )
+    create_notification(
+        job.worker_id,
+        "payment_received",
+        f"Has recibido ${job.budget:.2f} USDT por {job.title}",
+        {
+            "job_id": job.id,
+            "amount": job.budget,
+        },
+    )
     return job
 
 
 @router.post("/{job_id}/approve", response_model=JobResponse)
 @limiter.limit("10/minute")
-def approve_job(request: Request, job_id: int, db: Session = Depends(get_db),
-                current_user: User = Depends(get_current_user)):
+def approve_job(
+    request: Request,
+    job_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """El contractor aprueba directamente (sin codigo). Libera el pago automaticamente."""
     from app.models.transaction import Transaction
 
@@ -480,7 +586,7 @@ def approve_job(request: Request, job_id: int, db: Session = Depends(get_db),
     if contractor.held_balance < job.budget:
         raise HTTPException(
             status_code=400,
-            detail=f"Error: fondos insuficientes en escrow. Held: ${contractor.held_balance:.2f}, Budget: ${job.budget:.2f}"
+            detail=f"Error: fondos insuficientes en escrow. Held: ${contractor.held_balance:.2f}, Budget: ${job.budget:.2f}",
         )
 
     job.status = "completed"
@@ -501,25 +607,39 @@ def approve_job(request: Request, job_id: int, db: Session = Depends(get_db),
         amount=job.budget,
         network="polygon",
         status="confirmed",
-        confirmed_at=datetime.now(timezone.utc),
+        confirmed_at=datetime.now(UTC),
     )
     db.add(transaction)
     db.commit()
     db.refresh(job)
 
-    publish(job.worker_id, "job_completed", {
-        "job_id": job.id,
-        "job_title": job.title,
-        "message": f"{job.title} ha sido aprobado y completado exitosamente"
-    })
-    create_notification(job.worker_id, "job_completed", f"{job.title} ha sido aprobado y completado exitosamente", {
-        "job_id": job.id,
-        "job_title": job.title,
-    })
-    create_notification(job.client_id, "payment_sent", f"Has pagado ${job.budget:.2f} USDT por {job.title}", {
-        "job_id": job.id,
-        "amount": job.budget,
-    })
+    publish(
+        job.worker_id,
+        "job_completed",
+        {
+            "job_id": job.id,
+            "job_title": job.title,
+            "message": f"{job.title} ha sido aprobado y completado exitosamente",
+        },
+    )
+    create_notification(
+        job.worker_id,
+        "job_completed",
+        f"{job.title} ha sido aprobado y completado exitosamente",
+        {
+            "job_id": job.id,
+            "job_title": job.title,
+        },
+    )
+    create_notification(
+        job.client_id,
+        "payment_sent",
+        f"Has pagado ${job.budget:.2f} USDT por {job.title}",
+        {
+            "job_id": job.id,
+            "amount": job.budget,
+        },
+    )
     return job
 
 
@@ -528,8 +648,13 @@ def approve_job(request: Request, job_id: int, db: Session = Depends(get_db),
 
 @router.post("/{job_id}/request-correction", response_model=JobResponse)
 @limiter.limit("10/minute")
-def request_correction(request: Request, job_id: int, correction: CorrectionRequest, db: Session = Depends(get_db),
-                       current_user: User = Depends(get_current_user)):
+def request_correction(
+    request: Request,
+    job_id: int,
+    correction: CorrectionRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """El contractor pide una corrección al worker antes de aprobar"""
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
@@ -548,31 +673,49 @@ def request_correction(request: Request, job_id: int, correction: CorrectionRequ
     db.commit()
     db.refresh(job)
 
-    publish(job.worker_id, "correction_requested", {
-        "job_id": job.id,
-        "job_title": job.title,
-        "note": correction.note,
-        "message": f"Corrección solicitada en '{job.title}': {correction.note}"
-    })
-    create_notification(job.worker_id, "correction_requested", f"Corrección solicitada en '{job.title}': {correction.note}", {
-        "job_id": job.id,
-        "job_title": job.title,
-    })
+    publish(
+        job.worker_id,
+        "correction_requested",
+        {
+            "job_id": job.id,
+            "job_title": job.title,
+            "note": correction.note,
+            "message": f"Corrección solicitada en '{job.title}': {correction.note}",
+        },
+    )
+    create_notification(
+        job.worker_id,
+        "correction_requested",
+        f"Corrección solicitada en '{job.title}': {correction.note}",
+        {
+            "job_id": job.id,
+            "job_title": job.title,
+        },
+    )
     return job
 
 
 @router.post("/{job_id}/dispute", response_model=JobResponse)
 @limiter.limit("10/minute")
-def dispute_job(request: Request, job_id: int, dispute: DisputeRequest, db: Session = Depends(get_db),
-                current_user: User = Depends(get_current_user)):
+def dispute_job(
+    request: Request,
+    job_id: int,
+    dispute: DisputeRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """Abrir disputa (contractor o worker). Fondos quedan retenidos 24h."""
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Trabajo no encontrado")
     if job.status not in ("review_pending", "in_progress"):
-        raise HTTPException(status_code=400, detail="El trabajo no está en un estado que permita disputa")
+        raise HTTPException(
+            status_code=400, detail="El trabajo no está en un estado que permita disputa"
+        )
     if current_user.id not in (job.client_id, job.worker_id):
-        raise HTTPException(status_code=403, detail="Solo el contratista o el worker pueden abrir una disputa")
+        raise HTTPException(
+            status_code=403, detail="Solo el contratista o el worker pueden abrir una disputa"
+        )
 
     # Determinar quién abre la disputa
     dispute_by = "contractor" if current_user.id == job.client_id else "worker"
@@ -580,7 +723,7 @@ def dispute_job(request: Request, job_id: int, dispute: DisputeRequest, db: Sess
     job.status = "disputed"
     job.dispute_reason = dispute.reason
     job.dispute_by = dispute_by
-    job.disputed_at = datetime.now(timezone.utc)
+    job.disputed_at = datetime.now(UTC)
     job.evidence_images = json.dumps(dispute.images) if dispute.images else None
     job.review_requested_at = None
     job.completion_code = None
@@ -592,25 +735,38 @@ def dispute_job(request: Request, job_id: int, dispute: DisputeRequest, db: Sess
     # Notificar al admin y a la otra parte
     other_id = job.client_id if dispute_by == "worker" else job.worker_id
     msg = f"'{job.title}' ha sido disputado por el {dispute_by}: {dispute.reason}"
-    publish(1, "job_disputed", {
-        "job_id": job.id,
-        "job_title": job.title,
-        "reason": dispute.reason,
-        "dispute_by": dispute_by,
-        "message": msg
-    })
-    if other_id:
-        create_notification(other_id, "job_disputed", msg, {
+    publish(
+        1,
+        "job_disputed",
+        {
             "job_id": job.id,
             "job_title": job.title,
-        })
+            "reason": dispute.reason,
+            "dispute_by": dispute_by,
+            "message": msg,
+        },
+    )
+    if other_id:
+        create_notification(
+            other_id,
+            "job_disputed",
+            msg,
+            {
+                "job_id": job.id,
+                "job_title": job.title,
+            },
+        )
     return job
 
 
 @router.post("/{job_id}/cancel", response_model=JobResponse)
 @limiter.limit("10/minute")
-def cancel_job(request: Request, job_id: int, db: Session = Depends(get_db),
-               current_user: User = Depends(get_current_user)):
+def cancel_job(
+    request: Request,
+    job_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """El contratista cancela el trabajo. Libera fondos retenidos."""
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
@@ -630,22 +786,31 @@ def cancel_job(request: Request, job_id: int, db: Session = Depends(get_db),
     db.commit()
     db.refresh(job)
     if job.worker_id:
-        publish(job.worker_id, "job_cancelled", {
-            "job_id": job.id,
-            "job_title": job.title,
-            "message": f"{job.title} ha sido cancelado"
-        })
-        create_notification(job.worker_id, "job_cancelled", f"{job.title} ha sido cancelado", {
-            "job_id": job.id,
-            "job_title": job.title,
-        })
+        publish(
+            job.worker_id,
+            "job_cancelled",
+            {"job_id": job.id, "job_title": job.title, "message": f"{job.title} ha sido cancelado"},
+        )
+        create_notification(
+            job.worker_id,
+            "job_cancelled",
+            f"{job.title} ha sido cancelado",
+            {
+                "job_id": job.id,
+                "job_title": job.title,
+            },
+        )
     return job
 
 
 @router.post("/{job_id}/check-in", response_model=JobResponse)
 @limiter.limit("10/minute")
-def check_in(request: Request, job_id: int, db: Session = Depends(get_db),
-             current_user: User = Depends(get_current_user)):
+def check_in(
+    request: Request,
+    job_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """El worker confirma que llegó al lugar del trabajo"""
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
@@ -665,21 +830,22 @@ def check_in(request: Request, job_id: int, db: Session = Depends(get_db),
 # TIMEOUT 48 HORAS
 # ──────────────────────────────────────────────
 
+
 @router.post("/process-timeouts")
 @limiter.limit("2/minute")
 def process_timeouts(request: Request, db: Session = Depends(get_db)):
     """
     ⏰ TIMEOUT 72h
-    
+
     Busca trabajos en 'review_pending' donde haya pasado el timeout_at.
     Si el contractor no respondió, libera el pago automáticamente al worker.
-    
+
     Esto protege al worker de contractors que ignoran la solicitud.
-    
+
     Llama a este endpoint manualmente o configúralo como tarea programada.
     """
-    now = datetime.now(timezone.utc)
-    
+    now = datetime.now(UTC)
+
     # Buscar jobs con timeout vencido
     expired_jobs = (
         db.query(Job)
@@ -690,7 +856,7 @@ def process_timeouts(request: Request, db: Session = Depends(get_db)):
         )
         .all()
     )
-    
+
     processed = []
     for job in expired_jobs:
         # Completar el trabajo automáticamente
@@ -698,18 +864,19 @@ def process_timeouts(request: Request, db: Session = Depends(get_db)):
         job.review_requested_at = None
         job.timeout_at = None
         job.correction_note = None
-        
+
         # Liberar el pago desde held_balance
         contractor = db.query(User).filter(User.id == job.client_id).first()
         worker = db.query(User).filter(User.id == job.worker_id).first()
-        
+
         if contractor and worker:
             if contractor.held_balance >= job.budget:
                 contractor.held_balance -= job.budget
                 worker.balance += job.budget
-                
+
                 # Crear transacción de liberación automática
                 from app.models.transaction import Transaction
+
                 tx = Transaction(
                     user_id=contractor.id,
                     job_id=job.id,
@@ -717,28 +884,36 @@ def process_timeouts(request: Request, db: Session = Depends(get_db)):
                     amount=job.budget,
                     network="polygon",
                     status="confirmed",
-                    confirmed_at=datetime.now(timezone.utc),
+                    confirmed_at=datetime.now(UTC),
                 )
                 db.add(tx)
-                
+
                 # Notificar a ambas partes
-                create_notification(worker.id, "payment_received",
+                create_notification(
+                    worker.id,
+                    "payment_received",
                     f"Pago automático de ${job.budget:.2f} USDT por '{job.title}' (timeout)",
-                    {"job_id": job.id, "amount": job.budget})
-                create_notification(contractor.id, "auto_released",
+                    {"job_id": job.id, "amount": job.budget},
+                )
+                create_notification(
+                    contractor.id,
+                    "auto_released",
                     f"Se liberó ${job.budget:.2f} USDT por inactividad en '{job.title}'",
-                    {"job_id": job.id})
-        
+                    {"job_id": job.id},
+                )
+
         db.flush()
-        processed.append({
-            "job_id": job.id,
-            "title": job.title,
-            "amount": job.budget,
-            "new_status": "completed",
-        })
-    
+        processed.append(
+            {
+                "job_id": job.id,
+                "title": job.title,
+                "amount": job.budget,
+                "new_status": "completed",
+            }
+        )
+
     db.commit()
-    
+
     return {
         "processed": len(processed),
         "jobs": processed,
@@ -747,6 +922,7 @@ def process_timeouts(request: Request, db: Session = Depends(get_db)):
 
 
 # ─── UPLOAD EVIDENCE ───────────────────────────────
+
 
 @router.post("/upload-evidence")
 async def upload_evidence(

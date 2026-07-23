@@ -1,21 +1,24 @@
 """
 Tests de autenticación: register, login, refresh, /me
 """
+
 from fastapi.testclient import TestClient
-import pytest
 
 
 class TestRegister:
     def test_register_success(self, client: TestClient):
         """Registro exitoso debe devolver 201 con datos del usuario."""
-        resp = client.post("/api/v1/auth/register", json={
-            "email": "newuser@test.com",
-            "password": "SecurePass123!",
-            "full_name": "New User",
-            "phone": "+584143333333",
-            "cedula": "V-33333333",
-            "role": "worker",
-        })
+        resp = client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "newuser@test.com",
+                "password": "SecurePass123!",
+                "full_name": "New User",
+                "phone": "+584143333333",
+                "cedula": "V-33333333",
+                "role": "worker",
+            },
+        )
         assert resp.status_code == 201
         data = resp.json()
         assert data["email"] == "newuser@test.com"
@@ -26,41 +29,73 @@ class TestRegister:
 
     def test_register_duplicate_email(self, client: TestClient):
         """Email duplicado debe devolver 400."""
-        client.post("/api/v1/auth/register", json={
-            "email": "dup@test.com", "password": "Pass123!",
-            "full_name": "User", "phone": "+584144444444",
-            "cedula": "V-44444444", "role": "worker",
-        })
-        resp = client.post("/api/v1/auth/register", json={
-            "email": "dup@test.com", "password": "Pass123!",
-            "full_name": "User2", "phone": "+584145555555",
-            "cedula": "V-55555555", "role": "worker",
-        })
+        client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "dup@test.com",
+                "password": "Pass123!",
+                "full_name": "User",
+                "phone": "+584144444444",
+                "cedula": "V-44444444",
+                "role": "worker",
+            },
+        )
+        resp = client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "dup@test.com",
+                "password": "Pass123!",
+                "full_name": "User2",
+                "phone": "+584145555555",
+                "cedula": "V-55555555",
+                "role": "worker",
+            },
+        )
         assert resp.status_code == 400
         assert "ya registrado" in resp.json()["detail"].lower()
 
     def test_register_duplicate_cedula(self, client: TestClient):
         """Cédula duplicada debe devolver 400."""
-        client.post("/api/v1/auth/register", json={
-            "email": "user1@test.com", "password": "Pass123!",
-            "full_name": "User1", "phone": "+584146666666",
-            "cedula": "V-66666666", "role": "worker",
-        })
-        resp = client.post("/api/v1/auth/register", json={
-            "email": "user2@test.com", "password": "Pass123!",
-            "full_name": "User2", "phone": "+584147777777",
-            "cedula": "V-66666666", "role": "worker",
-        })
+        client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "user1@test.com",
+                "password": "Pass123!",
+                "full_name": "User1",
+                "phone": "+584146666666",
+                "cedula": "V-66666666",
+                "role": "worker",
+            },
+        )
+        resp = client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "user2@test.com",
+                "password": "Pass123!",
+                "full_name": "User2",
+                "phone": "+584147777777",
+                "cedula": "V-66666666",
+                "role": "worker",
+            },
+        )
         assert resp.status_code == 400
-        assert "cédula" in resp.json()["detail"].lower() or "cedula" in resp.json()["detail"].lower()
+        assert (
+            "cédula" in resp.json()["detail"].lower() or "cedula" in resp.json()["detail"].lower()
+        )
 
     def test_register_invalid_email(self, client: TestClient):
         """Email invalido (actualmente aceptado, sin validation EmailStr)."""
-        resp = client.post("/api/v1/auth/register", json={
-            "email": "no-es-un-email",
-            "password": "Pass123!", "full_name": "User",
-            "phone": "+584148888888", "cedula": "V-88888888", "role": "worker",
-        })
+        resp = client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "no-es-un-email",
+                "password": "Pass123!",
+                "full_name": "User",
+                "phone": "+584148888888",
+                "cedula": "V-88888888",
+                "role": "worker",
+            },
+        )
         # Sin validacion EmailStr, la API lo acepta. Si se agrega, cambiar a 422
         assert resp.status_code in (200, 201)
 
@@ -68,10 +103,13 @@ class TestRegister:
 class TestLogin:
     def test_login_success(self, client: TestClient, contractor_token):
         """Login exitoso devuelve access_token + refresh_token + user."""
-        resp = client.post("/api/v1/auth/login", json={
-            "email": "contractor@test.com",
-            "password": "Test123!",
-        })
+        resp = client.post(
+            "/api/v1/auth/login",
+            json={
+                "email": "contractor@test.com",
+                "password": "Test123!",
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert "access_token" in data
@@ -81,27 +119,36 @@ class TestLogin:
 
     def test_login_wrong_password(self, client: TestClient, contractor_token):
         """Password incorrecto devuelve 401."""
-        resp = client.post("/api/v1/auth/login", json={
-            "email": "contractor@test.com",
-            "password": "WrongPassword!",
-        })
+        resp = client.post(
+            "/api/v1/auth/login",
+            json={
+                "email": "contractor@test.com",
+                "password": "WrongPassword!",
+            },
+        )
         assert resp.status_code == 401
 
     def test_login_nonexistent_user(self, client: TestClient):
         """Usuario que no existe devuelve 401."""
-        resp = client.post("/api/v1/auth/login", json={
-            "email": "noexisto@test.com",
-            "password": "Test123!",
-        })
+        resp = client.post(
+            "/api/v1/auth/login",
+            json={
+                "email": "noexisto@test.com",
+                "password": "Test123!",
+            },
+        )
         assert resp.status_code == 401
 
 
 class TestProfile:
     def test_get_me(self, client: TestClient, contractor_token):
         """/me devuelve datos del usuario autenticado."""
-        resp = client.get("/api/v1/auth/me", headers={
-            "Authorization": f"Bearer {contractor_token}",
-        })
+        resp = client.get(
+            "/api/v1/auth/me",
+            headers={
+                "Authorization": f"Bearer {contractor_token}",
+            },
+        )
         assert resp.status_code == 200
         assert resp.json()["email"] == "contractor@test.com"
 
@@ -112,9 +159,13 @@ class TestProfile:
 
     def test_update_profile(self, client: TestClient, contractor_token):
         """PATCH /me actualiza nombre y teléfono."""
-        resp = client.patch("/api/v1/auth/me", json={
-            "full_name": "Updated Name",
-        }, headers={"Authorization": f"Bearer {contractor_token}"})
+        resp = client.patch(
+            "/api/v1/auth/me",
+            json={
+                "full_name": "Updated Name",
+            },
+            headers={"Authorization": f"Bearer {contractor_token}"},
+        )
         assert resp.status_code == 200
         assert resp.json()["full_name"] == "Updated Name"
 
@@ -123,9 +174,13 @@ class TestRefreshToken:
     def test_refresh_success(self, client: TestClient, contractor_token):
         """Refresh devuelve nuevo par de tokens."""
         # Primero obtener refresh token
-        login_resp = client.post("/api/v1/auth/login", json={
-            "email": "contractor@test.com", "password": "Test123!",
-        })
+        login_resp = client.post(
+            "/api/v1/auth/login",
+            json={
+                "email": "contractor@test.com",
+                "password": "Test123!",
+            },
+        )
         refresh_token = login_resp.json()["refresh_token"]
 
         # Refrescar

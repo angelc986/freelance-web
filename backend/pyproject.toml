@@ -1,0 +1,172 @@
+# pyproject.toml — TurnoGO Backend
+# Progressive linting & type-checking configuration
+# Rules will be tightened in future phases as the codebase matures.
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+exclude = [
+    "alembic/",
+    "venv/",
+    "__pycache__/",
+    ".pytest_cache/",
+]
+
+[tool.ruff.lint]
+# Start with foundational rules that catch real bugs.
+# Expand select in future phases (e.g. "A", "PL", "RUF", "N").
+select = [
+    "F",     # Pyflakes — undefined names, unused imports, f-string errors
+    "E",     # pycodestyle errors — indentation, syntax, etc.
+    "W",     # pycodestyle warnings — trailing whitespace, blank lines, etc.
+    "I",     # isort — import ordering & grouping
+    "UP",    # pyupgrade — use modern Python syntax (e.g. `x | None` instead of `Optional[x]`)
+    "B",     # flake8-bugbear — common bug patterns
+    "C4",    # flake8-comprehensions — use list/dict comprehensions properly
+    "SIM",   # flake8-simplify — simplify conditionals and expressions
+]
+ignore = [
+    "E501",  # line too long → handled by formatter, not linter
+    "B008",  # FastAPI Depends() in function args is the framework pattern
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "S101",  # assert is fine in tests
+    "S311",  # random is fine in tests
+]
+"**/__init__.py" = [
+    "F401",  # unused imports in __init__.py are intentional (re-export)
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+
+[tool.mypy]
+python_version = "3.11"
+explicit_package_bases = true
+mypy_path = "$MYPY_CONFIG_FILE_DIR"
+# Be tolerant of third-party packages without stubs.
+# Applied per-module instead of globally to avoid silencing
+# issues in dependencies that DO have type stubs.
+follow_imports = "silent"
+# ── Progressive Type-Checking Strategy ──
+# Phase 1 (now):  Catch undefined names, missing returns, config issues.
+#                 Skip SQLAlchemy Column[] noise and strict optional checks.
+# Phase 2+ (future): Flip these to true, expand file coverage to routers.
+check_untyped_defs = false
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+warn_return_any = false
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = false
+warn_no_return = true
+no_implicit_optional = false       # Phase 2 → true (needs Optional[] on ~5 params)
+strict_optional = false            # Phase 2 → true (needs None-checks on request.client)
+# Output
+show_error_codes = true
+pretty = true
+
+# ── Phase 1 Scope: core modules only ──
+# Routers are excluded because they contain heavy SQLAlchemy Column[]
+# patterns that trigger ~50 assignment/arg-type errors.
+# Expand to app/ (full scope) in Phase 2.
+files = [
+    "app/models/",
+    "app/schemas/",
+    "app/services/",
+    "app/config.py",
+    "app/database.py",
+    "app/main.py",
+    "app/limiter.py",
+    "app/startup_validator.py",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "tests.*",
+    "alembic.*",
+]
+ignore_errors = true
+
+# ── Third-party packages without type stubs ──
+# Per-module instead of global ignore_missing_imports.
+[[tool.mypy.overrides]]
+module = [
+    "jose.*",
+    "passlib.*",
+    "slowapi.*",
+    "cloudinary.*",
+    "web3.*",
+    "eth_account.*",
+    "eth_utils.*",
+    "eth_typing.*",
+    "eth_hash.*",
+    "eth_keys.*",
+    "eth_keyfile.*",
+    "eth_rlp.*",
+    "eth_abi.*",
+    "hexbytes.*",
+    "rlp.*",
+    "ckzg.*",
+    "bitarray.*",
+    "cytoolz.*",
+    "toolz.*",
+    "parsimonious.*",
+    "pyunormalize.*",
+    "resend.*",
+    "pywebpush.*",
+    "py_vapid.*",
+    "http_ece.*",
+    "ecdsa.*",
+    "pyasn1.*",
+    "pycryptodome.*",
+    "aiohappyeyeballs.*",
+    "aiohttp.*",
+    "aiosignal.*",
+    "frozenlist.*",
+    "multidict.*",
+    "propcache.*",
+    "yarl.*",
+    "annotated_doc.*",
+    "dotenv.*",
+    "websockets.*",
+    "psycopg2.*",
+    "uvicorn.*",
+    "starlette.*",
+    "fastapi.*",
+    "pydantic.*",
+    "pydantic_settings.*",
+    "pydantic_core.*",
+    "sqlalchemy.*",
+    "alembic.*",
+    "sentry_sdk.*",
+    "requests.*",
+    "urllib3.*",
+    "certifi.*",
+    "charset_normalizer.*",
+    "idna.*",
+    "wrapt.*",
+    "anyio.*",
+    "h11.*",
+    "httpcore.*",
+    "httpx.*",
+    "PIL.*",
+]
+ignore_missing_imports = true
+
+# ── Phase 1: known type issues documented for future hardening ──
+[[tool.mypy.overrides]]
+module = [
+    "app.services.push_service",    # return "GONE" vs bool (line 59)
+    "app.services.blockchain",      # web3.py HexBytes vs str (lines 150,156)
+    "app.main",                     # Starlette exception handler signature (line 85)
+]
+ignore_errors = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

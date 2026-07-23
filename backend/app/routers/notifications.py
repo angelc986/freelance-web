@@ -1,17 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-from sqlalchemy import desc
-from typing import List
 from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+from sqlalchemy import desc
+from sqlalchemy.orm import Session
+
 from app.database import SessionLocal
-from app.models.user import User
 from app.models.notification import Notification
+from app.models.user import User
 from app.services.auth import get_current_user
 from app.services.email_service import send_notification_email
-from app.services.push_service import send_push, send_to_user
-from pydantic import BaseModel
+from app.services.push_service import send_to_user
 
 router = APIRouter(prefix="/api/v1", tags=["notifications"])
+
 
 class NotificationResponse(BaseModel):
     id: int
@@ -24,12 +26,14 @@ class NotificationResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
 
 def create_notification(user_id: int, event: str, message: str, data: dict | None = None):
     """Crea una notificacion en la base de datos y dispara email + push."""
@@ -59,6 +63,7 @@ def create_notification(user_id: int, event: str, message: str, data: dict | Non
 def debug_notifications():
     """Diagnóstico de configuración de notificaciones"""
     import os
+
     rk = os.getenv("RESEND_API_KEY", "")
     vp = os.getenv("VAPID_PRIVATE_KEY", "")
     vu = os.getenv("VAPID_PUBLIC_KEY", "")
@@ -110,6 +115,7 @@ def admin_send_test_notification(
 
     # 1. Verificar config de email
     import os
+
     sg_key = os.getenv("SENDGRID_API_KEY", "")
     results["sendgrid_configured"] = bool(sg_key)
 
@@ -130,7 +136,7 @@ def admin_send_test_notification(
     return {"target": target.email, **results}
 
 
-@router.get("/notifications", response_model=List[NotificationResponse])
+@router.get("/notifications", response_model=list[NotificationResponse])
 def get_notifications(
     limit: int = 20,
     db: Session = Depends(get_db),
@@ -150,6 +156,7 @@ def get_notifications(
     )
     return notifs
 
+
 @router.put("/notifications/{notification_id}/read")
 def mark_read(
     notification_id: int,
@@ -157,15 +164,20 @@ def mark_read(
     current_user: User = Depends(get_current_user),
 ):
     """Marca una notificacion como leida."""
-    n = db.query(Notification).filter(
-        Notification.id == notification_id,
-        Notification.user_id == current_user.id,
-    ).first()
+    n = (
+        db.query(Notification)
+        .filter(
+            Notification.id == notification_id,
+            Notification.user_id == current_user.id,
+        )
+        .first()
+    )
     if not n:
         raise HTTPException(status_code=404, detail="Notificacion no encontrada")
     n.read = True
     db.commit()
     return {"ok": True}
+
 
 @router.put("/notifications/read-all")
 def mark_all_read(
@@ -180,6 +192,7 @@ def mark_all_read(
     db.commit()
     return {"ok": True}
 
+
 @router.get("/notifications/unread-count")
 def unread_count(
     db: Session = Depends(get_db),
@@ -187,9 +200,13 @@ def unread_count(
 ):
     """Cantidad de notificaciones sin leer."""
     cutoff = datetime.utcnow() - timedelta(days=3)
-    count = db.query(Notification).filter(
-        Notification.user_id == current_user.id,
-        Notification.read == False,
-        Notification.created_at >= cutoff,
-    ).count()
+    count = (
+        db.query(Notification)
+        .filter(
+            Notification.user_id == current_user.id,
+            Notification.read == False,
+            Notification.created_at >= cutoff,
+        )
+        .count()
+    )
     return {"count": count}

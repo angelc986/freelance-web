@@ -3,11 +3,10 @@ Servicio de Web Push Notifications — Multi-dispositivo.
 Envía a todas las suscripciones push de un usuario.
 Elimina automáticamente suscripciones expiradas (410 Gone).
 """
-import json
-import os
-from typing import Optional
 
-from pywebpush import webpush, WebPushException
+import json
+
+from pywebpush import WebPushException, webpush
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -29,16 +28,18 @@ def _send_to_one(subscription_json: str, title: str, body: str, url: str = "/das
 
     try:
         subscription = json.loads(subscription_json)
-        data = json.dumps({
-            "title": title,
-            "body": body,
-            "icon": "/icons/icon-192x192.png",
-            "badge": "/icons/icon-192x192.png",
-            "data": {"url": url},
-            "actions": [
-                {"action": "open", "title": "Ver"},
-            ],
-        })
+        data = json.dumps(
+            {
+                "title": title,
+                "body": body,
+                "icon": "/icons/icon-192x192.png",
+                "badge": "/icons/icon-192x192.png",
+                "data": {"url": url},
+                "actions": [
+                    {"action": "open", "title": "Ver"},
+                ],
+            }
+        )
 
         webpush(
             subscription_info=subscription,
@@ -65,7 +66,9 @@ def _send_to_one(subscription_json: str, title: str, body: str, url: str = "/das
         return False
 
 
-def send_to_user(user_id: int, title: str, body: str, url: str = "/dashboard", db: Optional[Session] = None) -> int:
+def send_to_user(
+    user_id: int, title: str, body: str, url: str = "/dashboard", db: Session | None = None
+) -> int:
     """
     Envía notificación push a TODAS las suscripciones de un usuario.
     Retorna cantidad de envíos exitosos.
@@ -86,14 +89,16 @@ def send_to_user(user_id: int, title: str, body: str, url: str = "/dashboard", d
         expired: list[int] = []  # ids de suscripciones a eliminar
 
         for sub in subs:
-            sub_json = json.dumps({
-                "endpoint": sub.endpoint,
-                "keys": {
-                    "auth": sub.auth,
-                    "p256dh": sub.p256dh,
-                },
-                # expirationTime puede ser null, pywebpush lo tolera
-            })
+            sub_json = json.dumps(
+                {
+                    "endpoint": sub.endpoint,
+                    "keys": {
+                        "auth": sub.auth,
+                        "p256dh": sub.p256dh,
+                    },
+                    # expirationTime puede ser null, pywebpush lo tolera
+                }
+            )
 
             result = _send_to_one(sub_json, title, body, url)
             if result is True:
@@ -103,7 +108,9 @@ def send_to_user(user_id: int, title: str, body: str, url: str = "/dashboard", d
 
         # Limpiar suscripciones expiradas
         if expired:
-            db.query(PushSubscription).filter(PushSubscription.id.in_(expired)).delete(synchronize_session=False)
+            db.query(PushSubscription).filter(PushSubscription.id.in_(expired)).delete(
+                synchronize_session=False
+            )
             db.commit()
             print(f"[PUSH] Limpiadas {len(expired)} suscripciones expiradas del user {user_id}")
 

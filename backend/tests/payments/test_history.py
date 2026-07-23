@@ -2,15 +2,17 @@
 Transaction history tests — FASE 3B
 Covers: user transaction listing, isolation between users
 """
-from app.models.user import User
+
 from app.models.job import Job
-from app.models.transaction import Transaction
+from app.models.user import User
 
 
-def _create_completed_job_db(db, contractor_email="contractor@test.com",
-                             worker_email="worker@test.com", budget=50.0):
+def _create_completed_job_db(
+    db, contractor_email="contractor@test.com", worker_email="worker@test.com", budget=50.0
+):
     """Create a completed job directly in DB."""
     from passlib.context import CryptContext
+
     pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     contractor = db.query(User).filter(User.email == contractor_email).first()
@@ -53,8 +55,9 @@ class TestHistory:
 
     def test_history_returns_list(self, client, contractor_token, db):
         """Authenticated user gets transaction list (may be empty)."""
-        resp = client.get("/api/v1/payments/history",
-                         headers={"Authorization": f"Bearer {contractor_token}"})
+        resp = client.get(
+            "/api/v1/payments/history", headers={"Authorization": f"Bearer {contractor_token}"}
+        )
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
 
@@ -63,11 +66,14 @@ class TestHistory:
         jid = _create_completed_job_db(db)
 
         # Release payment
-        client.post(f"/api/v1/payments/release/{jid}",
-                   headers={"Authorization": f"Bearer {contractor_token}"})
+        client.post(
+            f"/api/v1/payments/release/{jid}",
+            headers={"Authorization": f"Bearer {contractor_token}"},
+        )
 
-        resp = client.get("/api/v1/payments/history",
-                         headers={"Authorization": f"Bearer {contractor_token}"})
+        resp = client.get(
+            "/api/v1/payments/history", headers={"Authorization": f"Bearer {contractor_token}"}
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert isinstance(data, list)

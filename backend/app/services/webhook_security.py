@@ -22,8 +22,9 @@ import hashlib
 import hmac
 import time
 from collections import defaultdict
-from typing import Optional
+
 from fastapi import HTTPException, Request
+
 from app.config import get_settings
 
 settings = get_settings()
@@ -53,9 +54,7 @@ def _prune_nonces(now: float) -> None:
 def _prune_rate_limits(endpoint_id: str, now: float) -> None:
     """Remove expired rate-limit entries."""
     window_start = now - _RATE_WINDOW_SECONDS
-    _rate_limits[endpoint_id] = [
-        ts for ts in _rate_limits[endpoint_id] if ts > window_start
-    ]
+    _rate_limits[endpoint_id] = [ts for ts in _rate_limits[endpoint_id] if ts > window_start]
 
 
 async def validate_webhook(
@@ -146,7 +145,9 @@ async def validate_webhook(
 
     # Expected format: "sha256=<hex>"
     if not signature_header.startswith("sha256="):
-        raise HTTPException(status_code=400, detail="Invalid signature format. Expected: sha256=<hex>")
+        raise HTTPException(
+            status_code=400, detail="Invalid signature format. Expected: sha256=<hex>"
+        )
 
     received_sig = signature_header[7:]  # Remove "sha256=" prefix
 
@@ -154,7 +155,7 @@ async def validate_webhook(
     if not webhook_secret:
         raise HTTPException(status_code=500, detail="Webhook secret not configured on server")
 
-    payload = f"{timestamp}.{nonce}.{body_str}".encode("utf-8")
+    payload = f"{timestamp}.{nonce}.{body_str}".encode()
     expected_sig = hmac.new(
         webhook_secret.encode("utf-8"),
         payload,

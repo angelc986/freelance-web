@@ -7,9 +7,9 @@ In production (Railway), environment variables are injected directly.
 
 ⚠️  Never hardcode secrets here. Defaults are for non-sensitive values only.
 """
-from functools import lru_cache
+
 import os
-import sys
+from functools import lru_cache
 
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
@@ -100,8 +100,8 @@ class Settings(BaseSettings):
                 "====================================================\n"
                 "|  Generate a secure key:                           |\n"
                 "|                                                   |\n"
-                "|    python -c \"import secrets;                     |\n"
-                "|      print(secrets.token_hex(64))\"               |\n"
+                '|    python -c "import secrets;                     |\n'
+                '|      print(secrets.token_hex(64))"               |\n'
                 "|                                                   |\n"
                 "|  Then set it as an environment variable:          |\n"
                 "|    SECRET_KEY=<generated-key>                     |\n"
@@ -118,8 +118,8 @@ class Settings(BaseSettings):
                 "====================================================\n"
                 "|  Generate a secure key:                           |\n"
                 "|                                                   |\n"
-                "|    python -c \"import secrets;                     |\n"
-                "|      print(secrets.token_hex(64))\"               |\n"
+                '|    python -c "import secrets;                     |\n'
+                '|      print(secrets.token_hex(64))"               |\n'
                 "|                                                   |\n"
                 "|  Then set it as an environment variable:          |\n"
                 "|    SECRET_KEY=<generated-key>                     |\n"
@@ -130,7 +130,7 @@ class Settings(BaseSettings):
             )
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     settings = Settings()
     # Validate on first load (cached, so runs once)

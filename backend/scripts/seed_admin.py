@@ -1,10 +1,14 @@
 """Seed: crea un usuario administrador."""
-import sys, os
+
+import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from app.database import SessionLocal, engine, Base
-from app.models.user import User
 from passlib.context import CryptContext
+
+from app.database import Base, SessionLocal, engine
+from app.models.user import User
 
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

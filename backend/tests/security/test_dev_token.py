@@ -1,9 +1,12 @@
 """Tests: Dev-token bypass gating by ENVIRONMENT."""
+
 import os
+
 import pytest
+from passlib.context import CryptContext
+
 from app.config import get_settings
 from app.models.user import User
-from passlib.context import CryptContext
 
 pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -38,9 +41,12 @@ class TestDevTokenDevelopment:
         db.refresh(user)
 
         # /payments/balance uses Depends(get_current_user) which has dev-token guard
-        resp = client.get("/api/v1/payments/balance", headers={
-            "Authorization": f"Bearer dev-{user.id}",
-        })
+        resp = client.get(
+            "/api/v1/payments/balance",
+            headers={
+                "Authorization": f"Bearer dev-{user.id}",
+            },
+        )
         assert resp.status_code == 200
 
     def test_protected_route_accepts_dev_token(self, client, db):
@@ -57,16 +63,22 @@ class TestDevTokenDevelopment:
         db.commit()
         db.refresh(user)
 
-        resp = client.get("/api/v1/payments/balance", headers={
-            "Authorization": f"Bearer dev-{user.id}",
-        })
+        resp = client.get(
+            "/api/v1/payments/balance",
+            headers={
+                "Authorization": f"Bearer dev-{user.id}",
+            },
+        )
         assert resp.status_code == 200
 
     def test_invalid_dev_token_format_rejected(self, client):
         """dev- without integer user_id returns 401."""
-        resp = client.get("/api/v1/auth/me", headers={
-            "Authorization": "Bearer dev-abc",
-        })
+        resp = client.get(
+            "/api/v1/auth/me",
+            headers={
+                "Authorization": "Bearer dev-abc",
+            },
+        )
         assert resp.status_code == 401
 
 
@@ -87,14 +99,20 @@ class TestDevTokenProduction:
 
     def test_dev_token_rejected_in_prod(self, client):
         """dev- tokens are 401 on endpoints using get_current_user() in production."""
-        resp = client.get("/api/v1/payments/balance", headers={
-            "Authorization": "Bearer dev-1",
-        })
+        resp = client.get(
+            "/api/v1/payments/balance",
+            headers={
+                "Authorization": "Bearer dev-1",
+            },
+        )
         assert resp.status_code == 401
 
     def test_valid_jwt_still_works_in_prod(self, client, contractor_token):
         """Real JWT tokens still work fine in production."""
-        resp = client.get("/api/v1/auth/me", headers={
-            "Authorization": f"Bearer {contractor_token}",
-        })
+        resp = client.get(
+            "/api/v1/auth/me",
+            headers={
+                "Authorization": f"Bearer {contractor_token}",
+            },
+        )
         assert resp.status_code == 200

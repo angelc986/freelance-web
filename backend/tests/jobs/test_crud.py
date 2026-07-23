@@ -2,7 +2,6 @@
 Job CRUD tests — FASE 3C
 Covers: create, read, update, delete/cancel (6 tests)
 """
-import pytest
 
 JOB_PAYLOAD = {
     "title": "Test Job CRUD",
@@ -15,8 +14,9 @@ JOB_PAYLOAD = {
 
 
 def _create_job(client, token):
-    resp = client.post("/api/v1/jobs/", json=JOB_PAYLOAD,
-                       headers={"Authorization": f"Bearer {token}"})
+    resp = client.post(
+        "/api/v1/jobs/", json=JOB_PAYLOAD, headers={"Authorization": f"Bearer {token}"}
+    )
     return resp
 
 
@@ -45,8 +45,11 @@ class TestJobCreate:
 
     def test_create_job_missing_fields(self, client, contractor_token):
         """Missing required fields returns 422."""
-        resp = client.post("/api/v1/jobs/", json={"title": "x"},
-            headers={"Authorization": f"Bearer {contractor_token}"})
+        resp = client.post(
+            "/api/v1/jobs/",
+            json={"title": "x"},
+            headers={"Authorization": f"Bearer {contractor_token}"},
+        )
         assert resp.status_code == 422
 
 
@@ -56,16 +59,24 @@ class TestJobUpdate:
     def test_update_own_job(self, client, contractor_token):
         """Owner can update their open job."""
         jid = _create_job(client, contractor_token).json()["id"]
-        resp = client.put(f"/api/v1/jobs/{jid}", json={
-            **JOB_PAYLOAD, "title": "Updated Title", "budget": 75.0,
-        }, headers={"Authorization": f"Bearer {contractor_token}"})
+        resp = client.put(
+            f"/api/v1/jobs/{jid}",
+            json={
+                **JOB_PAYLOAD,
+                "title": "Updated Title",
+                "budget": 75.0,
+            },
+            headers={"Authorization": f"Bearer {contractor_token}"},
+        )
         assert resp.status_code == 200
         assert resp.json()["title"] == "Updated Title"
 
     def test_update_not_owner(self, client, contractor_token, worker_token):
         """Non-owner cannot update job."""
         jid = _create_job(client, contractor_token).json()["id"]
-        resp = client.put(f"/api/v1/jobs/{jid}", json={
-            **JOB_PAYLOAD, "title": "Hacked!"
-        }, headers={"Authorization": f"Bearer {worker_token}"})
+        resp = client.put(
+            f"/api/v1/jobs/{jid}",
+            json={**JOB_PAYLOAD, "title": "Hacked!"},
+            headers={"Authorization": f"Bearer {worker_token}"},
+        )
         assert resp.status_code == 403

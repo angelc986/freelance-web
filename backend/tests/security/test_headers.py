@@ -1,9 +1,6 @@
 """
 Tests: Security headers in HTTP responses.
 """
-import os
-import pytest
-from app.config import get_settings
 
 
 class TestSecurityHeaders:
@@ -39,9 +36,12 @@ class TestSecurityHeaders:
 
     def test_headers_on_authenticated_endpoint(self, client, contractor_token):
         """Security headers are on protected endpoints too."""
-        resp = client.get("/api/v1/auth/me", headers={
-            "Authorization": f"Bearer {contractor_token}",
-        })
+        resp = client.get(
+            "/api/v1/auth/me",
+            headers={
+                "Authorization": f"Bearer {contractor_token}",
+            },
+        )
         assert resp.headers.get("X-Content-Type-Options") == "nosniff"
 
     def test_headers_on_error_response(self, client):

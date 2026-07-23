@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text
+from datetime import UTC, datetime
+
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+
 from app.database import Base
 
 
@@ -19,15 +21,21 @@ class Job(Base):
     status = Column(String(20), default="open")
     client_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     worker_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+    updated_at = Column(
+        DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
+    )
     dispute_reason = Column(String(1000), nullable=True)
-    dispute_by = Column(String(20), nullable=True)  # "contractor" o "worker" — quién abrió la disputa
-    disputed_at = Column(DateTime, nullable=True)    # Cuándo se abrió la disputa (24h lock)
+    dispute_by = Column(
+        String(20), nullable=True
+    )  # "contractor" o "worker" — quién abrió la disputa
+    disputed_at = Column(DateTime, nullable=True)  # Cuándo se abrió la disputa (24h lock)
     review_requested_at = Column(DateTime, nullable=True)  # Cuándo pidió completar el worker
-    timeout_at = Column(DateTime, nullable=True)     # Timeout para auto-release (72h después de review_pending)
+    timeout_at = Column(
+        DateTime, nullable=True
+    )  # Timeout para auto-release (72h después de review_pending)
     completion_code = Column(String(6), nullable=True)  # Código de verificación para completar
-    correction_count = Column(Integer, default=0)    # Veces que se pidió corrección
+    correction_count = Column(Integer, default=0)  # Veces que se pidió corrección
     correction_note = Column(String(1000), nullable=True)  # Nota de qué falta corregir
     evidence_images = Column(Text, nullable=True)  # JSON array de URLs de fotos subidas
 

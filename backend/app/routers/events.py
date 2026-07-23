@@ -1,14 +1,13 @@
-from fastapi import APIRouter, Depends, Request, Query, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
-from jose import jwt, JWTError
-from sqlalchemy.orm import Session
+
+from app.config import get_settings
 from app.database import SessionLocal
 from app.models.user import User
 from app.services.event_manager import event_generator
-from app.services.auth import SECRET_KEY, ALGORITHM, get_current_user as _get_current_user
-from app.config import get_settings
 
 router = APIRouter(tags=["events"])
+
 
 def _get_user_from_token(token: str = Query(...)) -> User:
     """Obtiene el usuario desde un token JWT. Usado para SSE (no puede usar headers)."""
@@ -29,6 +28,7 @@ def _get_user_from_token(token: str = Query(...)) -> User:
             return user
         finally:
             db.close()
+
 
 @router.get("/api/v1/events")
 async def sse_events(

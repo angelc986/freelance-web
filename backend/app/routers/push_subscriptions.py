@@ -4,14 +4,14 @@ POST  /api/v1/push/subscribe   → agregar suscripción del dispositivo actual
 DELETE /api/v1/push/subscribe   → eliminar suscripción (por endpoint)
 GET   /api/v1/push/subscriptions → listar dispositivos suscritos
 """
+
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional
+from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
-from app.models.user import User
 from app.models.push_subscription import PushSubscription
+from app.models.user import User
 from app.services.auth import get_current_user
 
 router = APIRouter(prefix="/api/v1/push", tags=["push"])
@@ -46,9 +46,7 @@ def add_push_subscription(
     Si el endpoint ya existe (otro dispositivo lo registró), se actualiza.
     """
     # Verificar si el endpoint ya está registrado
-    existing = db.query(PushSubscription).filter(
-        PushSubscription.endpoint == data.endpoint
-    ).first()
+    existing = db.query(PushSubscription).filter(PushSubscription.endpoint == data.endpoint).first()
 
     if existing:
         # Actualizar keys (podrían haber cambiado)
@@ -59,7 +57,7 @@ def add_push_subscription(
             existing.user_id = current_user.id
         db.commit()
         return {"ok": True, "action": "updated"}
-    
+
     # Crear nueva suscripción
     sub = PushSubscription(
         user_id=current_user.id,
@@ -82,10 +80,14 @@ def remove_push_subscription(
     Elimina una suscripción push por su endpoint.
     Solo el dueño de la suscripción puede eliminarla.
     """
-    sub = db.query(PushSubscription).filter(
-        PushSubscription.endpoint == endpoint,
-        PushSubscription.user_id == current_user.id,
-    ).first()
+    sub = (
+        db.query(PushSubscription)
+        .filter(
+            PushSubscription.endpoint == endpoint,
+            PushSubscription.user_id == current_user.id,
+        )
+        .first()
+    )
 
     if not sub:
         raise HTTPException(status_code=404, detail="Suscripción no encontrada")
@@ -103,9 +105,12 @@ def list_subscriptions(
     """
     Lista todos los dispositivos suscritos del usuario autenticado.
     """
-    subs = db.query(PushSubscription).filter(
-        PushSubscription.user_id == current_user.id
-    ).order_by(PushSubscription.created_at.desc()).all()
+    subs = (
+        db.query(PushSubscription)
+        .filter(PushSubscription.user_id == current_user.id)
+        .order_by(PushSubscription.created_at.desc())
+        .all()
+    )
 
     return {
         "subscriptions": [

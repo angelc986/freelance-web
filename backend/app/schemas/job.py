@@ -1,6 +1,6 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+
+from pydantic import BaseModel
 
 
 class JobCreate(BaseModel):
@@ -24,23 +24,24 @@ class JobResponse(BaseModel):
     duration: str
     status: str
     client_id: int
-    worker_id: Optional[int] = None
+    worker_id: int | None = None
     latitude: float | None = None
     longitude: float | None = None
     created_at: datetime
     updated_at: datetime
-    dispute_reason: Optional[str] = None
-    dispute_by: Optional[str] = None
-    disputed_at: Optional[datetime] = None
-    review_requested_at: Optional[datetime] = None
-    timeout_at: Optional[datetime] = None
-    completion_code: Optional[str] = None
+    dispute_reason: str | None = None
+    dispute_by: str | None = None
+    disputed_at: datetime | None = None
+    review_requested_at: datetime | None = None
+    timeout_at: datetime | None = None
+    completion_code: str | None = None
     correction_count: int = 0
-    correction_note: Optional[str] = None
-    evidence_images: Optional[str] = None  # JSON array de fotos
+    correction_note: str | None = None
+    evidence_images: str | None = None  # JSON array de fotos
 
     class Config:
         from_attributes = True
+
 
 class JobUpdate(BaseModel):
     title: str
@@ -51,6 +52,7 @@ class JobUpdate(BaseModel):
     duration: str
     latitude: float | None = None
     longitude: float | None = None
+
 
 class DisputeRequest(BaseModel):
     reason: str
@@ -64,6 +66,7 @@ class CorrectionRequest(BaseModel):
 
 class ApplicationBrief(BaseModel):
     """Info detallada de un aplicante para mostrar al contratista"""
+
     id: int
     worker_id: int
     worker_name: str
@@ -80,5 +83,6 @@ class ApplicationBrief(BaseModel):
 
 class JobWithApplicants(BaseModel):
     """Trabajo con lista de aplicantes"""
+
     job: JobResponse
     applicants: list[ApplicationBrief]
