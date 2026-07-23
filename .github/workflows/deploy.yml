@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 jobs:
-  # Gate: only proceed if CI passed
+  # ── Gate: only proceed if CI passed ─────────────────────
   gate:
     name: Verify CI Passed
     runs-on: ubuntu-latest
@@ -29,98 +29,71 @@ jobs:
         id: check
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "Manual deploy — bypassing CI gate."
+            echo "Manual deploy triggered — bypassing CI gate."
             echo "proceed=true" >> $GITHUB_OUTPUT
           elif [ "${{ github.event.workflow_run.conclusion }}" = "success" ]; then
-            echo "CI passed. Proceeding with deploy."
+            echo "CI passed (${{ github.event.workflow_run.id }}). Proceeding."
             echo "proceed=true" >> $GITHUB_OUTPUT
           else
-            echo "CI FAILED. Deploy BLOCKED."
+            echo "::error::CI FAILED (conclusion=${{ github.event.workflow_run.conclusion }}). Deploy BLOCKED."
             echo "proceed=false" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-  # Deploy Backend → Railway (webhook)
-  deploy-backend:
-    name: Deploy Backend (Railway)
-    needs: [gate]
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: needs.gate.outputs.proceed == 'true'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Trigger Railway Deploy
-        env:
-          RAILWAY_DEPLOY_HOOK: ${{ secrets.RAILWAY_DEPLOY_HOOK }}
-        run: |
-          if [ -z "$RAILWAY_DEPLOY_HOOK" ]; then
-            echo "::warning::RAILWAY_DEPLOY_HOOK not set — deploy skipped."
-            echo ""
-            echo "Setup instructions:"
-            echo "  1. Go to Railway Dashboard → your backend service → Settings"
-            echo "  2. Turn OFF 'Auto-deploy on push' (IMPORTANT!)"
-            echo "  3. Create a Webhook for deployments"
-            echo "  4. Copy the webhook URL"
-            echo "  5. Add RAILWAY_DEPLOY_HOOK secret in GitHub → Settings → Secrets"
-          else
-            echo "Triggering Railway deploy..."
-            RESPONSE=$(curl -s -w "%{http_code}" -o /dev/null -X POST "$RAILWAY_DEPLOY_HOOK")
-            if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "201" ] || [ "$RESPONSE" = "204" ]; then
-              echo "Railway deploy triggered (HTTP $RESPONSE)"
-            else
-              echo "::warning::Railway webhook returned HTTP $RESPONSE"
-            fi
-          fi
-
-  # Deploy Frontend → Vercel (deploy hook)
+  # ── Vercel: Trigger via Deploy Hook ────────────────────
   deploy-frontend:
-    name: Deploy Frontend (Vercel)
+    name: Deploy Vercel
     needs: [gate]
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     if: needs.gate.outputs.proceed == 'true'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Trigger Vercel Deploy
         env:
           VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
         run: |
           if [ -z "$VERCEL_DEPLOY_HOOK" ]; then
-            echo "::warning::VERCEL_DEPLOY_HOOK not set — deploy skipped."
-            echo ""
-            echo "Setup instructions:"
-            echo "  1. Go to Vercel Dashboard → Project → Settings → Git"
-            echo "  2. Scroll to 'Ignored Build Step' → paste this script:"
-            echo "     -------------------------------------------"
-            echo "     #!/bin/bash"
-            echo "     # Block deploy until CI passes"
-            echo "     SHA=\$(git rev-parse HEAD)"
-            echo "     CI=\$(curl -sf \"https://api.github.com/repos/${{ github.repository }}/commits/\$SHA/status\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get('state','pending'))\")"
-            echo "     if [ \"\$CI\" = \"success\" ]; then"
-            echo "       echo 'CI passed → deploying'"
-            echo "       exit 1"
-            echo "     else"
-            echo "       echo 'CI not ready → skipping'"
-            echo "       exit 0"
-            echo "     fi"
-            echo "     -------------------------------------------"
-            echo "  3. Create a Deploy Hook in Vercel for manual triggers"
-            echo "  4. Add VERCEL_DEPLOY_HOOK secret in GitHub"
+            echo "::warning::VERCEL_DEPLOY_HOOK not set. Create it:"
+            echo "  Vercel Dashboard → Settings → Git → Deploy Hooks → Create"
+            echo "  Name: GitHub Actions | Branch: main"
+            echo "  Add URL as VERCEL_DEPLOY_HOOK in GitHub Secrets"
+            exit 0
+          fi
+          echo "Deploying to Vercel..."
+          curl -sf -X POST "$VERCEL_DEPLOY_HOOK"
+          echo "::notice::Vercel deploy triggered. Check: https://vercel.com/angelc986/freelance-web/deployments"
+
+  # ── Railway: Trigger via Webhook ───────────────────────
+  deploy-backend:
+    name: Deploy Railway
+    needs: [gate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: needs.gate.outputs.proceed == 'true'
+    steps:
+      - name: Trigger Railway Deploy
+        env:
+          RAILWAY_DEPLOY_HOOK: ${{ secrets.RAILWAY_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$RAILWAY_DEPLOY_HOOK" ]; then
+            echo "::warning::RAILWAY_DEPLOY_HOOK not set. Create it:"
+            echo "  Railway Dashboard → Service → Settings → Webhooks → Create"
+            echo "  Add webhook URL as RAILWAY_DEPLOY_HOOK in GitHub Secrets"
+            echo "  (Auto-deploy should already be OFF)"
+            exit 0
+          fi
+          echo "Deploying to Railway..."
+          RESPONSE=$(curl -s -w "%{http_code}" -o /dev/null -X POST "$RAILWAY_DEPLOY_HOOK")
+          if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "201" ] || [ "$RESPONSE" = "204" ]; then
+            echo "::notice::Railway deploy triggered (HTTP $RESPONSE)."
           else
-            echo "Triggering Vercel deploy..."
-            curl -sf -X POST "$VERCEL_DEPLOY_HOOK"
-            echo ""
-            echo "Vercel deploy triggered."
+            echo "::warning::Railway webhook returned HTTP $RESPONSE"
           fi
 
-  # Summary
+  # ── Summary ────────────────────────────────────────────
   deploy-summary:
     name: Deploy Summary
-    needs: [deploy-backend, deploy-frontend]
+    needs: [deploy-frontend, deploy-backend]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -131,8 +104,8 @@ jobs:
           echo "| Stage | Result |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| CI Gate | ${{ needs.gate.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Railway | ${{ needs.deploy-backend.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Vercel | ${{ needs.deploy-frontend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Railway | ${{ needs.deploy-backend.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Backend:** https://railway.app/project" >> $GITHUB_STEP_SUMMARY
-          echo "**Frontend:** https://freelance-web-beta.vercel.app" >> $GITHUB_STEP_SUMMARY
+          echo "**Vercel:** https://freelance-web-beta.vercel.app" >> $GITHUB_STEP_SUMMARY
+          echo "**Railway:** https://railway.app/project" >> $GITHUB_STEP_SUMMARY
