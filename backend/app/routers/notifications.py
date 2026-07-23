@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -10,6 +11,8 @@ from app.models.notification import Notification
 from app.models.user import User
 from app.services.auth import get_current_user
 from app.services.email_service import send_notification_email
+
+logger = logging.getLogger(__name__)
 from app.services.push_service import send_to_user
 
 router = APIRouter(prefix="/api/v1", tags=["notifications"])
@@ -53,8 +56,8 @@ def create_notification(user_id: int, event: str, message: str, data: dict | Non
             # Web Push (a todos los dispositivos)
             send_to_user(user_id, "TurnoGO", message, "/dashboard", db=db)
 
-    except Exception as e:
-        print(f"Error creating notification: {e}")
+    except Exception:
+        logger.exception("Failed to create notification")
     finally:
         db.close()
 

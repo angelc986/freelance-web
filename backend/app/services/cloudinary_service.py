@@ -6,7 +6,11 @@ can run without it installed. Functions return None when cloudinary
 is not available or not configured.
 """
 
+import logging
+
 from app.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 
 def _ensure_cloudinary():
@@ -50,7 +54,7 @@ def upload_avatar(file_bytes: bytes, user_id: int, filename: str) -> str | None:
         )
         return result.get("secure_url")
     except Exception as e:
-        print(f"[Cloudinary] Error subiendo avatar: {e}")
+        logger.error("Cloudinary avatar upload failed", extra={"error": str(e)})
         return None
 
 
@@ -64,5 +68,5 @@ def delete_avatar(public_id: str) -> bool:
         cloudinary.uploader.destroy(public_id)
         return True
     except Exception as e:
-        print(f"[Cloudinary] Error eliminando avatar: {e}")
+        logger.error("Cloudinary avatar delete failed", extra={"error": str(e)})
         return False

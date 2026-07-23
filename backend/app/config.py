@@ -72,6 +72,12 @@ class Settings(BaseSettings):
     # Environment
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
 
+    # Logging
+    LOG_LEVEL: str = os.getenv(
+        "LOG_LEVEL",
+        "INFO" if os.getenv("ENVIRONMENT", "development") == "production" else "DEBUG",
+    )
+
     # Webhooks
     WEBHOOK_SECRET: str = os.getenv("WEBHOOK_SECRET", "")
     WEBHOOK_ALLOWED_IPS: str = os.getenv("WEBHOOK_ALLOWED_IPS", "")  # comma-separated

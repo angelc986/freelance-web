@@ -11,11 +11,15 @@ En desarrollo: usamos Polygon Amoy Testnet (dinero falso)
 En producción: Polygon Mainnet (dinero real)
 """
 
+import logging
+
 from eth_account import Account
 from web3 import Web3
 from web3.middleware import ExtraDataToPOAMiddleware
 
 from app.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
@@ -99,8 +103,8 @@ def get_system_wallet_balance() -> float:
             Web3.to_checksum_address(settings.SYSTEM_WALLET_ADDRESS)
         ).call()
         return balance_wei / (10**decimals)
-    except Exception as e:
-        print(f"Error obteniendo balance: {e}")
+    except Exception:
+        logger.error("Error getting system wallet balance", exc_info=True)
         return 0.0
 
 
@@ -114,8 +118,10 @@ def get_wallet_balance(wallet_address: str) -> float:
         decimals = contract.functions.decimals().call()
         balance_wei = contract.functions.balanceOf(Web3.to_checksum_address(wallet_address)).call()
         return balance_wei / (10**decimals)
-    except Exception as e:
-        print(f"Error obteniendo balance de {wallet_address}: {e}")
+    except Exception:
+        logger.error(
+            "Error getting wallet balance", extra={"wallet": wallet_address}, exc_info=True
+        )
         return 0.0
 
 
@@ -231,8 +237,8 @@ def send_usdt(to_address: str, amount: float) -> str | None:
 
         return w3.to_hex(tx_hash)
 
-    except Exception as e:
-        print(f"Error enviando USDT: {e}")
+    except Exception:
+        logger.error("Error sending USDT", exc_info=True)
         return None
 
 
@@ -277,7 +283,9 @@ def scan_deposits(from_block: int | None = None, to_block: int | None = None) ->
         if to_block is None:
             to_block = current_block
 
-        print(f"🔍 Escaneando bloques {from_block} → {to_block} (actual: {current_block})")
+        logger.info(
+            "Scanning blocks", extra={"from": from_block, "to": to_block, "current": current_block}
+        )
 
         # Crear filtro de eventos Transfer hacia nuestra wallet
         event_filter = contract.events.Transfer.create_filter(
@@ -306,9 +314,9 @@ def scan_deposits(from_block: int | None = None, to_block: int | None = None) ->
             }
             deposits.append(deposit)
 
-        print(f"✅ Escaneo completo: {len(deposits)} depósito(s) encontrados")
+        logger.info("Scan complete", extra={"deposits": len(deposits)})
         return deposits
 
-    except Exception as e:
-        print(f"❌ Error escaneando depósitos: {e}")
+    except Exception:
+        logger.error("Error scanning deposits", exc_info=True)
         return deposits

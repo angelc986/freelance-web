@@ -1,7 +1,10 @@
 import json
+import logging
 
 from app.database import SessionLocal
 from app.models.audit_log import AuditLog
+
+logger = logging.getLogger(__name__)
 
 
 def log_action(
@@ -18,7 +21,7 @@ def log_action(
         )
         db.add(log)
         db.commit()
-    except Exception as e:
-        print(f"[AUDIT ERROR] {e}")
+    except Exception:
+        logger.exception("Audit log write failed")
     finally:
         db.close()

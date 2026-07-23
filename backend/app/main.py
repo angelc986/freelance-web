@@ -13,11 +13,20 @@ from slowapi.errors import RateLimitExceeded
 from app.config import get_settings
 from app.database import Base, engine
 from app.limiter import limiter
+from app.logging_config import configure_logging, get_logger
 from app.startup_validator import validate_startup
 
 _settings = get_settings()
+
+# ── Structured logging ──
+is_production = _settings.ENVIRONMENT == "production"
+configure_logging(level=_settings.LOG_LEVEL, json_format=is_production)
+logger = get_logger(__name__)
+
 validate_startup(_settings)
-print(f"[STARTUP] Validation passed ({_settings.APP_NAME} v{_settings.APP_VERSION})")
+logger.info(
+    "Startup validation passed", extra={"app": _settings.APP_NAME, "version": _settings.APP_VERSION}
+)
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 
@@ -39,11 +48,11 @@ from app.routers import (
     verification_router,
 )
 
-sentry_dsn = os.getenv("SENTRY_DSN", "")
+sentry_dsn = _settings.SENTRY_DSN
 if sentry_dsn:
     sentry_sdk.init(
         dsn=sentry_dsn,
-        environment=os.getenv("ENVIRONMENT", "development"),
+        environment=_settings.ENVIRONMENT,
         traces_sample_rate=0.1,
         send_default_pii=True,
         integrations=[
@@ -51,6 +60,7 @@ if sentry_dsn:
             SqlalchemyIntegration(),
         ],
     )
+    logger.info("Sentry initialized", extra={"environment": _settings.ENVIRONMENT})
 
 # Database Schema -- Alembic handles migrations
 # Production: schema managed by `alembic upgrade head` in the
@@ -58,9 +68,9 @@ if sentry_dsn:
 # Development: Base.metadata.create_all() as safe fallback
 #   (prefer `alembic upgrade head` for consistency).
 if _settings.ENVIRONMENT == "production":
-    print("[DB] Production: Alembic manages schema")
+    logger.info("Production: Alembic manages schema")
 else:
-    print("[DB] Development: create_all fallback active")
+    logger.info("Development: create_all fallback active")
     Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -121,7 +131,7 @@ if env == "production":
             "====================================================\n"
         )
     allow_origins = [frontend_url]
-    print(f"[CORS] Production mode: only {frontend_url}")
+    logger.info("CORS: Production mode", extra={"origin": frontend_url})
 else:
     allow_origins = [
         "http://localhost:3000",
@@ -132,7 +142,7 @@ else:
     ]
     if frontend_url:
         allow_origins.append(frontend_url)
-    print(f"[CORS] Development mode: {len(allow_origins)} origins allowed")
+    logger.info("CORS: Development mode", extra={"origin_count": len(allow_origins)})
 
 app.add_middleware(
     CORSMiddleware,
