@@ -3,7 +3,7 @@ import time
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -16,6 +16,15 @@ from app.config import get_settings
 from app.database import Base, engine
 from app.limiter import limiter
 from app.logging_config import configure_logging, get_logger
+from app.metrics import (
+    get_metrics,
+    http_errors_total,
+    http_request_duration_seconds,
+    http_requests_total,
+    set_app_info,
+    set_database_down,
+    set_database_up,
+)
 from app.request_context import generate_request_id, set_request_id
 from app.startup_validator import validate_startup
 
@@ -30,6 +39,7 @@ validate_startup(_settings)
 logger.info(
     "Startup validation passed", extra={"app": _settings.APP_NAME, "version": _settings.APP_VERSION}
 )
+set_app_info(_settings.APP_NAME, _settings.APP_VERSION, _settings.ENVIRONMENT)
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 
@@ -93,15 +103,26 @@ async def request_id_middleware(request: Request, call_next):
 
     start = time.time()
     response = await call_next(request)
-    duration_ms = round((time.time() - start) * 1000)
+    duration_s = time.time() - start
+    duration_ms = round(duration_s * 1000)
 
     response.headers["X-Request-ID"] = request_id
+
+    # ── Metrics ──
+    status = str(response.status_code)
+    endpoint = request.url.path
+    method = request.method
+    http_requests_total.labels(method=method, endpoint=endpoint, status=status).inc()
+    http_request_duration_seconds.labels(method=method, endpoint=endpoint).observe(duration_s)
+    if response.status_code >= 400:
+        status_class = "4xx" if response.status_code < 500 else "5xx"
+        http_errors_total.labels(method=method, endpoint=endpoint, status_class=status_class).inc()
 
     logger.debug(
         "Request completed",
         extra={
-            "method": request.method,
-            "path": request.url.path,
+            "method": method,
+            "path": endpoint,
             "status": response.status_code,
             "duration_ms": duration_ms,
         },
@@ -231,9 +252,11 @@ def ready():
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
         checks["database"] = "ok"
+        set_database_up()
     except Exception as e:
         checks["database"] = "unavailable"
         healthy = False
+        set_database_down()
         logger.error("Readiness check failed: database unavailable", extra={"error": str(e)})
 
     status_code = 200 if healthy else 503
@@ -241,3 +264,9 @@ def ready():
         content={"status": "ready" if healthy else "not_ready", "checks": checks},
         status_code=status_code,
     )
+
+
+@app.get("/metrics")
+def metrics():
+    """Prometheus metrics endpoint — format: text/plain."""
+    return Response(content=get_metrics(), media_type="text/plain; version=0.0.4")
