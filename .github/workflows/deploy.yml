@@ -15,10 +15,13 @@ permissions:
   contents: read
 
 jobs:
+  # ── Gate: only proceed if CI passed ─────────────────────
   gate:
     name: Verify CI Passed
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     outputs:
       proceed: ${{ steps.check.outputs.proceed }}
     steps:
@@ -26,7 +29,7 @@ jobs:
         id: check
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "Manual deploy - bypassing CI gate."
+            echo "Manual deploy — bypassing CI gate."
             echo "proceed=true" >> $GITHUB_OUTPUT
           elif [ "${{ github.event.workflow_run.conclusion }}" = "success" ]; then
             echo "CI passed. Proceeding."
@@ -37,6 +40,7 @@ jobs:
             exit 0
           fi
 
+  # ── Vercel: Deploy via CLI (full control, no race condition) ──
   deploy-frontend:
     name: Deploy Vercel
     needs: [gate]
@@ -49,29 +53,47 @@ jobs:
 
       - name: Deploy to Vercel
         env:
-          VERCEL_TOKEN: *** secrets.VERCEL_TOKEN }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           if [ -z "$VERCEL_TOKEN" ]; then
-            echo "::warning::VERCEL_TOKEN not set. Deploy skipped."
+            echo "::warning::VERCEL_TOKEN not set. How to fix:"
+            echo "  1. Vercel Dashboard → Settings → Tokens → Create"
+            echo "  2. Name: GitHub Actions, Scope: Full Account"
+            echo "  3. Add token as VERCEL_TOKEN in GitHub Secrets"
+            echo "  4. Vercel Settings → Git → DISCONNECT repo (stops auto-deploy)"
             exit 0
           fi
           cd frontend
-          echo "Deploying to Vercel..."
-          npx vercel deploy --prod --token "***" --yes
-          echo "::notice::Vercel deploy complete."
+          echo "Deploying to Vercel production..."
+          npx vercel deploy --prod --token "$VERCEL_TOKEN" --yes
+          echo "::notice::Vercel deploy complete. https://freelance-web-beta.vercel.app"
 
+  # Railway: Native auto-deploy with Wait for CI enabled
+  deploy-backend:
+    name: Railway (Native)
+    needs: [gate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    if: needs.gate.outputs.proceed == 'true'
+    steps:
+      - name: Railway Status
+        run: |
+          echo "Railway auto-deploys natively with 'Wait for CI' enabled."
+          echo "Monitor at: https://railway.app/project"
+
+  # ── Summary ────────────────────────────────────────────
   deploy-summary:
     name: Deploy Summary
-    needs: [deploy-frontend]
+    needs: [deploy-frontend, deploy-backend]
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: Summary
         run: |
-          echo "## Deploy Pipeline" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Deploy Pipeline" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Stage | Result |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| CI Gate | ${{ needs.gate.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Vercel | ${{ needs.deploy-frontend.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Railway | native (CI-gated auto-deploy) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Railway | ${{ needs.deploy-backend.result }} |" >> $GITHUB_STEP_SUMMARY
