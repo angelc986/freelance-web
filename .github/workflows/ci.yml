@@ -48,6 +48,7 @@ jobs:
           python -m pytest tests/ -v --cov=app --cov-report=term-missing --cov-report=xml
         env:
           TESTING: "true"
+          SECRET_KEY: "ci-smoke-test-key-not-for-production"
           SENTRY_DSN: ""
 
       - name: Upload coverage artifact
