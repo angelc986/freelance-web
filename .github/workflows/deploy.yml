@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 jobs:
-  # ── Gate: only proceed if CI passed ─────────────────────
+  # Gate: only proceed if CI passed
   gate:
     name: Verify CI Passed
     runs-on: ubuntu-latest
@@ -29,7 +29,7 @@ jobs:
         id: check
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "Manual deploy — bypassing CI gate."
+            echo "Manual deploy - bypassing CI gate."
             echo "proceed=true" >> $GITHUB_OUTPUT
           elif [ "${{ github.event.workflow_run.conclusion }}" = "success" ]; then
             echo "CI passed. Proceeding with Vercel deploy."
@@ -40,7 +40,7 @@ jobs:
             exit 0
           fi
 
-  # ── Vercel: Deploy via CLI ──────────────────────────────
+  # Vercel: Deploy via CLI
   deploy-frontend:
     name: Deploy Vercel
     needs: [gate]
@@ -64,7 +64,7 @@ jobs:
           npx vercel deploy --prod --token "***" --yes
           echo "::notice::Vercel deploy complete."
 
-  # ── Summary ────────────────────────────────────────────
+  # Summary
   deploy-summary:
     name: Deploy Summary
     needs: [deploy-frontend]
@@ -73,13 +73,10 @@ jobs:
     steps:
       - name: Summary
         run: |
-          echo "## 🚀 Deploy Pipeline" >> $GITHUB_STEP_SUMMARY
+          echo "## Deploy Pipeline" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Stage | Result |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| CI Gate | ${{ needs.gate.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Vercel | ${{ needs.deploy-frontend.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Railway | native (CI-gated auto-deploy) |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Vercel:** https://freelance-web-beta.vercel.app" >> $GITHUB_STEP_SUMMARY
-          echo "**Railway:** https://freelance-web-production-add4.up.railway.app" >> $GITHUB_STEP_SUMMARY
