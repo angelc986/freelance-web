@@ -7,10 +7,13 @@ Configuración por variables de entorno:
 """
 
 import json
+import logging
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from app.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 
 def _send_sendgrid(to: str, subject: str, html: str) -> bool:
@@ -36,14 +39,17 @@ def _send_sendgrid(to: str, subject: str, html: str) -> bool:
             },
         )
         with urlopen(req, timeout=15) as resp:
-            print(f"[EMAIL] SendGrid -> {to}: {subject} (HTTP {resp.status})")
+            logger.info(
+                "Email sent (SendGrid)",
+                extra={"to": to, "subject": subject, "http_status": resp.status},
+            )
             return True
     except HTTPError as e:
         body = e.read().decode()[:200]
-        print(f"[EMAIL] SendGrid HTTP {e.code}: {body}")
+        logger.error("SendGrid HTTP error", extra={"code": e.code, "body": body})
         return False
-    except Exception as e:
-        print(f"[EMAIL] SendGrid error: {e}")
+    except Exception:
+        logger.exception("SendGrid unexpected error")
         return False
 
 
@@ -67,10 +73,10 @@ def _send_smtp(to: str, subject: str, html: str) -> bool:
             s.starttls()
             s.login(user, password)
             s.sendmail(user, to, msg.as_string())
-        print(f"[EMAIL] SMTP -> {to}: {subject}")
+        logger.info("Email sent (SMTP)", extra={"to": to, "subject": subject})
         return True
-    except Exception as e:
-        print(f"[EMAIL] SMTP error: {e}")
+    except Exception:
+        logger.exception("SMTP error")
         return False
 
 
@@ -91,10 +97,10 @@ def _send_resend(to: str, subject: str, html: str) -> bool:
                 "html": html,
             }
         )
-        print(f"[EMAIL] Resend -> {to}: {subject}")
+        logger.info("Email sent (Resend)", extra={"to": to, "subject": subject})
         return True
-    except Exception as e:
-        print(f"[EMAIL] Resend error: {e}")
+    except Exception:
+        logger.exception("Resend error")
         return False
 
 

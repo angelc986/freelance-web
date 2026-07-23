@@ -5,6 +5,7 @@ Elimina automáticamente suscripciones expiradas (410 Gone).
 """
 
 import json
+import logging
 
 from pywebpush import WebPushException, webpush
 from sqlalchemy.orm import Session
@@ -12,6 +13,8 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.database import SessionLocal
 from app.models.push_subscription import PushSubscription
+
+logger = logging.getLogger(__name__)
 
 settings = get_settings()
 VAPID_CLAIMS = {"sub": "mailto:notificaciones@turnogo.com"}
@@ -23,7 +26,7 @@ def _send_to_one(subscription_json: str, title: str, body: str, url: str = "/das
     """
     vapid_private = settings.VAPID_PRIVATE_KEY
     if not vapid_private:
-        print("[PUSH] Sin VAPID_PRIVATE_KEY — push no enviado")
+        logger.warning("VAPID_PRIVATE_KEY not configured — push not sent")
         return False
 
     try:
@@ -48,21 +51,24 @@ def _send_to_one(subscription_json: str, title: str, body: str, url: str = "/das
             vapid_claims=VAPID_CLAIMS,
             timeout=10,
         )
-        print(f"[PUSH] Enviado: {title}")
+        logger.info("Push notification sent", extra={"title": title})
         return True
     except WebPushException as e:
         if hasattr(e, "response") and e.response is not None:
             status = e.response.status_code
             body_text = e.response.text[:200]
-            print(f"[PUSH] Error HTTP {status}: {body_text}")
+            logger.warning(
+                "Push subscription expired (410)",
+                extra={"status": status, "detail": body_text[:200]},
+            )
             # 410 Gone = suscripción expirada / inválida
             if status == 410:
                 return "GONE"
         else:
-            print(f"[PUSH] WebPushException: {e}")
+            logger.warning("WebPushException", extra={"error": str(e)})
         return False
-    except Exception as e:
-        print(f"[PUSH] Error inesperado: {e}")
+    except Exception:
+        logger.error("Unexpected push error", exc_info=True)
         return False
 
 
@@ -82,7 +88,7 @@ def send_to_user(
     try:
         subs = db.query(PushSubscription).filter(PushSubscription.user_id == user_id).all()
         if not subs:
-            print(f"[PUSH] User {user_id}: sin suscripciones push")
+            logger.debug("No push subscriptions", extra={"user_id": user_id})
             return 0
 
         sent = 0
@@ -112,7 +118,9 @@ def send_to_user(
                 synchronize_session=False
             )
             db.commit()
-            print(f"[PUSH] Limpiadas {len(expired)} suscripciones expiradas del user {user_id}")
+            logger.info(
+                "Cleaned expired subscriptions", extra={"count": len(expired), "user_id": user_id}
+            )
 
         return sent
     finally:
