@@ -1,4 +1,5 @@
 import hashlib
+
 import psycopg2
 
 conn = psycopg2.connect(
@@ -6,7 +7,7 @@ conn = psycopg2.connect(
     port=5432,
     dbname="postgres",
     user="postgres.kojuiugfdhspdblfcmvm",
-    password="28659265An$"
+    password="28659265An$",
 )
 cur = conn.cursor()
 cur.execute("SELECT id, email, cedula FROM users WHERE LENGTH(cedula) = 64 ORDER BY id")
@@ -17,11 +18,12 @@ for r in cur.fetchall():
 
 # Try different formats for numbers 1-1M (V-prefix, E-prefix, etc)
 import time
+
 start = time.time()
 found = 0
 for i in range(1, 1000001):
     if i % 100000 == 0:
-        print(f"  {i:,}/1M ({i/10000:.0f}%) found={found}", flush=True)
+        print(f"  {i:,}/1M ({i / 10000:.0f}%) found={found}", flush=True)
     for fmt in [f"V{i}", f"V-{i}", f"E{i}", f"E-{i}", str(i).zfill(8), str(i).zfill(7)]:
         h = hashlib.sha256(fmt.encode()).hexdigest()
         for uid, data in list(targets.items()):
@@ -47,7 +49,7 @@ for ced in ["test", "admin", "contratista", "worker", "contractor", "12345678", 
             del targets[uid]
             found += 1
 
-print(f"\nDone: {found} found, {len(targets)} remaining in {time.time()-start:.0f}s")
+print(f"\nDone: {found} found, {len(targets)} remaining in {time.time() - start:.0f}s")
 for uid, data in targets.items():
     print(f"  NOT FOUND: ID={uid} {data['email']} hash={data['hash'][:30]}...")
 cur.close()

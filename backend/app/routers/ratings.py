@@ -1,13 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
-from datetime import datetime, timezone
+
 from app.database import SessionLocal
 from app.models.job import Job
 from app.models.rating import Rating
+from app.models.user import User
 from app.schemas.rating import RatingCreate, RatingResponse
 from app.services.auth import get_current_user
-from app.models.user import User
 
 router = APIRouter(prefix="/api/v1/jobs", tags=["ratings"])
 
@@ -21,8 +20,12 @@ def get_db():
 
 
 @router.post("/{job_id}/rate", response_model=RatingResponse)
-def rate_job(job_id: int, data: RatingCreate, db: Session = Depends(get_db),
-             current_user: User = Depends(get_current_user)):
+def rate_job(
+    job_id: int,
+    data: RatingCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """
     ⭐ CALIFICAR TRABAJO
     Worker califica al contractor y viceversa.
@@ -48,10 +51,9 @@ def rate_job(job_id: int, data: RatingCreate, db: Session = Depends(get_db),
         raise HTTPException(status_code=400, detail="No hay trabajador asignado a este trabajo")
 
     # Verificar que no haya calificado ya
-    existing = db.query(Rating).filter(
-        Rating.job_id == job_id,
-        Rating.rater_id == current_user.id
-    ).first()
+    existing = (
+        db.query(Rating).filter(Rating.job_id == job_id, Rating.rater_id == current_user.id).first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail="Ya calificaste este trabajo")
 
@@ -72,7 +74,7 @@ def rate_job(job_id: int, data: RatingCreate, db: Session = Depends(get_db),
     return rating
 
 
-@router.get("/{job_id}/ratings", response_model=List[RatingResponse])
+@router.get("/{job_id}/ratings", response_model=list[RatingResponse])
 def get_job_ratings(job_id: int, db: Session = Depends(get_db)):
     """
     📋 CALIFICACIONES DE UN TRABAJO
@@ -84,6 +86,7 @@ def get_job_ratings(job_id: int, db: Session = Depends(get_db)):
 def update_user_rating(db: Session, user_id: int):
     """Recalcula el rating promedio de un usuario"""
     from app.models.user import User
+
     ratings = db.query(Rating).filter(Rating.rated_id == user_id).all()
     if ratings:
         avg = sum(r.rating for r in ratings) / len(ratings)

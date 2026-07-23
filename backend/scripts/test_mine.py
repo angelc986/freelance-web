@@ -1,4 +1,4 @@
-import requests, json
+import requests
 
 BASE = "http://127.0.0.1:8000/api/v1"
 
@@ -17,7 +17,9 @@ for email in ["worker_final@test.com", "worker2@test.com", "worker@test.com"]:
             print("    Job #" + str(j["id"]) + ": " + j["title"] + " [" + j["status"] + "]")
 
         # Test /jobs/my-applications
-        r = requests.get(BASE + "/jobs/my-applications", headers={"Authorization": "Bearer " + tk_w})
+        r = requests.get(
+            BASE + "/jobs/my-applications", headers={"Authorization": "Bearer " + tk_w}
+        )
         data = r.json()
         print("  /jobs/my-applications: " + str(len(data)) + " apps")
         for a in data:
@@ -25,7 +27,7 @@ for email in ["worker_final@test.com", "worker2@test.com", "worker@test.com"]:
         break
 
 # Login contractor
-r = requests.post(BASE + "/auth/login", json={"email":"probar@test.com","password":"test123"})
+r = requests.post(BASE + "/auth/login", json={"email": "probar@test.com", "password": "test123"})
 tk_c = r.json()["access_token"]
 print("Contractor: probar@test.com")
 

@@ -1,9 +1,12 @@
 """
 Tests: Startup validation (SECRET_KEY, SYSTEM_WALLET_PRIVATE_KEY, CORS, ENVIRONMENT).
 """
+
 import os
+
 import pytest
-from app.config import get_settings, _INSECURE_SECRET_KEYS
+
+from app.config import get_settings
 
 
 class TestSecretKeyValidation:
@@ -12,6 +15,7 @@ class TestSecretKeyValidation:
     def test_empty_secret_key_raises(self):
         """Missing SECRET_KEY raises RuntimeError."""
         from app.config import Settings
+
         s = Settings()
         s.SECRET_KEY = ""
         with pytest.raises(RuntimeError):
@@ -20,6 +24,7 @@ class TestSecretKeyValidation:
     def test_insecure_secret_key_blocked(self):
         """Insecure default SECRET_KEY values are blocked."""
         from app.config import Settings
+
         for insecure in ["changeme", "secret", "super-secret-key-change-in-production"]:
             s = Settings()
             s.SECRET_KEY = insecure
@@ -29,6 +34,7 @@ class TestSecretKeyValidation:
     def test_secure_key_passes(self):
         """A 128-char hex key passes validation."""
         from app.config import Settings
+
         s = Settings()
         s.SECRET_KEY = "a" * 128
         # Should not raise
@@ -40,8 +46,8 @@ class TestWalletValidation:
 
     def test_missing_wallet_key_blocked(self):
         """Missing SYSTEM_WALLET_PRIVATE_KEY raises RuntimeError."""
-        from app.startup_validator import validate_startup
         from app.config import Settings
+        from app.startup_validator import validate_startup
 
         s = Settings()
         s.SECRET_KEY = "a" * 128
@@ -51,8 +57,8 @@ class TestWalletValidation:
 
     def test_wallet_key_present_passes(self):
         """With both SECRET_KEY and WALLET key, startup passes."""
-        from app.startup_validator import validate_startup
         from app.config import Settings
+        from app.startup_validator import validate_startup
 
         s = Settings()
         s.SECRET_KEY = "a" * 128
@@ -128,8 +134,8 @@ class TestOptionalServices:
 
     def test_missing_optional_services_warn(self, capsys):
         """Missing Cloudinary/Didit produces warnings, not errors."""
-        from app.startup_validator import validate_startup
         from app.config import Settings
+        from app.startup_validator import validate_startup
 
         s = Settings()
         s.SECRET_KEY = "a" * 128

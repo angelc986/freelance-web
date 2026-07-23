@@ -1,5 +1,6 @@
-import psycopg2
 import hashlib
+
+import psycopg2
 
 conn = psycopg2.connect(
     host="aws-1-us-west-2.pooler.supabase.com",
@@ -7,7 +8,7 @@ conn = psycopg2.connect(
     dbname="postgres",
     user="postgres.kojuiugfdhspdblfcmvm",
     password="28659265An$",
-    connect_timeout=5
+    connect_timeout=5,
 )
 cur = conn.cursor()
 cur.execute("SELECT id, email, full_name, cedula FROM users WHERE LENGTH(cedula) = 64 ORDER BY id")

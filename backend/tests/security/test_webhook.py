@@ -1,18 +1,19 @@
 """
 Tests: Webhook security module — HMAC, timestamp, nonce, replay, rate limit, IP whitelist.
 """
+
 import hashlib
 import hmac
 import time
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi import HTTPException
+
 from app.services.webhook_security import (
-    validate_webhook,
     _nonce_store,
     _rate_limits,
-    _MAX_REQUESTS,
-    _MAX_TIMESTAMP_AGE_SECONDS,
+    validate_webhook,
 )
 
 WEBHOOK_SECRET = "test-webhook-secret-12345"
@@ -36,7 +37,7 @@ def _make_valid_headers(secret: str, body: bytes) -> dict:
     """Generate valid webhook security headers."""
     now = int(time.time())
     nonce = hashlib.sha256(f"{now}".encode()).hexdigest()[:16]
-    payload = f"{now}.{nonce}.{body.decode('utf-8')}".encode("utf-8")
+    payload = f"{now}.{nonce}.{body.decode('utf-8')}".encode()
     sig = hmac.new(secret.encode("utf-8"), payload, hashlib.sha256).hexdigest()
     return {
         "X-Webhook-Timestamp": str(now),
@@ -117,7 +118,7 @@ class TestWebhookTimestamp:
         now = int(time.time())
         old_ts = now - 301  # 5 min + 1 sec
         nonce = hashlib.sha256(f"{old_ts}".encode()).hexdigest()[:16]
-        payload = f"{old_ts}.{nonce}.{body.decode('utf-8')}".encode("utf-8")
+        payload = f"{old_ts}.{nonce}.{body.decode('utf-8')}".encode()
         sig = hmac.new(WEBHOOK_SECRET.encode("utf-8"), payload, hashlib.sha256).hexdigest()
         headers = {
             "X-Webhook-Timestamp": str(old_ts),
@@ -172,8 +173,12 @@ class TestWebhookNonce:
         h2 = _make_valid_headers(WEBHOOK_SECRET, body)
         assert h1["X-Webhook-Nonce"] != h2["X-Webhook-Nonce"]
 
-        await validate_webhook(_make_request(body=body, headers=h1), WEBHOOK_SECRET, endpoint_id="test_nonce")
-        await validate_webhook(_make_request(body=body, headers=h2), WEBHOOK_SECRET, endpoint_id="test_nonce")
+        await validate_webhook(
+            _make_request(body=body, headers=h1), WEBHOOK_SECRET, endpoint_id="test_nonce"
+        )
+        await validate_webhook(
+            _make_request(body=body, headers=h2), WEBHOOK_SECRET, endpoint_id="test_nonce"
+        )
 
 
 class TestWebhookRateLimit:
@@ -190,12 +195,17 @@ class TestWebhookRateLimit:
         h1 = _make_valid_headers(WEBHOOK_SECRET, body)
         # Wait to get different timestamps (and therefore different nonces)
         import time as _time
+
         _time.sleep(1.1)
         h2 = _make_valid_headers(WEBHOOK_SECRET, body)
         assert h1["X-Webhook-Nonce"] != h2["X-Webhook-Nonce"]
 
-        await validate_webhook(_make_request(body=body, headers=h1), WEBHOOK_SECRET, endpoint_id="test_rate")
-        await validate_webhook(_make_request(body=body, headers=h2), WEBHOOK_SECRET, endpoint_id="test_rate")
+        await validate_webhook(
+            _make_request(body=body, headers=h1), WEBHOOK_SECRET, endpoint_id="test_rate"
+        )
+        await validate_webhook(
+            _make_request(body=body, headers=h2), WEBHOOK_SECRET, endpoint_id="test_rate"
+        )
 
 
 class TestWebhookIPWhitelist:
@@ -210,6 +220,7 @@ class TestWebhookIPWhitelist:
         """IP in whitelist passes."""
         # Temporarily set allowed IPs
         import app.services.webhook_security as ws
+
         old_ips = ws.settings.WEBHOOK_ALLOWED_IPS
         ws.settings.WEBHOOK_ALLOWED_IPS = "10.0.0.1,192.168.1.1"
         try:
@@ -224,6 +235,7 @@ class TestWebhookIPWhitelist:
     async def test_denied_ip_rejected(self):
         """IP not in whitelist is rejected with 403."""
         import app.services.webhook_security as ws
+
         old_ips = ws.settings.WEBHOOK_ALLOWED_IPS
         ws.settings.WEBHOOK_ALLOWED_IPS = "10.0.0.1"
         try:
@@ -240,6 +252,7 @@ class TestWebhookIPWhitelist:
     async def test_no_whitelist_allows_all(self):
         """When WEBHOOK_ALLOWED_IPS is empty, all IPs pass."""
         import app.services.webhook_security as ws
+
         old_ips = ws.settings.WEBHOOK_ALLOWED_IPS
         ws.settings.WEBHOOK_ALLOWED_IPS = ""
         try:

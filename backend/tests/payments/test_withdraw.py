@@ -2,7 +2,7 @@
 Withdraw tests — FASE 3B
 Covers: success, insufficient balance, no wallet, amount validation, auth
 """
-import pytest
+
 from app.models.user import User
 
 
@@ -17,10 +17,14 @@ class TestWithdraw:
         user.balance = 500.0
         db.commit()
 
-        resp = client.post("/api/v1/payments/withdraw", json={
-            "amount": 50.0,
-            "to_address": "0x1234567890abcdef1234567890abcdef12345678",
-        }, headers={"Authorization": f"Bearer {contractor_token}"})
+        resp = client.post(
+            "/api/v1/payments/withdraw",
+            json={
+                "amount": 50.0,
+                "to_address": "0x1234567890abcdef1234567890abcdef12345678",
+            },
+            headers={"Authorization": f"Bearer {contractor_token}"},
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["type"] == "withdraw"
@@ -33,13 +37,19 @@ class TestWithdraw:
         user.balance = 10.0
         db.commit()
 
-        resp = client.post("/api/v1/payments/withdraw", json={
-            "amount": 50.0,
-            "to_address": "0x1234567890abcdef1234567890abcdef12345678",
-        }, headers={"Authorization": f"Bearer {contractor_token}"})
+        resp = client.post(
+            "/api/v1/payments/withdraw",
+            json={
+                "amount": 50.0,
+                "to_address": "0x1234567890abcdef1234567890abcdef12345678",
+            },
+            headers={"Authorization": f"Bearer {contractor_token}"},
+        )
         assert resp.status_code == 400
-        assert "saldo insuficiente" in resp.json()["detail"].lower() or \
-               "insuficiente" in resp.json()["detail"].lower()
+        assert (
+            "saldo insuficiente" in resp.json()["detail"].lower()
+            or "insuficiente" in resp.json()["detail"].lower()
+        )
 
     def test_withdraw_without_wallet_rejected(self, client, contractor_token, db):
         """User without registered wallet cannot withdraw."""
@@ -48,10 +58,14 @@ class TestWithdraw:
         user.wallet_address = None  # No wallet
         db.commit()
 
-        resp = client.post("/api/v1/payments/withdraw", json={
-            "amount": 50.0,
-            "to_address": "0x1234567890abcdef1234567890abcdef12345678",
-        }, headers={"Authorization": f"Bearer {contractor_token}"})
+        resp = client.post(
+            "/api/v1/payments/withdraw",
+            json={
+                "amount": 50.0,
+                "to_address": "0x1234567890abcdef1234567890abcdef12345678",
+            },
+            headers={"Authorization": f"Bearer {contractor_token}"},
+        )
         assert resp.status_code == 400
         assert "wallet" in resp.json()["detail"].lower()
 
@@ -62,16 +76,23 @@ class TestWithdraw:
         user.balance = 500.0
         db.commit()
 
-        resp = client.post("/api/v1/payments/withdraw", json={
-            "amount": 0.50,
-            "to_address": "0x1234567890abcdef1234567890abcdef12345678",
-        }, headers={"Authorization": f"Bearer {contractor_token}"})
+        resp = client.post(
+            "/api/v1/payments/withdraw",
+            json={
+                "amount": 0.50,
+                "to_address": "0x1234567890abcdef1234567890abcdef12345678",
+            },
+            headers={"Authorization": f"Bearer {contractor_token}"},
+        )
         assert resp.status_code == 400
 
     def test_withdraw_without_auth_rejected(self, client):
         """No token → 403."""
-        resp = client.post("/api/v1/payments/withdraw", json={
-            "amount": 50.0,
-            "to_address": "0x1234567890abcdef1234567890abcdef12345678",
-        })
+        resp = client.post(
+            "/api/v1/payments/withdraw",
+            json={
+                "amount": 50.0,
+                "to_address": "0x1234567890abcdef1234567890abcdef12345678",
+            },
+        )
         assert resp.status_code in (401, 403)

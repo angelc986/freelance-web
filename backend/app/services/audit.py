@@ -1,9 +1,12 @@
 import json
+
 from app.database import SessionLocal
 from app.models.audit_log import AuditLog
 
 
-def log_action(user_id: int | None, action: str, details: dict | None = None, ip: str | None = None):
+def log_action(
+    user_id: int | None, action: str, details: dict | None = None, ip: str | None = None
+):
     """Registra una acción sensible en la tabla audit_logs."""
     db = SessionLocal()
     try:

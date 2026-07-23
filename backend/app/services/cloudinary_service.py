@@ -5,6 +5,7 @@ NOTE: cloudinary is an optional dependency. Import is lazy so tests
 can run without it installed. Functions return None when cloudinary
 is not available or not configured.
 """
+
 from app.config import get_settings
 
 
@@ -45,9 +46,7 @@ def upload_avatar(file_bytes: bytes, user_id: int, filename: str) -> str | None:
             overwrite=True,
             folder="turnogo/avatars",
             format=ext,
-            transformation=[
-                {"width": 400, "height": 400, "crop": "fill", "gravity": "face"}
-            ],
+            transformation=[{"width": 400, "height": 400, "crop": "fill", "gravity": "face"}],
         )
         return result.get("secure_url")
     except Exception as e:
@@ -60,6 +59,7 @@ def delete_avatar(public_id: str) -> bool:
     if not _ensure_cloudinary():
         return False
     import cloudinary.uploader
+
     try:
         cloudinary.uploader.destroy(public_id)
         return True

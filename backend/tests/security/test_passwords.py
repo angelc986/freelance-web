@@ -1,10 +1,10 @@
 """
 Tests: Password validation and common password blacklist.
 """
-import pytest
+
 from app.services.password_validator import (
-    validate_password_strength,
     is_password_common,
+    validate_password_strength,
 )
 
 
@@ -90,14 +90,17 @@ class TestRegisterPasswordValidation:
 
     def test_register_weak_password_rejected(self, client):
         """Registration with 'abc' is rejected by password validator."""
-        resp = client.post("/api/v1/auth/register", json={
-            "email": "weakpw@test.com",
-            "password": "abc",
-            "full_name": "Test",
-            "phone": "+584149999999",
-            "cedula": "V-99999999",
-            "role": "worker",
-        })
+        resp = client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "weakpw@test.com",
+                "password": "abc",
+                "full_name": "Test",
+                "phone": "+584149999999",
+                "cedula": "V-99999999",
+                "role": "worker",
+            },
+        )
         assert resp.status_code == 400
         detail = resp.json()["detail"].lower()
         assert "8 caracteres" in detail or "8" in detail
@@ -105,14 +108,17 @@ class TestRegisterPasswordValidation:
     def test_register_common_password_rejected(self, client):
         """Registration with a common password is rejected (either by complexity or blacklist)."""
         # 'password' fails complexity first (no uppercase), 'password123' fails blacklist too
-        resp = client.post("/api/v1/auth/register", json={
-            "email": "commonpw2@test.com",
-            "password": "password",  # No uppercase = complexity fail first
-            "full_name": "Test",
-            "phone": "+584148888801",
-            "cedula": "V-88888801",
-            "role": "worker",
-        })
+        resp = client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "commonpw2@test.com",
+                "password": "password",  # No uppercase = complexity fail first
+                "full_name": "Test",
+                "phone": "+584148888801",
+                "cedula": "V-88888801",
+                "role": "worker",
+            },
+        )
         assert resp.status_code == 400
         # Either complexity or blacklist message
         detail = resp.json()["detail"].lower()
@@ -120,13 +126,16 @@ class TestRegisterPasswordValidation:
 
     def test_register_strong_password_accepted(self, client):
         """Registration with a strong password succeeds."""
-        resp = client.post("/api/v1/auth/register", json={
-            "email": "strongpw@test.com",
-            "password": "Str0ng!Pass2024",
-            "full_name": "Test",
-            "phone": "+584147777777",
-            "cedula": "V-77777777",
-            "role": "worker",
-        })
+        resp = client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "strongpw@test.com",
+                "password": "Str0ng!Pass2024",
+                "full_name": "Test",
+                "phone": "+584147777777",
+                "cedula": "V-77777777",
+                "role": "worker",
+            },
+        )
         assert resp.status_code == 201
         assert resp.json()["email"] == "strongpw@test.com"

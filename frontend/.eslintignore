@@ -1,0 +1,11 @@
+# Build artifacts & generated files
+.next/
+node_modules/
+public/sw.js
+public/workbox-*.js
+
+# CJS build scripts (not TypeScript source)
+scripts/
+
+# Legacy pages (to be refactored)
+src/app/(public)/auth/viejo/

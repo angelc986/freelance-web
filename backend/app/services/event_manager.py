@@ -1,12 +1,13 @@
+import asyncio
 import json
 import queue
 import threading
-import asyncio
-from typing import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator
 
 # Colas de eventos por usuario: user_id -> list[queue.Queue]
 _queues: dict[int, list[queue.Queue]] = {}
 _lock = threading.Lock()
+
 
 def subscribe(user_id: int) -> queue.Queue:
     """Registra un cliente SSE y devuelve su cola."""
@@ -17,6 +18,7 @@ def subscribe(user_id: int) -> queue.Queue:
         _queues[user_id].append(q)
     return q
 
+
 def unsubscribe(user_id: int, q: queue.Queue):
     """Desregistra un cliente SSE."""
     with _lock:
@@ -24,6 +26,7 @@ def unsubscribe(user_id: int, q: queue.Queue):
             _queues[user_id] = [x for x in _queues[user_id] if x is not q]
             if not _queues[user_id]:
                 del _queues[user_id]
+
 
 def publish(user_id: int, event: str, data: dict):
     """Publica un evento a todos los clientes de un usuario."""
@@ -39,6 +42,7 @@ def publish(user_id: int, event: str, data: dict):
                 dead.append(q)
         for q in dead:
             _queues[user_id].remove(q)
+
 
 async def event_generator(user_id: int) -> AsyncGenerator[str, None]:
     """Generador SSE asincrono. Thread-safe."""

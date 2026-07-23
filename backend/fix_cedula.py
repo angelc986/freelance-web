@@ -5,13 +5,15 @@ conn = psycopg2.connect(
     port=5432,
     dbname="postgres",
     user="postgres.kojuiugfdhspdblfcmvm",
-    password="28659265An$"
+    password="28659265An$",
 )
 conn.autocommit = True
 cur = conn.cursor()
 
 # See current values
-cur.execute("SELECT id, email, cedula FROM users WHERE email LIKE '%angel%' OR email LIKE '%gmail%'")
+cur.execute(
+    "SELECT id, email, cedula FROM users WHERE email LIKE '%angel%' OR email LIKE '%gmail%'"
+)
 rows = cur.fetchall()
 for row in rows:
     print(f"  ID={row[0]} email={row[1]} cedula(truncated)={str(row[2])[:30]}")

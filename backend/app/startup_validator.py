@@ -73,7 +73,10 @@ def validate_startup(settings) -> None:
         warnings.append("DIDIT_WORKFLOW_ID (workflow-based verification not configured)")
 
     # -- [OPTIONAL] Email --
-    if not (settings.SENDGRID_API_KEY or "").strip() and not (settings.RESEND_API_KEY or "").strip():
+    if (
+        not (settings.SENDGRID_API_KEY or "").strip()
+        and not (settings.RESEND_API_KEY or "").strip()
+    ):
         warnings.append("SENDGRID_API_KEY or RESEND_API_KEY (email sending unavailable)")
 
     # -- [OPTIONAL] Web Push --

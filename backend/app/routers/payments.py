@@ -1,34 +1,32 @@
 import secrets
-from datetime import datetime, timezone, timedelta
-from typing import List, Optional
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.database import SessionLocal
-from app.models.user import User
+from app.limiter import limiter
 from app.models.job import Job
 from app.models.transaction import Transaction
-from app.services.audit import log_action
+from app.models.user import User
 from app.schemas.payment import (
+    BalanceResponse,
+    ConfirmPaymentRequest,
     DepositRequest,
     TransactionResponse,
-    BalanceResponse,
     WithdrawRequest,
-    ReleaseRequest,
-    ConfirmPaymentRequest,
-    DetectedDeposit,
 )
+from app.services.audit import log_action
 from app.services.auth import get_current_user
 from app.services.blockchain import (
-    verify_transaction,
-    send_usdt,
-    get_system_wallet_balance,
     is_connected,
+    send_usdt,
+    verify_transaction,
+)
+from app.services.blockchain import (
     scan_deposits as blockchain_scan_deposits,
 )
-from app.config import get_settings
-from app.limiter import limiter
 
 router = APIRouter(prefix="/api/v1/payments", tags=["payments"])
 
@@ -58,9 +56,7 @@ def _create_confirmation_token() -> tuple[str, datetime]:
 
 def _check_daily_withdrawals(db: Session, user_id: int) -> int:
     """Cuenta retiros del día de hoy. Levanta error si >= 3."""
-    today_start = datetime.now(timezone.utc).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
+    today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
     count = (
         db.query(Transaction)
         .filter(
@@ -74,7 +70,7 @@ def _check_daily_withdrawals(db: Session, user_id: int) -> int:
     return count
 
 
-def _try_blockchain_transfer(to_address: str, amount: float) -> tuple[Optional[str], str, Optional[str]]:
+def _try_blockchain_transfer(to_address: str, amount: float) -> tuple[str | None, str, str | None]:
     """
     Intenta enviar USDT real a blockchain.
     Returns (tx_hash, status, error_message).
@@ -84,7 +80,6 @@ def _try_blockchain_transfer(to_address: str, amount: float) -> tuple[Optional[s
     blockchain_error = None
 
     try:
-        from web3 import Web3
         from app.services.blockchain import w3
 
         matic_wei = w3.eth.get_balance(settings.SYSTEM_WALLET_ADDRESS)
@@ -131,7 +126,8 @@ def payment_health(request: Request):
 
 @router.post("/deposit", response_model=TransactionResponse, status_code=201)
 @limiter.limit("5/minute")
-def deposit(request: Request, 
+def deposit(
+    request: Request,
     deposit_data: DepositRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -170,14 +166,19 @@ def deposit(request: Request,
         to_address=settings.SYSTEM_WALLET_ADDRESS,
         confirmations=verification["confirmations"],
         status="confirmed",
-        confirmed_at=datetime.now(timezone.utc),
+        confirmed_at=datetime.now(UTC),
     )
 
     db.add(transaction)
     user = db.query(User).filter(User.id == current_user.id).first()
     user.balance += deposit_data.amount
 
-    log_action(current_user.id, "deposit", {"amount": deposit_data.amount, "tx_hash": deposit_data.tx_hash}, ip=request.client.host)
+    log_action(
+        current_user.id,
+        "deposit",
+        {"amount": deposit_data.amount, "tx_hash": deposit_data.tx_hash},
+        ip=request.client.host,
+    )
 
     db.commit()
     db.refresh(transaction)
@@ -189,7 +190,8 @@ def deposit(request: Request,
 
 @router.get("/balance", response_model=BalanceResponse)
 @limiter.limit("30/minute")
-def get_balance(request: Request, 
+def get_balance(
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -210,7 +212,8 @@ def get_balance(request: Request,
 
 @router.post("/release/{job_id}", response_model=TransactionResponse)
 @limiter.limit("10/minute")
-def release_payment(request: Request, 
+def release_payment(
+    request: Request,
     job_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -293,10 +296,15 @@ def release_payment(request: Request,
         amount=job.budget,
         network="polygon",
         status="confirmed",
-        confirmed_at=datetime.now(timezone.utc),
+        confirmed_at=datetime.now(UTC),
     )
 
-    log_action(current_user.id, "payment_release", {"job_id": job_id, "amount": job.budget, "worker_id": job.worker_id}, ip=request.client.host)
+    log_action(
+        current_user.id,
+        "payment_release",
+        {"job_id": job_id, "amount": job.budget, "worker_id": job.worker_id},
+        ip=request.client.host,
+    )
 
     db.add(transaction)
     db.commit()
@@ -309,7 +317,8 @@ def release_payment(request: Request,
 
 @router.post("/refund/{job_id}", response_model=TransactionResponse)
 @limiter.limit("3/minute")
-def refund_payment(request: Request, 
+def refund_payment(
+    request: Request,
     job_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -344,10 +353,12 @@ def refund_payment(request: Request,
         amount=job.budget,
         network="polygon",
         status="confirmed",
-        confirmed_at=datetime.now(timezone.utc),
+        confirmed_at=datetime.now(UTC),
     )
 
-    log_action(contractor.id, "refund", {"job_id": job_id, "amount": job.budget}, ip=request.client.host)
+    log_action(
+        contractor.id, "refund", {"job_id": job_id, "amount": job.budget}, ip=request.client.host
+    )
 
     db.add(transaction)
     db.commit()
@@ -360,7 +371,8 @@ def refund_payment(request: Request,
 
 @router.post("/withdraw", response_model=TransactionResponse)
 @limiter.limit("5/minute")
-def withdraw(request: Request, 
+def withdraw(
+    request: Request,
     withdraw_data: WithdrawRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -450,10 +462,15 @@ def withdraw(request: Request,
         from_address=settings.SYSTEM_WALLET_ADDRESS,
         to_address=withdraw_data.to_address,
         status=blockchain_status,
-        confirmed_at=datetime.now(timezone.utc),
+        confirmed_at=datetime.now(UTC),
     )
 
-    log_action(current_user.id, "withdraw", {"amount": withdraw_data.amount, "wallet": withdraw_data.to_address}, ip=request.client.host)
+    log_action(
+        current_user.id,
+        "withdraw",
+        {"amount": withdraw_data.amount, "wallet": withdraw_data.to_address},
+        ip=request.client.host,
+    )
 
     db.add(transaction)
     db.commit()
@@ -466,7 +483,8 @@ def withdraw(request: Request,
 
 @router.post("/confirm/{transaction_id}", response_model=TransactionResponse)
 @limiter.limit("10/minute")
-def confirm_transaction(request: Request, 
+def confirm_transaction(
+    request: Request,
     transaction_id: int,
     confirm_data: ConfirmPaymentRequest,
     current_user: User = Depends(get_current_user),
@@ -507,7 +525,11 @@ def confirm_transaction(request: Request,
     # Validar expiración (SQLite no guarda timezone, comparamos naive vs naive)
     if tx.confirmation_expires_at:
         now_naive = datetime.utcnow()
-        expires_naive = tx.confirmation_expires_at.replace(tzinfo=None) if tx.confirmation_expires_at.tzinfo else tx.confirmation_expires_at
+        expires_naive = (
+            tx.confirmation_expires_at.replace(tzinfo=None)
+            if tx.confirmation_expires_at.tzinfo
+            else tx.confirmation_expires_at
+        )
         if now_naive > expires_naive:
             tx.status = "failed"
             db.commit()
@@ -544,7 +566,7 @@ def confirm_transaction(request: Request,
         worker.balance += tx.amount
 
         tx.status = "confirmed"
-        tx.confirmed_at = datetime.now(timezone.utc)
+        tx.confirmed_at = datetime.now(UTC)
 
     elif tx.type == "withdraw":
         # Retirar: descontar balance + enviar a blockchain
@@ -561,19 +583,22 @@ def confirm_transaction(request: Request,
         user.balance -= tx.amount
 
         # Intentar envío real a blockchain
-        tx_hash, blockchain_status, _ = _try_blockchain_transfer(
-            tx.to_address, tx.amount
-        )
+        tx_hash, blockchain_status, _ = _try_blockchain_transfer(tx.to_address, tx.amount)
         tx.tx_hash = tx_hash
         tx.status = blockchain_status
-        tx.confirmed_at = datetime.now(timezone.utc)
+        tx.confirmed_at = datetime.now(UTC)
 
     # Limpiar campos de confirmación (ya no se necesitan)
     tx.confirmation_token = None
     tx.confirmation_expires_at = None
     tx.requires_confirmation = False
 
-    log_action(current_user.id, f"confirm_{tx.type}", {"transaction_id": transaction_id, "amount": tx.amount}, ip=request.client.host)
+    log_action(
+        current_user.id,
+        f"confirm_{tx.type}",
+        {"transaction_id": transaction_id, "amount": tx.amount},
+        ip=request.client.host,
+    )
 
     db.commit()
     db.refresh(tx)
@@ -583,9 +608,10 @@ def confirm_transaction(request: Request,
 # ─── HISTORIAL ────────────────────────────────────────
 
 
-@router.get("/history", response_model=List[TransactionResponse])
+@router.get("/history", response_model=list[TransactionResponse])
 @limiter.limit("30/minute")
-def get_history(request: Request, 
+def get_history(
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -607,7 +633,8 @@ def get_history(request: Request,
 
 @router.post("/scan-deposits")
 @limiter.limit("2/minute")
-def scan_new_deposits(request: Request, 
+def scan_new_deposits(
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -648,11 +675,7 @@ def scan_new_deposits(request: Request,
     existing_hashes = set()
     if found_deposits:
         hashes = [d["tx_hash"] for d in found_deposits]
-        existing = (
-            db.query(Transaction.tx_hash)
-            .filter(Transaction.tx_hash.in_(hashes))
-            .all()
-        )
+        existing = db.query(Transaction.tx_hash).filter(Transaction.tx_hash.in_(hashes)).all()
         existing_hashes = {r[0] for r in existing}
 
     # Procesar depósitos nuevos
@@ -668,11 +691,7 @@ def scan_new_deposits(request: Request,
         from_address = deposit["from_address"].lower()
 
         # Buscar usuario con esa wallet registrada
-        user = (
-            db.query(User)
-            .filter(User.wallet_address.ilike(from_address))
-            .first()
-        )
+        user = db.query(User).filter(User.wallet_address.ilike(from_address)).first()
 
         if user:
             # Acreditar automáticamente
@@ -688,7 +707,7 @@ def scan_new_deposits(request: Request,
                 to_address=settings.SYSTEM_WALLET_ADDRESS,
                 confirmations=0,  # Se actualizará cuando se verifique mejor
                 status="confirmed",
-                confirmed_at=datetime.now(timezone.utc),
+                confirmed_at=datetime.now(UTC),
             )
             db.add(tx)
             credited_count += 1
@@ -725,18 +744,20 @@ class WebhookDepositPayload(BaseModel):
     llamar a este endpoint cuando detecten una transferencia
     USDT a nuestra wallet.
     """
+
     tx_hash: str
     from_address: str
     amount: float
     network: str = "polygon"
-    block_number: Optional[int] = None
+    block_number: int | None = None
     # Firmas opcionales para verificar autenticidad
-    signature: Optional[str] = None
+    signature: str | None = None
 
 
 @router.post("/webhook/deposit")
 @limiter.exempt
-def webhook_deposit(request: Request, 
+def webhook_deposit(
+    request: Request,
     payload: WebhookDepositPayload,
     db: Session = Depends(get_db),
 ):
@@ -762,11 +783,7 @@ def webhook_deposit(request: Request,
         raise HTTPException(status_code=400, detail="Faltan campos requeridos")
 
     # Verificar que no exista ya
-    existing = (
-        db.query(Transaction)
-        .filter(Transaction.tx_hash == payload.tx_hash)
-        .first()
-    )
+    existing = db.query(Transaction).filter(Transaction.tx_hash == payload.tx_hash).first()
     if existing:
         # Ya registrado, no es error — solo ignorar
         return {
@@ -790,11 +807,7 @@ def webhook_deposit(request: Request,
             pass  # Continuar procesando
 
     # Buscar usuario por wallet
-    user = (
-        db.query(User)
-        .filter(User.wallet_address.ilike(payload.from_address.lower()))
-        .first()
-    )
+    user = db.query(User).filter(User.wallet_address.ilike(payload.from_address.lower())).first()
 
     if not user:
         # No encontramos usuario para esta wallet
@@ -808,7 +821,7 @@ def webhook_deposit(request: Request,
             from_address=payload.from_address,
             to_address=settings.SYSTEM_WALLET_ADDRESS,
             status="confirmed",
-            confirmed_at=datetime.now(timezone.utc),
+            confirmed_at=datetime.now(UTC),
         )
         db.add(tx)
         db.commit()
@@ -836,13 +849,18 @@ def webhook_deposit(request: Request,
         from_address=payload.from_address,
         to_address=settings.SYSTEM_WALLET_ADDRESS,
         status="confirmed",
-        confirmed_at=datetime.now(timezone.utc),
+        confirmed_at=datetime.now(UTC),
     )
     db.add(tx)
     db.commit()
     db.refresh(tx)
 
-    log_action(user.id, "webhook_deposit", {"amount": payload.amount, "tx_hash": payload.tx_hash}, ip=request.client.host)
+    log_action(
+        user.id,
+        "webhook_deposit",
+        {"amount": payload.amount, "tx_hash": payload.tx_hash},
+        ip=request.client.host,
+    )
 
     return {
         "status": "credited",

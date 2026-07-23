@@ -1,4 +1,4 @@
-import requests, json
+import requests
 
 BASE = "http://127.0.0.1:8000/api/v1"
 
@@ -35,7 +35,7 @@ r = requests.get(BASE + "/jobs/?status=open")
 print("  Open jobs:", len(r.json()))
 j = r.json()
 if j:
-    print("  Latest:", j[0]["title"], "- $"+str(j[0]["budget"]))
+    print("  Latest:", j[0]["title"], "- $" + str(j[0]["budget"]))
 
 print()
 print("ALL OK")

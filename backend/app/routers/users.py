@@ -1,18 +1,19 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+import os
+import uuid
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from pydantic import BaseModel
+from sqlalchemy import update as sa_update
 from sqlalchemy.orm import Session
-from typing import List, Optional
+
 from app.database import SessionLocal
-from app.models.user import User
-from app.models.rating import Rating
-from app.models.job import Job
 from app.models.application import Application
+from app.models.job import Job
+from app.models.rating import Rating
 from app.models.transaction import Transaction
+from app.models.user import User
 from app.services.auth import get_current_user
 from app.services.cloudinary_service import upload_avatar as cloudinary_upload
-import os, shutil, uuid
-from sqlalchemy import update as sa_update
-from pydantic import BaseModel
-from typing import List, Optional
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
@@ -31,7 +32,7 @@ class UserPublicResponse(BaseModel):
     role: str
     rating_avg: float
     is_active: bool
-    created_at: Optional[str] = None
+    created_at: str | None = None
 
     class Config:
         from_attributes = True
@@ -40,10 +41,10 @@ class UserPublicResponse(BaseModel):
 class UserRatingResponse(BaseModel):
     id: int
     rater_id: int
-    rater_name: Optional[str] = None
+    rater_name: str | None = None
     rating: float
-    comment: Optional[str] = None
-    created_at: Optional[str] = None
+    comment: str | None = None
+    created_at: str | None = None
 
     class Config:
         from_attributes = True
@@ -53,7 +54,7 @@ class UserRatingSummary(BaseModel):
     avg: float
     total: int
     breakdown: dict  # {5: N, 4: N, 3: N, 2: N, 1: N}
-    reviews: List[UserRatingResponse]
+    reviews: list[UserRatingResponse]
 
 
 @router.get("/{user_id}", response_model=UserPublicResponse)
@@ -73,19 +74,25 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     )
 
 
-@router.get("/activity", response_model=List[dict])
-def get_user_activity(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+@router.get("/activity", response_model=list[dict])
+def get_user_activity(
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+):
     """
     📋 ACTIVIDAD RECIENTE
-    
+
     Combina trabajos, aplicaciones y transacciones recientes.
     """
     activities = []
 
     # Trabajos del usuario
-    jobs = db.query(Job).filter(
-        (Job.client_id == current_user.id) | (Job.worker_id == current_user.id)
-    ).order_by(Job.updated_at.desc()).limit(5).all()
+    jobs = (
+        db.query(Job)
+        .filter((Job.client_id == current_user.id) | (Job.worker_id == current_user.id))
+        .order_by(Job.updated_at.desc())
+        .limit(5)
+        .all()
+    )
 
     for j in jobs:
         if j.client_id == current_user.id:
@@ -103,19 +110,25 @@ def get_user_activity(db: Session = Depends(get_db), current_user: User = Depend
         }
         action = action_map.get(j.status, "Actualizaste")
 
-        activities.append({
-            "type": "job",
-            "action": f"{action} el trabajo",
-            "title": j.title,
-            "status": j.status,
-            "id": j.id,
-            "date": str(j.updated_at) if j.updated_at else str(j.created_at),
-        })
+        activities.append(
+            {
+                "type": "job",
+                "action": f"{action} el trabajo",
+                "title": j.title,
+                "status": j.status,
+                "id": j.id,
+                "date": str(j.updated_at) if j.updated_at else str(j.created_at),
+            }
+        )
 
     # Aplicaciones del worker
-    apps = db.query(Application).filter(
-        Application.worker_id == current_user.id
-    ).order_by(Application.created_at.desc()).limit(5).all()
+    apps = (
+        db.query(Application)
+        .filter(Application.worker_id == current_user.id)
+        .order_by(Application.created_at.desc())
+        .limit(5)
+        .all()
+    )
 
     for a in apps:
         job = db.query(Job).filter(Job.id == a.job_id).first()
@@ -126,19 +139,25 @@ def get_user_activity(db: Session = Depends(get_db), current_user: User = Depend
             "rejected": "Rechazaron tu postulación en",
         }.get(a.status, "Postulaste a")
 
-        activities.append({
-            "type": "application",
-            "action": app_action,
-            "title": job_title,
-            "status": a.status,
-            "id": a.job_id,
-            "date": str(a.created_at),
-        })
+        activities.append(
+            {
+                "type": "application",
+                "action": app_action,
+                "title": job_title,
+                "status": a.status,
+                "id": a.job_id,
+                "date": str(a.created_at),
+            }
+        )
 
     # Transacciones recientes
-    txns = db.query(Transaction).filter(
-        Transaction.user_id == current_user.id
-    ).order_by(Transaction.created_at.desc()).limit(3).all()
+    txns = (
+        db.query(Transaction)
+        .filter(Transaction.user_id == current_user.id)
+        .order_by(Transaction.created_at.desc())
+        .limit(3)
+        .all()
+    )
 
     for t in txns:
         txn_action = {
@@ -148,14 +167,16 @@ def get_user_activity(db: Session = Depends(get_db), current_user: User = Depend
             "refund": "Reembolso de",
         }.get(t.type, "Transacción")
 
-        activities.append({
-            "type": "transaction",
-            "action": txn_action,
-            "title": f"${t.amount:.2f}",
-            "status": t.status,
-            "id": t.id,
-            "date": str(t.created_at),
-        })
+        activities.append(
+            {
+                "type": "transaction",
+                "action": txn_action,
+                "title": f"${t.amount:.2f}",
+                "status": t.status,
+                "id": t.id,
+                "date": str(t.created_at),
+            }
+        )
 
     # Ordenar por fecha descendente
     activities.sort(key=lambda x: x["date"], reverse=True)
@@ -173,7 +194,9 @@ def get_user_ratings(user_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    ratings = db.query(Rating).filter(Rating.rated_id == user_id).order_by(Rating.created_at.desc()).all()
+    ratings = (
+        db.query(Rating).filter(Rating.rated_id == user_id).order_by(Rating.created_at.desc()).all()
+    )
 
     total = len(ratings)
     breakdown = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0}
@@ -185,14 +208,16 @@ def get_user_ratings(user_id: int, db: Session = Depends(get_db)):
     reviews = []
     for r in ratings:
         rater = db.query(User).filter(User.id == r.rater_id).first()
-        reviews.append(UserRatingResponse(
-            id=r.id,
-            rater_id=r.rater_id,
-            rater_name=rater.full_name if rater else None,
-            rating=r.rating,
-            comment=r.comment,
-            created_at=str(r.created_at) if r.created_at else None,
-        ))
+        reviews.append(
+            UserRatingResponse(
+                id=r.id,
+                rater_id=r.rater_id,
+                rater_name=rater.full_name if rater else None,
+                rating=r.rating,
+                comment=r.comment,
+                created_at=str(r.created_at) if r.created_at else None,
+            )
+        )
 
     avg = round(sum(r.rating for r in ratings) / total, 1) if total > 0 else 0
 
@@ -202,6 +227,7 @@ def get_user_ratings(user_id: int, db: Session = Depends(get_db)):
         breakdown=breakdown,
         reviews=reviews,
     )
+
 
 @router.post("/avatar")
 async def upload_avatar(
@@ -223,15 +249,12 @@ async def upload_avatar(
     if cloudinary_url:
         # Cloudinary funciono -> guardar URL en BD
         db.execute(
-            sa_update(User).where(User.id == current_user.id).values(
-                avatar_url=cloudinary_url
-            )
+            sa_update(User).where(User.id == current_user.id).values(avatar_url=cloudinary_url)
         )
         db.commit()
         return {"avatar_url": cloudinary_url}
 
     # Fallback: guardar localmente (Railway ephemeral, pero util para dev)
-    import os, uuid
     ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
     filename = f"avatar_{current_user.id}_{uuid.uuid4().hex[:8]}.{ext}"
     filepath = os.path.join("uploads", filename)
@@ -241,9 +264,7 @@ async def upload_avatar(
         f.write(contents)
 
     db.execute(
-        sa_update(User).where(User.id == current_user.id).values(
-            avatar_url=f"/uploads/{filename}"
-        )
+        sa_update(User).where(User.id == current_user.id).values(avatar_url=f"/uploads/{filename}")
     )
     db.commit()
 

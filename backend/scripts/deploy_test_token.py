@@ -1,10 +1,14 @@
 """
 Script para desplegar un token USDT de prueba en Polygon Amoy Testnet.
 """
-import sys; sys.path.insert(0, '.')
+
+import sys
+
+sys.path.insert(0, ".")
+from eth_account import Account
 from web3 import Web3
 from web3.middleware import ExtraDataToPOAMiddleware
-from eth_account import Account
+
 from app.config import get_settings
 
 settings = get_settings()
@@ -40,43 +44,43 @@ TEST_USDT_ABI = [
         "name": "mint",
         "outputs": [],
         "stateMutability": "nonpayable",
-        "type": "function"
+        "type": "function",
     },
     {
         "inputs": [{"name": "account", "type": "address"}],
         "name": "balanceOf",
         "outputs": [{"name": "", "type": "uint256"}],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
     },
     {
         "inputs": [{"name": "to", "type": "address"}, {"name": "amount", "type": "uint256"}],
         "name": "transfer",
         "outputs": [{"name": "", "type": "bool"}],
         "stateMutability": "nonpayable",
-        "type": "function"
+        "type": "function",
     },
     {
         "inputs": [],
         "name": "decimals",
         "outputs": [{"name": "", "type": "uint8"}],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
     },
     {
         "inputs": [],
         "name": "symbol",
         "outputs": [{"name": "", "type": "string"}],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
     },
     {
         "inputs": [],
         "name": "name",
         "outputs": [{"name": "", "type": "string"}],
         "stateMutability": "view",
-        "type": "function"
-    }
+        "type": "function",
+    },
 ]
 
 print("\n📦 Desplegando TestUSDT...")
@@ -88,12 +92,14 @@ TestUSDT = w3.eth.contract(abi=TEST_USDT_ABI, bytecode=TEST_USDT_BYTECODE)
 
 # Construir transacción de deploy
 nonce = w3.eth.get_transaction_count(settings.SYSTEM_WALLET_ADDRESS)
-tx = TestUSDT.constructor().build_transaction({
-    'from': settings.SYSTEM_WALLET_ADDRESS,
-    'nonce': nonce,
-    'gas': 2000000,
-    'gasPrice': w3.eth.gas_price,
-})
+tx = TestUSDT.constructor().build_transaction(
+    {
+        "from": settings.SYSTEM_WALLET_ADDRESS,
+        "nonce": nonce,
+        "gas": 2000000,
+        "gasPrice": w3.eth.gas_price,
+    }
+)
 
 # Firmar
 signed = account.sign_transaction(tx)
@@ -105,7 +111,7 @@ print(f"Tx hash: {w3.to_hex(tx_hash)}")
 
 # Esperar confirmación
 receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
-contract_address = receipt['contractAddress']
+contract_address = receipt["contractAddress"]
 print(f"\n✅ Contrato desplegado en: {contract_address}")
 
 # Mintear 10,000 tokens a la wallet del sistema
@@ -113,27 +119,27 @@ contract = w3.eth.contract(address=contract_address, abi=TEST_USDT_ABI)
 decimals = contract.functions.decimals().call()
 print(f"Decimals: {decimals}")
 
-amount = 10000 * (10 ** decimals)  # 10,000 tokens
+amount = 10000 * (10**decimals)  # 10,000 tokens
 nonce2 = w3.eth.get_transaction_count(settings.SYSTEM_WALLET_ADDRESS)
-mint_tx = contract.functions.mint(
-    settings.SYSTEM_WALLET_ADDRESS, amount
-).build_transaction({
-    'from': settings.SYSTEM_WALLET_ADDRESS,
-    'nonce': nonce2,
-    'gas': 100000,
-    'gasPrice': w3.eth.gas_price,
-})
+mint_tx = contract.functions.mint(settings.SYSTEM_WALLET_ADDRESS, amount).build_transaction(
+    {
+        "from": settings.SYSTEM_WALLET_ADDRESS,
+        "nonce": nonce2,
+        "gas": 100000,
+        "gasPrice": w3.eth.gas_price,
+    }
+)
 
 signed2 = account.sign_transaction(mint_tx)
 mint_hash = w3.eth.send_raw_transaction(signed2.raw_transaction)
 receipt2 = w3.eth.wait_for_transaction_receipt(mint_hash, timeout=120)
 
-if receipt2['status'] == 1:
+if receipt2["status"] == 1:
     print(f"✅ Minteados 10,000 TestUSDT a {settings.SYSTEM_WALLET_ADDRESS}")
     balance = contract.functions.balanceOf(settings.SYSTEM_WALLET_ADDRESS).call()
-    print(f"   Balance: {balance / (10 ** decimals)} TestUSDT")
+    print(f"   Balance: {balance / (10**decimals)} TestUSDT")
 else:
     print("❌ Error minteando tokens")
 
-print(f"\n📝 Agrega esto a tu .env:")
+print("\n📝 Agrega esto a tu .env:")
 print(f"USDT_CONTRACT_ADDRESS={contract_address}")

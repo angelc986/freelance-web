@@ -1,0 +1,110 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deploy target"
+        required: true
+        type: choice
+        default: "production"
+        options:
+          - production
+          - preview
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # ── Gate: only proceed if CI passed ───────────────────────
+  gate:
+    name: Verify CI Passed
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
+    steps:
+      - name: CI status
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual deploy triggered — skipping CI gate."
+          else
+            echo "CI workflow completed successfully. Proceeding with deploy."
+          fi
+
+  # ── Verify: Backend → Railway ───────────────────────────
+  verify-backend:
+    name: Verify Railway Deployment
+    needs: [gate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify Railway Deployment
+        run: |
+          echo "::notice::Railway auto-deploys from GitHub on push to main."
+          echo "Verify deploy status at: https://railway.app/project"
+          echo ""
+          echo "To enable explicit deploys via Railway CLI:"
+          echo "  1. Install Railway CLI: npm i -g @railway/cli"
+          echo "  2. Set RAILWAY_TOKEN in GitHub Secrets"
+          echo "  3. Uncomment: railway up --service backend --detach"
+
+  # ── Verify: Frontend → Vercel ───────────────────────────
+  verify-frontend:
+    name: Verify Vercel Deployment
+    needs: [gate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Trigger Vercel Deploy
+        env:
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$VERCEL_DEPLOY_HOOK" ]; then
+            echo "::notice::VERCEL_DEPLOY_HOOK secret not set."
+            echo "Vercel auto-deploys from GitHub on push to main."
+            echo "To enable explicit deploys:"
+            echo "  1. Go to Vercel Dashboard → Settings → Git → Deploy Hooks"
+            echo "  2. Create a hook for production"
+            echo "  3. Add the URL as VERCEL_DEPLOY_HOOK in GitHub Secrets"
+          else
+            echo "Triggering Vercel deploy hook..."
+            curl --fail --silent --show-error -X POST "$VERCEL_DEPLOY_HOOK"
+            echo ""
+            echo "::notice::Vercel deploy triggered successfully."
+          fi
+
+  # ── Summary ──────────────────────────────────────────────
+  deploy-summary:
+    name: Deploy Summary
+    needs: [verify-backend, verify-frontend]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "## 🚀 Deploy Pipeline" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| CI Gate | ${{ needs.gate.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Verify Backend | ${{ needs.verify-backend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Verify Frontend | ${{ needs.verify-frontend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Backend:** https://railway.app/project" >> $GITHUB_STEP_SUMMARY
+          echo "**Frontend:** https://freelance-web-beta.vercel.app" >> $GITHUB_STEP_SUMMARY
