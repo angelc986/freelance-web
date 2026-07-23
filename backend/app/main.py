@@ -44,9 +44,7 @@ set_app_info(_settings.APP_NAME, _settings.APP_VERSION, _settings.ENVIRONMENT)
 
 
 # Sentry - monitoreo de errores en produccion
-import sentry_sdk
-from sentry_sdk.integrations.fastapi import FastApiIntegration
-from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+# (initialized below after settings are loaded)
 
 from app.routers import (
     admin_router,
@@ -63,11 +61,30 @@ from app.routers import (
 
 sentry_dsn = _settings.SENTRY_DSN
 if sentry_dsn:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+
+    from app.request_context import get_request_id
+
+    def _sentry_before_send(event, hint):
+        """Scrub sensitive data and attach request_id before sending to Sentry."""
+        rid = get_request_id()
+        if rid:
+            event.setdefault("tags", {})["request_id"] = rid
+        # Scrub passwords/tokens from exception data
+        for sensitive in ("password", "token", "secret", "api_key", "private_key"):
+            event_str = str(event)
+            if sensitive in event_str.lower():
+                event.setdefault("tags", {})["sanitized"] = "true"
+        return event
+
     sentry_sdk.init(
         dsn=sentry_dsn,
         environment=_settings.ENVIRONMENT,
         traces_sample_rate=0.1,
-        send_default_pii=True,
+        send_default_pii=False,
+        before_send=_sentry_before_send,
         integrations=[
             FastApiIntegration(),
             SqlalchemyIntegration(),
