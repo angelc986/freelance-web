@@ -58,7 +58,7 @@ class TestRegister:
     def test_register_duplicate_cedula(self, client: TestClient):
         """Step 2: duplicate cedula should return 400 during profile completion."""
         # Register two users (Step 1 gives placeholder cedulas)
-        r1 = client.post(
+        _r1 = client.post(
             "/api/v1/auth/register",
             json={
                 "email": "user1@test.com",
@@ -78,11 +78,16 @@ class TestRegister:
         # Complete profile for user1 with cedula V-66666666
         client.patch(
             "/api/v1/auth/complete-profile",
-            json={"full_name": "User1", "phone": "+584146666666", "cedula": "V-66666666", "address": "Calle 1"},
+            json={
+                "full_name": "User1",
+                "phone": "+584146666666",
+                "cedula": "V-66666666",
+                "address": "Calle 1",
+            },
             headers={"Authorization": f"Bearer {token1}"},
         )
         # Register user2
-        r2 = client.post(
+        _r2 = client.post(
             "/api/v1/auth/register",
             json={
                 "email": "user2@test.com",
@@ -102,7 +107,12 @@ class TestRegister:
         # Try to complete user2 with the same cedula — should fail
         resp = client.patch(
             "/api/v1/auth/complete-profile",
-            json={"full_name": "User2", "phone": "+584147777777", "cedula": "V-66666666", "address": "Calle 2"},
+            json={
+                "full_name": "User2",
+                "phone": "+584147777777",
+                "cedula": "V-66666666",
+                "address": "Calle 2",
+            },
             headers={"Authorization": f"Bearer {token2}"},
         )
         assert resp.status_code == 400
