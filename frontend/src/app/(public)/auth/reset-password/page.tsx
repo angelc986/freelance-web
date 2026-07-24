@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useRef } from "react";
+import { Suspense, useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { API_BASE } from "@/lib/api";
@@ -159,6 +159,18 @@ function ResetPasswordForm() {
     if (!tokenFromUrl) { setErrorMsg("Enlace invalido. Solicita un nuevo enlace de recuperacion."); setStatus("error"); }
   }, [tokenFromUrl]);
 
+  // Stagger animation — same as auth/page.tsx
+  useLayoutEffect(() => {
+    const timers: NodeJS.Timeout[] = [];
+    const items = document.querySelectorAll(".stagger");
+    items.forEach((el, i) => {
+      (el as HTMLElement).classList.remove("in");
+      const timer = setTimeout(() => (el as HTMLElement).classList.add("in"), i * 60);
+      timers.push(timer);
+    });
+    return () => timers.forEach(clearTimeout);
+  }, [status]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
@@ -179,7 +191,7 @@ function ResetPasswordForm() {
   /* ── Success screen ── */
   if (status === "success") {
     return (
-      <div className="screen screen-active" style={{alignItems:"center",justifyContent:"center"}}>
+      <div className="screen screen-active" style={{alignItems:"center",justifyContent:"center",paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
         <div className="stagger in text-center">
           <div className="email-icon" style={{margin:"0 auto 24px"}}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -197,8 +209,8 @@ function ResetPasswordForm() {
   /* ── Invalid token screen ── */
   if (!tokenFromUrl && status === "error") {
     return (
-      <div className="screen screen-active" style={{alignItems:"center",justifyContent:"center"}}>
-        <div className="stagger" style={{textAlign:"center",maxWidth:"360px"}}>
+      <div className="screen screen-active" style={{alignItems:"center",justifyContent:"center",paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
+        <div className="stagger in" style={{textAlign:"center",maxWidth:"360px"}}>
           <div className="email-icon" style={{margin:"0 auto 24px",background:"rgba(245,158,11,.08)",borderColor:"rgba(245,158,11,.15)"}}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
               <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
@@ -218,7 +230,7 @@ function ResetPasswordForm() {
 
   /* ── Reset form ── */
   return (
-    <div className="screen screen-active">
+    <div className="screen screen-active" style={{paddingTop:"calc(env(safe-area-inset-top,0px) + 48px)",paddingBottom:"calc(env(safe-area-inset-bottom,0px) + 12px)"}}>
       {/* Top bar — IDENTICAL to auth page TopRowLogo */}
       <div className="top-row top-bar">
         <div className="flex items-center gap-2">
