@@ -504,7 +504,7 @@ function ResetPasswordContent() {
     <div style={{
       position: "absolute", top: 0, right: 0, bottom: 0, left: 0,
       background: "transparent", overflow: "hidden",
-      height: "100vh", height: "-webkit-fill-available", height: "100dvh",
+      height: "100dvh",
       fontFamily: "'Inter', system-ui, sans-serif",
     }}>
       {/* Layer 0: Mesh gradient canvas */}
