@@ -1,4 +1,4 @@
-import hashlib
+﻿import hashlib
 import logging
 import random
 import secrets
@@ -93,7 +93,7 @@ def register(request: Request, user: UserCreate, db: Session = Depends(get_db)):
     # Common password check
     if is_password_common(user.password):
         raise HTTPException(
-            status_code=400, detail="Esa contrasena es demasiado comun. Elige una mas segura."
+            status_code=400, detail="Esa contraseña es demasiado comun. Elige una mas segura."
         )
 
     db_user = db.query(User).filter(User.email == user.email).first()
@@ -701,7 +701,7 @@ RESET_TOKEN_EXPIRE_HOURS = 1
 @router.post("/forgot-password")
 def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session = Depends(get_db)):
     """
-    Solicitar recuperacion de contrasena.
+    Solicitar recuperacion de contraseña.
     Envia un email con un enlace de reset (solo si el usuario existe).
     Siempre responde igual para evitar enumeracion de usuarios.
     """
@@ -754,10 +754,10 @@ def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session =
 <div style="background:#2563EB;padding:24px;border-radius:16px 16px 0 0;text-align:center">
 <span style="color:white;font-size:20px;font-weight:700">TurnoGO</span></div>
 <div style="background:#fff;padding:24px;border:1px solid #E2E8F0;border-top:0;border-radius:0 0 16px 16px">
-<h2 style="color:#1F2937;margin-top:0">Recupera tu contrasena</h2>
-<p style="color:#6B7280;font-size:14px">Haz clic para crear una nueva contrasena:</p>
+<h2 style="color:#1F2937;margin-top:0">Recupera tu contraseña</h2>
+<p style="color:#6B7280;font-size:14px">Haz clic para crear una nueva contraseña:</p>
 <div style="text-align:center;margin:24px 0">
-<a href="{reset_link}" style="display:inline-block;background:#2563EB;color:white;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Restablecer Contrasena</a>
+<a href="{reset_link}" style="display:inline-block;background:#2563EB;color:white;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Restablecer Contraseña</a>
 </div>
 <p style="color:#9CA3AF;font-size:12px">Este enlace expira en 1 hora. Si no solicitaste este cambio, ignora este email.</p>
 </div>
@@ -766,7 +766,7 @@ def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session =
     try:
         from app.services.email_service import send_email
 
-        ok = send_email(user.email, "Recupera tu contrasena — TurnoGO", reset_html)
+        ok = send_email(user.email, "Recupera tu contraseña — TurnoGO", reset_html)
         if not ok:
             logger.warning(f"PASSWORD_RESET_EMAIL_FAILED user={user.id} send_email returned False")
     except Exception as e:
@@ -791,13 +791,13 @@ def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session =
 @limiter.limit("1/5minutes")
 def reset_password(request: Request, body: ResetPasswordRequest, db: Session = Depends(get_db)):
     """
-    Ejecutar el reset de contrasena con un token valido.
+    Ejecutar el reset de contraseña con un token valido.
     """
-    # Validar nueva contrasena (minimo 8 chars)
+    # Validar nueva contraseña (minimo 8 chars)
     if len(body.new_password) < 8:
         raise HTTPException(
             status_code=400,
-            detail="La contrasena debe tener al menos 8 caracteres",
+            detail="La contraseña debe tener al menos 8 caracteres",
         )
 
     # Buscar tokens PASSWORD_RESET no usados
@@ -841,14 +841,14 @@ def reset_password(request: Request, body: ResetPasswordRequest, db: Session = D
             detail="El enlace de recuperacion expiro. Solicita uno nuevo.",
         )
 
-    # Verificar que no es la misma contrasena
+    # Verificar que no es la misma contraseña
     if pwd_context.verify(body.new_password, user.password_hash):
         raise HTTPException(
             status_code=400,
-            detail="La nueva contrasena no puede ser igual a la anterior",
+            detail="La nueva contraseña no puede ser igual a la anterior",
         )
 
-    # Cambiar contrasena
+    # Cambiar contraseña
     user.password_hash = pwd_context.hash(body.new_password)
 
     # Invalidar token
@@ -867,7 +867,7 @@ def reset_password(request: Request, body: ResetPasswordRequest, db: Session = D
 
     db.commit()
 
-    return {"message": "Contrasena cambiada exitosamente. Inicia sesion con tu nueva contrasena."}
+    return {"message": "Contraseña cambiada exitosamente. Inicia sesion con tu nueva contraseña."}
 
 
 # ═══════════════════════════════════════════════════════════

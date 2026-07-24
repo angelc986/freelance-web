@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Suspense, useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -182,7 +182,7 @@ function ResetPasswordForm() {
         body: JSON.stringify({ token: tokenFromUrl, new_password: newPassword }),
       });
       const data = await res.json();
-      if (!res.ok) { setErrorMsg(data.detail || "Error al cambiar la contrasena."); setStatus("error"); return; }
+      if (!res.ok) { setErrorMsg(data.detail || "Error al cambiar la contraseña."); setStatus("error"); return; }
       setStatus("success");
       setTimeout(() => router.push("/auth?screen=login"), 2500);
     } catch { setErrorMsg("Error de conexion. Intenta de nuevo."); setStatus("error"); }
@@ -198,8 +198,8 @@ function ResetPasswordForm() {
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <h2 style={{fontSize:"22px",fontWeight:700,color:"#1F2937",margin:"0 0 8px"}}>Contrasena actualizada</h2>
-          <p style={{color:"#6B7280",fontSize:"15px",lineHeight:1.7}}>Tu contrasena ha sido cambiada exitosamente.</p>
+          <h2 style={{fontSize:"22px",fontWeight:700,color:"#1F2937",margin:"0 0 8px"}}>Contraseña actualizada</h2>
+          <p style={{color:"#6B7280",fontSize:"15px",lineHeight:1.7}}>Tu contraseña ha sido cambiada exitosamente.</p>
           <p style={{color:"#9CA3AF",fontSize:"13px",marginTop:"4px"}}>Redirigiendo al inicio de sesion...</p>
         </div>
       </div>
@@ -235,7 +235,7 @@ function ResetPasswordForm() {
       <div className="top-row top-bar">
         <div className="flex items-center gap-2">
           <a href="/" className="hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Logo size="sm" showText={false} />
+            <Logo size="lg" showText={false} />
             <span className="logo-text font-bold tracking-tight">Turno<span style={{color:"#2563EB"}}>GO</span></span>
             <div className="w-px h-4 bg-gray-300 mx-1" />
           </a>
@@ -257,8 +257,8 @@ function ResetPasswordForm() {
               <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /><circle cx="12" cy="16" r="1" fill="#2563EB" />
             </svg>
           </div>
-          <h2 style={{fontSize:"28px",fontWeight:800,letterSpacing:"-0.02em",color:"#1E293B",margin:0,textAlign:"center"}}>Nueva contrasena</h2>
-          <p style={{color:"#64748B",fontSize:"15px",textAlign:"center",margin:0,lineHeight:1.6}}>Elige una contrasena segura que no uses en otros sitios.</p>
+          <h2 style={{fontSize:"28px",fontWeight:800,letterSpacing:"-0.02em",color:"#1E293B",margin:0,textAlign:"center"}}>Nueva contraseña</h2>
+          <p style={{color:"#64748B",fontSize:"15px",textAlign:"center",margin:0,lineHeight:1.6}}>Elige una contraseña segura que no uses en otros sitios.</p>
         </div>
 
         <div className="form-area stagger" style={{width:"100%",maxWidth:"440px",overflowY:"auto",justifyContent:"flex-start"}}>
@@ -297,11 +297,11 @@ function ResetPasswordForm() {
                 <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /><circle cx="12" cy="16" r="1" fill="currentColor" />
               </svg>
               <input type={showPassword?"text":"password"} required minLength={8} value={confirmPassword}
-                onChange={(e)=>setConfirmPassword(e.target.value)} placeholder="Repite la contrasena"
+                onChange={(e)=>setConfirmPassword(e.target.value)} placeholder="Repite la contraseña"
                 className="input-field" style={confirmPassword&&!passwordsMatch?{borderColor:"#FCA5A5",background:"#FFF5F5"}:{}} />
             </div>
             {confirmPassword && !passwordsMatch && (
-              <p style={{color:"#EF4444",fontSize:"12px",margin:"4px 0 0 4px"}}>Las contrasenas no coinciden</p>
+              <p style={{color:"#EF4444",fontSize:"12px",margin:"4px 0 0 4px"}}>Las contraseñas no coinciden</p>
             )}
 
             {/* Error */}
@@ -310,7 +310,7 @@ function ResetPasswordForm() {
             )}
 
             <button type="submit" disabled={!canSubmit} className="btn-main" style={{marginTop:"20px"}}>
-              {status === "loading" ? "Cambiando..." : "Cambiar contrasena"}
+              {status === "loading" ? "Cambiando..." : "Cambiar contraseña"}
             </button>
           </form>
         </div>

@@ -227,7 +227,7 @@ function TopRowLogo({ onBack }: { onBack: () => void }) {
     <div className="flex items-center gap-2">
       {/* Logo + texto: solo visible en desktop (md+) â†' enlace al inicio */}
       <a href="/" className="hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity">
-        <Logo size="sm" showText={false} />
+        <Logo size="lg" showText={false} />
         <span className="logo-text font-bold tracking-tight">Turno<span style={{color:"#2563EB"}}>GO</span></span>
         <div className="w-px h-4 bg-gray-300 mx-1"></div>
       </a>

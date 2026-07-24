@@ -90,7 +90,7 @@
     padding:8px;
   }
   .auth-page .top-row .logo-text{font-size:22px;}
-  .auth-page .top-row svg{width:32px;height:32px;}
+  .auth-page .top-row .logo-svg{width:40px;height:40px;}
   .auth-page .pill-toggle{width:180px;height:44px;}
   .auth-page .pill-slider{width:86px;}
   .auth-page .pill-btn{font-size:14px;}

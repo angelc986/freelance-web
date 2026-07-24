@@ -23,6 +23,7 @@ export default function Logo({ className = "", showText = true, size = "md" }: L
       {/* SVG Icon */}
       <div className="relative" style={{ width: s.icon, height: s.icon }}>
         <svg
+          className="logo-svg"
           width={s.icon}
           height={s.icon}
           viewBox="0 0 48 48"
