@@ -12,12 +12,14 @@ status: Phase 9.5 Complete
 
 | Métrica | Valor |
 |---------|-------|
-| **RPO (Recovery Point Objective)** | 24 horas (Supabase free tier) |
-| **RTO (Recovery Time Objective)** | 2 horas |
+| **RPO (Recovery Point Objective)** | 24 horas (objetivo, depende del plan Supabase) |
+| **RTO (Recovery Time Objective)** | 2 horas (objetivo, no validado con simulacro) |
 | **Disponibilidad objetivo** | 99.5% (~3.6h downtime/mes aceptable) |
 | **Estrategia de recovery** | Restore from Supabase backup → verify → switch DNS |
 | **Estrategia de rollback** | `git revert` + Railway manual deploy |
 | **Última auditoría** | 2026-07-24 05:00 UTC |
+| **Backups verificados** | ⏳ Pendiente — requiere acceso al dashboard de Supabase |
+| **Simulacro de restore** | ❌ No ejecutado |
 
 ---
 
@@ -618,25 +620,25 @@ git push --mirror mirror
 
 # FASE 5 — OBJETIVOS SRE
 
-## 5.1 RPO (Recovery Point Objective)
+## 5.1 RPO (Recovery Point Objective) — Objetivo
 
 | Entorno | RPO | Notas |
 |---------|-----|-------|
 | **Supabase Free** | 24 horas | Backup diario, sin PITR |
 | **Supabase Pro** | 5 minutos | Con PITR |
-| **Actual (Free)** | **24 horas** | Máximo 1 día de datos perdidos en desastre |
+| **Objetivo actual** | **24 horas** | ⚠️ No validado — requiere verificar plan en dashboard |
 
-## 5.2 RTO (Recovery Time Objective)
+## 5.2 RTO (Recovery Time Objective) — Objetivo
 
-| Escenario | RTO |
-|-----------|-----|
-| Railway caído | 30 min |
-| Supabase caído | 1 hora |
-| Corrupción DB | 45 min |
-| Error de deploy | 15 min |
-| Pérdida de variables | 30 min |
-| Pérdida de repo | 30 min |
-| **RTO Global** | **2 horas** |
+| Escenario | RTO Objetivo | Validado |
+|-----------|-------------|----------|
+| Railway caído | 30 min | ❌ |
+| Supabase caído | 1 hora | ❌ |
+| Corrupción DB | 45 min | ❌ |
+| Error de deploy | 15 min | ✅ (smoke test 23 Jul) |
+| Pérdida de variables | 30 min | ❌ |
+| Pérdida de repo | 30 min | ❌ |
+| **RTO Objetivo Global** | **2 horas** | ❌ No validado con simulacro |
 
 ## 5.3 Disponibilidad Objetivo
 

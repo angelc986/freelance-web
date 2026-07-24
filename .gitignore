@@ -26,6 +26,11 @@ out/
 *.sqlite
 *.sqlite3
 
+# Credential leaks — NEVER commit connection strings
+supabase_url.txt
+*_url.txt
+*_connection*.txt
+
 # IDE
 .vscode/
 .idea/
