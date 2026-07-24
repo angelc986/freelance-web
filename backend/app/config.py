@@ -72,6 +72,9 @@ class Settings(BaseSettings):
     # Environment
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
 
+    # Frontend
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "https://freelance-web-beta.vercel.app")
+
     # Logging
     LOG_LEVEL: str = os.getenv(
         "LOG_LEVEL",
