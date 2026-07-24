@@ -664,7 +664,6 @@ function AuthPageInner() {
  <div className="stagger">
  <div className="logo-container mx-auto mb-6">
  <Logo size="lg" showText={false} className="logo-mark mx-auto" />
- <span className="logo-text">Turno<span style={{color:"#2563EB"}}>GO</span></span>
  </div>
  </div>
  <h1 className="text-[30px] font-extrabold mb-2 tracking-tight text-gray-900 stagger">Bienvenido</h1>

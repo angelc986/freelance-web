@@ -261,7 +261,7 @@ function ResetPasswordForm() {
           <p style={{color:"#64748B",fontSize:"15px",textAlign:"center",margin:0,lineHeight:1.6}}>Elige una contraseña segura que no uses en otros sitios.</p>
         </div>
 
-        <div className="form-area stagger" style={{width:"100%",maxWidth:"440px",overflowY:"auto",justifyContent:"flex-start"}}>
+        <div className="form-area stagger" style={{width:"100%",maxWidth:"440px"}}>
           <form onSubmit={handleSubmit} style={{display:"flex",flexDirection:"column",gap:"2px"}}>
             {/* New password */}
             <div className="input-group">
