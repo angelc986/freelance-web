@@ -179,8 +179,8 @@ class TestAvatarProtection:
             files={"file": ("avatar.png", fake_png, "image/png")},
             headers={"Authorization": f"Bearer {token}"},
         )
-        # Deberia funcionar (200 o fallback local)
-        assert resp.status_code in (200, 500)  # 500 si Cloudinary no configurado
+        # Sin Cloudinary configurado en tests -> 502
+        assert resp.status_code in (200, 502)
 
     def test_avatar_verified_url_not_writable_from_api(self, client, verified_user):
         """avatar_verified_url no debe ser escribible desde ningun endpoint publico."""
@@ -205,7 +205,7 @@ class TestAvatarProtection:
 class TestWebhookIdempotency:
     """HIGH-01: Webhooks duplicados no modifican estado."""
 
-    @patch("app.routers.verification._upload_avatar_from_url", return_value=None)
+    @patch("app.routers.verification.upload_avatar_from_url", return_value=None)
     def test_duplicate_webhook_no_state_change(self, mock_upload, client, kyc_user_token):
         """Webhook duplicado no crea doble registro ni cambia estado."""
         _token, user_id = kyc_user_token
@@ -242,7 +242,7 @@ class TestWebhookIdempotency:
         finally:
             db.close()
 
-    @patch("app.routers.verification._upload_avatar_from_url", return_value=None)
+    @patch("app.routers.verification.upload_avatar_from_url", return_value=None)
     def test_webhook_retry_terminates_correctly(self, mock_upload, client, kyc_user_token):
         """Reintento del webhook devuelve 200 con duplicate=True."""
         _token, user_id = kyc_user_token
@@ -255,7 +255,7 @@ class TestWebhookIdempotency:
         assert r2["status_code"] == 200
         assert r2["body"]["received"] is True
 
-    @patch("app.routers.verification._upload_avatar_from_url", return_value=None)
+    @patch("app.routers.verification.upload_avatar_from_url", return_value=None)
     def test_different_status_same_session_processed(self, mock_upload, client, kyc_user_token):
         """Diferentes status con misma session_id se procesan independientemente."""
         _token, user_id = kyc_user_token
@@ -287,7 +287,7 @@ class TestWebhookIdempotency:
 class TestKycStateMachine:
     """CRIT-03 + kyc_status: transiciones validas y proteccion de estado."""
 
-    @patch("app.routers.verification._upload_avatar_from_url", return_value=None)
+    @patch("app.routers.verification.upload_avatar_from_url", return_value=None)
     def test_approved_then_stale_declined_maintains_verification(
         self, mock_upload, client, kyc_user_token
     ):
@@ -310,7 +310,7 @@ class TestKycStateMachine:
         assert user.is_verified is True
         assert user.kyc_status == "APPROVED"
 
-    @patch("app.routers.verification._upload_avatar_from_url", return_value=None)
+    @patch("app.routers.verification.upload_avatar_from_url", return_value=None)
     def test_rejected_user_can_retry_kyc(self, mock_upload, client, kyc_user_token):
         """Usuario rechazado puede iniciar nuevo proceso KYC."""
         _token, user_id = kyc_user_token
@@ -336,7 +336,7 @@ class TestKycStateMachine:
         assert user.kyc_status == "DECLINED"
 
         # DECLINED → APPROVED (nuevo intento con otra sesion)
-        with patch("app.routers.verification._upload_avatar_from_url", return_value=None):
+        with patch("app.routers.verification.upload_avatar_from_url", return_value=None):
             _send_webhook(client, _webhook_payload("s2", "Approved", str(user_id)))
         user = _get_user_from_db(user_id)
         assert user.kyc_status == "APPROVED"
@@ -346,7 +346,7 @@ class TestKycStateMachine:
         user = _get_user_from_db(user_id)
         assert user.kyc_status == "APPROVED"
 
-    @patch("app.routers.verification._upload_avatar_from_url", return_value=None)
+    @patch("app.routers.verification.upload_avatar_from_url", return_value=None)
     def test_cloudinary_failure_keeps_consistent_state(self, mock_upload, client, kyc_user_token):
         """Si Cloudinary falla, el usuario queda verificado pero sin avatar."""
         _token, user_id = kyc_user_token
@@ -434,7 +434,7 @@ class TestWebhookSecurity:
         )
         assert resp.status_code == 401
 
-    @patch("app.routers.verification._upload_avatar_from_url", return_value=None)
+    @patch("app.routers.verification.upload_avatar_from_url", return_value=None)
     def test_valid_webhook_accepted(self, mock_upload, client, kyc_user_token):
         """Webhook con firma HMAC valida → 200."""
         _token, user_id = kyc_user_token
@@ -538,7 +538,7 @@ class TestKycStatusEndpoint:
         assert resp.json()["is_verified"] is True
         assert resp.json()["verified_at"] is not None
 
-    @patch("app.routers.verification._upload_avatar_from_url", return_value=None)
+    @patch("app.routers.verification.upload_avatar_from_url", return_value=None)
     def test_status_updates_after_webhook(self, mock_upload, client, kyc_user_token):
         """Despues de webhook Approved, status refleja el cambio."""
         token, user_id = kyc_user_token

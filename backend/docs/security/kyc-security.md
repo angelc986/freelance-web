@@ -220,6 +220,32 @@ pytest tests/verification/test_kyc_security.py -v
 
 ---
 
+## ⚠️ Riesgos Residuales
+
+### Bajo
+
+- **Flujo administrativo de re-verificación no implementado** (MED-02).
+  Actualmente requiere SQL directo. Mitigación: el endpoint `POST /admin/users/{id}/reset-kyc` está planificado.
+- **Política de retención de documentos KYC no definida** (MED-01).
+  Las imágenes de cédula/pasaporte no se almacenan. Si se implementa, requiere definir período de retención y cumplimiento legal.
+
+### Dependencias externas
+
+| Dependencia | Impacto si falla | Mitigación |
+|-------------|-----------------|------------|
+| Didit API | No se pueden crear nuevas sesiones KYC | Usuarios existentes no afectados. Reintentos automáticos. |
+| Didit Webhook | No se reciben resultados de verificación | Idempotencia implementada. Didit reenvía automáticamente. |
+| Cloudinary | No se sube el portrait verificado | El usuario queda verificado pero sin avatar KYC. No rompe el flujo. |
+| `DIDIT_WEBHOOK_SECRET` mal configurado | Webhooks rechazados (401) | Validación en startup. CI testea el flujo HMAC. |
+
+### No bloqueante para producción
+
+- MED-01: Almacenar documentos del KYC (cédula/pasaporte)
+- MED-02: Endpoint admin `POST /admin/users/{id}/reset-kyc`
+- MED-03: `public_id` con timestamp para evitar sobrescritura en Cloudinary
+
+---
+
 ## 📋 Checklist Pre-Producción
 
 - [x] CRIT-01: `avatar_verified_url` separado de `avatar_url`
@@ -231,8 +257,7 @@ pytest tests/verification/test_kyc_security.py -v
 - [x] HIGH-04: Solo HMAC, sin fallback API Key
 - [x] `kyc_status` como máquina de estados explícita
 - [x] 24 tests automatizados
+- [x] `DIDIT_WEBHOOK_SECRET` configurado en Railway
 - [ ] MED-01: Almacenar documentos del KYC (cédula/pasaporte)
 - [ ] MED-02: Endpoint admin `POST /admin/users/{id}/reset-kyc`
 - [ ] MED-03: `public_id` con timestamp para evitar sobrescritura
-- [ ] Configurar `DIDIT_WEBHOOK_SECRET` en Railway
-- [ ] Configurar IP whitelist de Didit en firewall (si aplica)

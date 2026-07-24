@@ -17,6 +17,7 @@ from app.models.kyc_webhook_event import KycWebhookEvent
 from app.models.user import User
 from app.services.audit import log_action
 from app.services.auth import get_current_user
+from app.services.cloudinary_service import upload_avatar_from_url
 
 logger = logging.getLogger(__name__)
 
@@ -77,50 +78,6 @@ def _extract_portrait_url(payload: dict) -> str | None:
                     return images[0].get("url") if isinstance(images[0], dict) else images[0]
 
     return None
-
-
-def _upload_avatar_from_url(image_url: str, user_id: int) -> str | None:
-    """Download portrait from Didit and upload to Cloudinary. Returns Cloudinary URL."""
-    try:
-        import cloudinary
-        import cloudinary.uploader
-    except ImportError:
-        logger.warning("cloudinary not installed, skipping avatar upload")
-        return None
-    settings = get_settings()
-    if not all(
-        [
-            settings.CLOUDINARY_CLOUD_NAME,
-            settings.CLOUDINARY_API_KEY,
-            settings.CLOUDINARY_API_SECRET,
-        ]
-    ):
-        logger.warning("Cloudinary not configured, skipping avatar upload")
-        return None
-
-    cloudinary.config(
-        cloud_name=settings.CLOUDINARY_CLOUD_NAME,
-        api_key=settings.CLOUDINARY_API_KEY,
-        api_secret=settings.CLOUDINARY_API_SECRET,
-    )
-
-    try:
-        with httpx.Client(timeout=30) as client:
-            resp = client.get(image_url)
-            resp.raise_for_status()
-
-        result = cloudinary.uploader.upload(
-            resp.content,
-            public_id=f"avatars/user_{user_id}",
-            folder="turnogo/avatars",
-            overwrite=True,
-            resource_type="image",
-            transformation=[{"width": 300, "height": 300, "crop": "fill", "gravity": "face"}],
-        )
-        return result.get("secure_url")
-    except Exception as e:
-        logger.error(f"Failed to upload avatar for user {user_id}: {e}")
-        return None
 
 
 @router.post("/create")
@@ -294,7 +251,7 @@ async def didit_webhook(request: Request):
 
             portrait_url = _extract_portrait_url(payload)
             if portrait_url:
-                cloud_url = _upload_avatar_from_url(portrait_url, user.id)
+                cloud_url = upload_avatar_from_url(portrait_url, user.id)
                 if cloud_url:
                     user.avatar_verified_url = cloud_url
                     user.avatar_url = cloud_url

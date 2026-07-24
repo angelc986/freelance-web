@@ -1,12 +1,11 @@
-import os
-import uuid
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel
 from sqlalchemy import update as sa_update
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
+from app.limiter import limiter
 from app.models.application import Application
 from app.models.job import Job
 from app.models.rating import Rating
@@ -14,7 +13,12 @@ from app.models.transaction import Transaction
 from app.models.user import User
 from app.services.audit import log_action
 from app.services.auth import get_current_user
-from app.services.cloudinary_service import upload_avatar as cloudinary_upload
+from app.services.cloudinary_service import (
+    ImageValidationError,
+    delete_avatar,
+    get_public_id,
+    upload_avatar,
+)
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
@@ -60,7 +64,7 @@ class UserRatingSummary(BaseModel):
 
 @router.get("/{user_id}", response_model=UserPublicResponse)
 def get_user(user_id: int, db: Session = Depends(get_db)):
-    """Perfil público de un usuario"""
+    """Perfil publico de un usuario"""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
@@ -80,7 +84,7 @@ def get_user_activity(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """
-    📋 ACTIVIDAD RECIENTE
+    ACTIVIDAD RECIENTE
 
     Combina trabajos, aplicaciones y transacciones recientes.
     """
@@ -96,16 +100,11 @@ def get_user_activity(
     )
 
     for j in jobs:
-        if j.client_id == current_user.id:
-            role = "contratista"
-        else:
-            role = "trabajador"
-
         action_map = {
             "open": "Publicaste",
             "in_progress": "Aceptaste",
             "checked_in": "Check-in realizado",
-            "review_pending": "Solicitud de finalización",
+            "review_pending": "Solicitud de finalizacion",
             "completed": "Completaste",
             "cancelled": "Cancelaste",
         }
@@ -136,8 +135,8 @@ def get_user_activity(
         job_title = job.title if job else f"Trabajo #{a.job_id}"
         app_action = {
             "pending": "Postulaste a",
-            "accepted": "Aceptaron tu postulación en",
-            "rejected": "Rechazaron tu postulación en",
+            "accepted": "Aceptaron tu postulacion en",
+            "rejected": "Rechazaron tu postulacion en",
         }.get(a.status, "Postulaste a")
 
         activities.append(
@@ -166,7 +165,7 @@ def get_user_activity(
             "release": "Recibiste pago por",
             "withdraw": "Retiraste",
             "refund": "Reembolso de",
-        }.get(t.type, "Transacción")
+        }.get(t.type, "Transaccion")
 
         activities.append(
             {
@@ -188,7 +187,7 @@ def get_user_activity(
 @router.get("/{user_id}/ratings", response_model=UserRatingSummary)
 def get_user_ratings(user_id: int, db: Session = Depends(get_db)):
     """
-    ⭐ CALIFICACIONES DE UN USUARIO
+    CALIFICACIONES DE UN USUARIO
     Devuelve todas las calificaciones que ha recibido + resumen.
     """
     user = db.query(User).filter(User.id == user_id).first()
@@ -231,7 +230,9 @@ def get_user_ratings(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/avatar")
-async def upload_avatar(
+@limiter.limit("10/minute")
+async def upload_avatar_endpoint(
+    request: Request,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -243,47 +244,42 @@ async def upload_avatar(
             detail="Tu foto de perfil fue verificada por KYC. Contacta a soporte para cambiarla.",
         )
 
-    allowed = {"image/jpeg", "image/png", "image/webp", "image/gif"}
-    if file.content_type not in allowed:
-        raise HTTPException(400, "Formato no permitido. Usa JPG, PNG, WebP o GIF.")
-
     contents = await file.read()
-    if len(contents) > 5 * 1024 * 1024:
-        raise HTTPException(400, "La imagen es muy grande. Maximo 5MB.")
 
-    # Intentar subir a Cloudinary primero
-    cloudinary_url = cloudinary_upload(contents, current_user.id, file.filename or "avatar.jpg")
+    # CLOUD-03: Validacion real con Pillow (no confiar en content_type)
+    try:
+        cloudinary_url = upload_avatar(contents, current_user.id)
+    except ImageValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    if cloudinary_url:
-        # HIGH-02: Log del cambio de avatar
-        previous_avatar = current_user.avatar_url
-        db.execute(
-            sa_update(User).where(User.id == current_user.id).values(avatar_url=cloudinary_url)
+    # CLOUD-01: Sin fallback local. Si Cloudinary falla -> 502
+    if not cloudinary_url:
+        raise HTTPException(
+            status_code=502,
+            detail="No fue posible subir la imagen. Intenta nuevamente.",
         )
-        db.commit()
-        log_action(
-            current_user.id,
-            "avatar_changed",
-            {
-                "previous_avatar": previous_avatar,
-                "new_avatar": cloudinary_url,
-                "source": "manual_upload",
-            },
-        )
-        return {"avatar_url": cloudinary_url}
 
-    # Fallback: guardar localmente (Railway ephemeral, pero util para dev)
-    ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
-    filename = f"avatar_{current_user.id}_{uuid.uuid4().hex[:8]}.{ext}"
-    filepath = os.path.join("uploads", filename)
-    os.makedirs("uploads", exist_ok=True)
-
-    with open(filepath, "wb") as f:
-        f.write(contents)
+    # HIGH-02: Log del cambio de avatar
+    previous_avatar = current_user.avatar_url
+    previous_public_id = get_public_id(current_user.id)
 
     db.execute(
-        sa_update(User).where(User.id == current_user.id).values(avatar_url=f"/uploads/{filename}")
+        sa_update(User).where(User.id == current_user.id).values(avatar_url=cloudinary_url)
     )
     db.commit()
 
-    return {"avatar_url": f"/uploads/{filename}"}
+    # CLOUD-06: Eliminar avatar anterior de Cloudinary
+    if previous_avatar:
+        delete_avatar(previous_public_id)
+
+    log_action(
+        current_user.id,
+        "avatar_changed",
+        {
+            "previous_avatar": previous_avatar,
+            "new_avatar": cloudinary_url,
+            "source": "manual_upload",
+        },
+        ip=request.client.host if request.client else None,
+    )
+    return {"avatar_url": cloudinary_url}
