@@ -241,16 +241,36 @@ CI/CD:          GitHub Actions — FASE 9.3 ✅ COMPLETADA (23 Jul 2026)
 - [x] Documentacion (docs/security/kyc-security.md)
 - [x] DIDIT_WEBHOOK_SECRET configurado y usado efectivamente en HMAC
 
-### 10.4 Cloudinary Funcional
-- [ ] Configurar credenciales en Railway
-- [ ] Verificar subida de avatares con transformaciones (300x300, face crop)
-- [ ] Verificar fallback local funciona cuando no hay credenciales
+### 10.4 Cloudinary Funcional 🟢 100%
+- [x] Configurar credenciales en Railway
+- [x] Auditoria de seguridad (8 hallazgos -> 7 corregidos)
+- [x] CLOUD-01: Sin fallback local → 502 (eliminado StaticFiles publico)
+- [x] CLOUD-02: public_id unificado (manual/user_{id} / verified/user_{id})
+- [x] CLOUD-03: Validacion real con Pillow (magic bytes, dimensiones, formato)
+- [x] Rate limiting: POST /users/avatar → 10/minute
+- [x] CLOUD-06: delete_avatar() al cambiar (sin huerfanos en Cloudinary)
+- [x] CLOUD-05: Config centralizada en cloudinary_service.py (sin duplicacion)
+- [x] CLOUD-07: Sin filename del usuario (no se usa para nada)
+- [x] Documentacion (docs/security/cloudinary-security.md)
+- [ ] CLOUD-04: Rate limit en webhook KYC (baja prioridad)
+- [ ] CLOUD-08: Soporte GIF con transformacion (baja prioridad)
 
-### 10.5 Pagos Blockchain Reales
+### 10.5 Pagos Blockchain Reales 🟡 40%
+- [x] Auditoria de seguridad completada (12 hallazgos en docs/security/blockchain-audit.md)
+- [ ] 🔴 BLC-01: Arreglar verify_transaction() para ERC-20 (usa tx.to en vez de event logs)
+- [ ] 🟠 BLC-04: Autenticar webhook/deposit (actualmente publico, sin rate limit)
+- [ ] 🟠 BLC-05: Leer monto real del input data/event logs (no confiar en expected_amount)
+- [ ] 🟠 BLC-03: Patron blockchain-primero en retiros (no descontar antes de confirmar)
+- [ ] 🟡 BLC-06: No acreditar con confirmations=0 (usar MIN_CONFIRMATIONS=12)
+- [ ] 🟡 BLC-07: estimate_gas() en vez de gas=100000 fijo
+- [ ] 🟡 BLC-08: Nonce management + reintentos en send_usdt()
+- [ ] 🟡 BLC-09: Verificar receipt despues de send_usdt()
+- [ ] 🟢 BLC-10/11/12: Logs estructurados, admin por rol, checksum wallets
 - [ ] Obtener MATIC de faucet Amoy para gas fees
-- [ ] Probar `send_usdt()` real en testnet
-- [ ] Verificar escaneo automático de depósitos
+- [ ] Probar send_usdt() real en testnet
+- [ ] Verificar escaneo automatico de depositos
 - [ ] Probar retiros a wallet externa
+- [ ] Crear tests/blockchain/test_blockchain_security.py
 
 ---
 
