@@ -491,23 +491,29 @@ function AuthPageInner() {
  } finally { setLoading(false); }
  }
 
+ async function handleResetPassword(e?: React.FormEvent) {
+   if (e) e.preventDefault();
+   if (!resetEmail) { setError("Ingresa tu email"); return; }
+   setError("");
+   setLoading(true);
+   try {
+     const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
+       body: JSON.stringify({ email: resetEmail }),
+     });
+     if (!res.ok) {
+       const data = await res.json().catch(() => ({ detail: "Error de conexion" }));
+       throw new Error(data.detail || "Error al enviar el enlace");
+     }
+     push("email");
+   } catch (err: any) {
+     setError(err.message || "Error de conexion");
+   } finally { setLoading(false); }
+ }
+
  function simulateReset() {
- const btn = document.getElementById("send-link-btn");
- if (!btn) return;
- const label = btn.textContent || "";
- btn.textContent = "Enviando...";
- btn.style.opacity = "0.7";
- setTimeout(() => {
- btn.textContent = "¡Enviado! ?";
- btn.classList.add("done");
- btn.style.opacity = "1";
- setTimeout(() => {
- push("email");
- btn.textContent = label;
- btn.classList.remove("done");
- btn.style.opacity = "1";
- }, 800);
- }, 1200);
+   handleResetPassword();
  }
 
  

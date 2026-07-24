@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import random
 import secrets
 from datetime import UTC, datetime, timedelta
@@ -19,7 +20,9 @@ from app.models.user import User
 from app.schemas.user import (
     CompleteProfileRequest,
     ConfirmChangeRequest,
+    ForgotPasswordRequest,
     RequestChangeRequest,
+    ResetPasswordRequest,
     UpdateProfileRequest,
     UpdateWalletRequest,
     UserCreate,
@@ -29,6 +32,8 @@ from app.schemas.user import (
 from app.services.audit import log_action
 from app.services.auth import get_current_user
 from app.services.password_validator import is_password_common, validate_password_strength
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
@@ -684,6 +689,177 @@ def resend_verification(
     log_action(user.id, "verification_resent", ip=request.client.host)
 
     return {"message": "Email de verificacion reenviado"}
+
+
+# ══════════════════════════════════════════════════════════
+# PASSWORD RESET (Fase 10.2)
+# ══════════════════════════════════════════════════════════
+
+RESET_TOKEN_EXPIRE_HOURS = 1
+
+
+@router.post("/forgot-password")
+@limiter.limit("1/5minutes")
+def forgot_password(
+    request: Request, body: ForgotPasswordRequest, db: Session = Depends(get_db)
+):
+    """
+    Solicitar recuperacion de contrasena.
+    Envia un email con un enlace de reset (solo si el usuario existe).
+    Siempre responde igual para evitar enumeracion de usuarios.
+    """
+    user = db.query(User).filter(User.email == body.email).first()
+
+    if not user or not user.is_active:
+        # Siempre responder igual — no revelar si el email existe
+        # Pero log si era un email valido
+        if user:
+            logger.info("Password reset requested for inactive user", extra={"user_id": user.id})
+        else:
+            logger.info("Password reset requested for unknown email", extra={"email_hint": body.email[:3] + "***"})
+        return {
+            "message": "Si tu email esta registrado, recibiras un enlace de recuperacion en unos minutos."
+        }
+
+    # Invalidar tokens anteriores de tipo PASSWORD_RESET
+    db.query(ChangeToken).filter(
+        ChangeToken.user_id == user.id,
+        ChangeToken.token_type == "PASSWORD_RESET",
+        ChangeToken.used == False,
+    ).update({"used": True})
+
+    # Generar token seguro
+    raw_token = secrets.token_urlsafe(32)
+    expires_at = datetime.utcnow() + timedelta(hours=RESET_TOKEN_EXPIRE_HOURS)
+
+    change_token = ChangeToken(
+        user_id=user.id,
+        token_hash=pwd_context.hash(raw_token),
+        token_type="PASSWORD_RESET",
+        expires_at=expires_at,
+    )
+    db.add(change_token)
+    db.commit()
+
+    # Construir link de reset
+    frontend_url = settings.FRONTEND_URL.rstrip("/")
+    reset_link = f"{frontend_url}/reset-password?token={raw_token}"
+
+    # Enviar email
+    reset_html = f"""<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:24px">
+<div style="background:#2563EB;padding:24px;border-radius:16px 16px 0 0;text-align:center">
+<span style="color:white;font-size:20px;font-weight:700">TurnoGO</span></div>
+<div style="background:#fff;padding:24px;border:1px solid #E2E8F0;border-top:0;border-radius:0 0 16px 16px">
+<h2 style="color:#1F2937;margin-top:0">Recupera tu contrasena</h2>
+<p style="color:#6B7280;font-size:14px">Haz clic para crear una nueva contrasena:</p>
+<div style="text-align:center;margin:24px 0">
+<a href="{reset_link}" style="display:inline-block;background:#2563EB;color:white;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Restablecer Contrasena</a>
+</div>
+<p style="color:#9CA3AF;font-size:12px">Este enlace expira en 1 hora. Si no solicitaste este cambio, ignora este email.</p>
+</div>
+</body></html>"""
+
+    send_email(user.email, "Recupera tu contrasena — TurnoGO", reset_html)
+
+    log_action(
+        user.id,
+        "password_reset_requested",
+        ip=request.client.host,
+    )
+
+    logger.info("Password reset token created", extra={"user_id": user.id, "token_type": "PASSWORD_RESET"})
+
+    return {
+        "message": "Si tu email esta registrado, recibiras un enlace de recuperacion en unos minutos."
+    }
+
+
+@router.post("/reset-password")
+@limiter.limit("1/5minutes")
+def reset_password(
+    request: Request, body: ResetPasswordRequest, db: Session = Depends(get_db)
+):
+    """
+    Ejecutar el reset de contrasena con un token valido.
+    """
+    # Validar nueva contrasena (minimo 8 chars)
+    if len(body.new_password) < 8:
+        raise HTTPException(
+            status_code=400,
+            detail="La contrasena debe tener al menos 8 caracteres",
+        )
+
+    # Buscar tokens PASSWORD_RESET no usados
+    tokens = (
+        db.query(ChangeToken)
+        .filter(
+            ChangeToken.token_type == "PASSWORD_RESET",
+            ChangeToken.used == False,
+        )
+        .all()
+    )
+
+    # Buscar el que haga match con el token
+    valid_token = None
+    user = None
+    for ct in tokens:
+        if pwd_context.verify(body.token, ct.token_hash):
+            valid_token = ct
+            user = db.query(User).filter(User.id == ct.user_id).first()
+            break
+
+    if not valid_token or not user:
+        logger.warning("Invalid password reset token used")
+        raise HTTPException(
+            status_code=400,
+            detail="Token invalido o expirado. Solicita un nuevo enlace de recuperacion.",
+        )
+
+    # Verificar expiracion
+    now_naive = datetime.utcnow()
+    expires_naive = (
+        valid_token.expires_at.replace(tzinfo=None)
+        if valid_token.expires_at.tzinfo
+        else valid_token.expires_at
+    )
+    if now_naive > expires_naive:
+        valid_token.used = True
+        db.commit()
+        raise HTTPException(
+            status_code=400,
+            detail="El enlace de recuperacion expiro. Solicita uno nuevo.",
+        )
+
+    # Verificar que no es la misma contrasena
+    if pwd_context.verify(body.new_password, user.hashed_password):
+        raise HTTPException(
+            status_code=400,
+            detail="La nueva contrasena no puede ser igual a la anterior",
+        )
+
+    # Cambiar contrasena
+    user.hashed_password = pwd_context.hash(body.new_password)
+
+    # Invalidar token
+    valid_token.used = True
+
+    # Invalidar todos los refresh tokens del usuario (forzar re-login)
+    db.query(RefreshToken).filter(RefreshToken.user_id == user.id).delete()
+
+    log_action(
+        user.id,
+        "password_reset_completed",
+        ip=request.client.host,
+    )
+
+    logger.info("Password reset completed", extra={"user_id": user.id})
+
+    db.commit()
+
+    return {"message": "Contrasena cambiada exitosamente. Inicia sesion con tu nueva contrasena."}
 
 
 # ═══════════════════════════════════════════════════════════
