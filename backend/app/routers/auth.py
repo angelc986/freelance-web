@@ -699,7 +699,6 @@ RESET_TOKEN_EXPIRE_HOURS = 1
 
 
 @router.post("/forgot-password")
-@limiter.limit("1/5minutes")
 def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session = Depends(get_db)):
     """
     Solicitar recuperacion de contrasena.
