@@ -301,15 +301,9 @@ class TestPasswordReset:
 
         # If email sends we should have a reset token
         if ct is not None:
-            from app.config import get_settings
-            from passlib.context import CryptContext
-
-            pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-            # We need the raw token — can't get it from hash, so test with
-            # the actual raw token from the forgot-password endpoint
+            # Since we can't extract the raw token (it's hashed), this test
+            # validates the forgot-password endpoint creates a token correctly.
+            # Full flow tested via frontend integration.
             pass
 
-        # Since we can't extract the raw token (it's hashed), this test
-        # validates the forgot-password endpoint creates a token correctly.
-        # Full flow tested via frontend integration.
         assert True
