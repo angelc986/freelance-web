@@ -768,9 +768,7 @@ def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session =
         if not ok:
             logger.warning(f"PASSWORD_RESET_EMAIL_FAILED user={user.id} send_email returned False")
     except Exception as e:
-        logger.exception(
-            f"PASSWORD_RESET_EMAIL_EXCEPTION user={user.id} error={e}"
-        )
+        logger.exception(f"PASSWORD_RESET_EMAIL_EXCEPTION user={user.id} error={e}")
 
     log_action(
         user.id,
