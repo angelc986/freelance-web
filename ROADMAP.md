@@ -222,12 +222,24 @@ CI/CD:          GitHub Actions — FASE 9.3 ✅ COMPLETADA (23 Jul 2026)
 - [ ] Token expira en 1 hora
 - [ ] Rate limiting: 1 solicitud/5 minutos
 
-### 10.3 KYC Funcional (Didit)
-- [ ] Obtener API Key de business.didit.me
-- [ ] Configurar en Railway env vars
-- [ ] Probar flujo completo: crear sesión → redirect → webhook → verified
-- [ ] Probar subida automática de avatar a Cloudinary post-verificación
-- [ ] Mostrar status de verificación en dashboard
+### 10.3 KYC Funcional (Didit) 🟢 100%
+- [x] Obtener API Key de business.didit.me
+- [x] Configurar DIDIT_API_KEY, DIDIT_WEBHOOK_SECRET, DIDIT_WORKFLOW_ID en Railway
+- [x] Probar flujo completo: crear sesion -> redirect -> webhook -> verified
+- [x] Probar subida automatica de avatar a Cloudinary post-verificacion
+- [x] Mostrar status de verificacion en dashboard
+- [x] Auditoria de seguridad (10 hallazgos -> 7 corregidos)
+- [x] CRIT-01: Separar avatar_verified_url de avatar_url
+- [x] CRIT-02: Bloquear POST /users/avatar si avatar_verified=True
+- [x] CRIT-03: Nunca des-verificar usuario aprobado (maquina de estados)
+- [x] HIGH-01: Idempotencia de webhooks (kyc_webhook_events)
+- [x] HIGH-02: Logs de cambio de avatar (audit_log)
+- [x] HIGH-03: Reutilizar sesion KYC pendiente (evitar duplicados)
+- [x] HIGH-04: Solo HMAC-SHA256 en webhook, sin fallback API Key
+- [x] kyc_status explicito (PENDING | APPROVED | DECLINED | EXPIRED | ABANDONED)
+- [x] 24 tests automatizados (tests/verification/test_kyc_security.py)
+- [x] Documentacion (docs/security/kyc-security.md)
+- [x] DIDIT_WEBHOOK_SECRET configurado y usado efectivamente en HMAC
 
 ### 10.4 Cloudinary Funcional
 - [ ] Configurar credenciales en Railway

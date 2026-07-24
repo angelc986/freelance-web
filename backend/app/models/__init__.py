@@ -2,6 +2,7 @@ from .application import Application
 from .audit_log import AuditLog
 from .change_token import ChangeToken
 from .job import Job
+from .kyc_webhook_event import KycWebhookEvent
 from .notification import Notification
 from .push_subscription import PushSubscription
 from .rating import Rating

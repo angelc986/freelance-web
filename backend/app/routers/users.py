@@ -13,6 +13,7 @@ from app.models.rating import Rating
 from app.models.transaction import Transaction
 from app.models.user import User
 from app.services.auth import get_current_user
+from app.services.audit import log_action
 from app.services.cloudinary_service import upload_avatar as cloudinary_upload
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
@@ -235,6 +236,13 @@ async def upload_avatar(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # CRIT-02: Usuario verificado por KYC no puede cambiar su avatar
+    if current_user.avatar_verified:
+        raise HTTPException(
+            status_code=403,
+            detail="Tu foto de perfil fue verificada por KYC. Contacta a soporte para cambiarla.",
+        )
+
     allowed = {"image/jpeg", "image/png", "image/webp", "image/gif"}
     if file.content_type not in allowed:
         raise HTTPException(400, "Formato no permitido. Usa JPG, PNG, WebP o GIF.")
@@ -247,11 +255,21 @@ async def upload_avatar(
     cloudinary_url = cloudinary_upload(contents, current_user.id, file.filename or "avatar.jpg")
 
     if cloudinary_url:
-        # Cloudinary funciono -> guardar URL en BD
+        # HIGH-02: Log del cambio de avatar
+        previous_avatar = current_user.avatar_url
         db.execute(
             sa_update(User).where(User.id == current_user.id).values(avatar_url=cloudinary_url)
         )
         db.commit()
+        log_action(
+            current_user.id,
+            "avatar_changed",
+            {
+                "previous_avatar": previous_avatar,
+                "new_avatar": cloudinary_url,
+                "source": "manual_upload",
+            },
+        )
         return {"avatar_url": cloudinary_url}
 
     # Fallback: guardar localmente (Railway ephemeral, pero util para dev)

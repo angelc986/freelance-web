@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.database import SessionLocal
 from app.limiter import limiter
+from app.models.kyc_webhook_event import KycWebhookEvent
 from app.models.user import User
 from app.services.audit import log_action
 from app.services.auth import get_current_user
@@ -144,8 +145,17 @@ async def create_verification(
             "message": "Tu identidad ya esta verificada",
         }
 
-    current_user.didit_session_id = None
-    db.commit()
+    # HIGH-03: Reusar sesión KYC pendiente si ya existe
+    if current_user.didit_session_id:
+        logger.info(
+            f"Reusing existing Didit session {current_user.didit_session_id} "
+            f"for user {current_user.id}"
+        )
+        return {
+            "status": "existing_session",
+            "message": "Ya tienes una sesion de verificacion activa. Completala antes de crear otra.",
+            "session_id": current_user.didit_session_id,
+        }
 
     callback_url = (
         f"{os.getenv('APP_URL', 'https://freelance-web-beta.vercel.app')}/verification-complete"
@@ -214,35 +224,34 @@ async def didit_webhook(request: Request):
     signature = request.headers.get("X-Signature-V2")
     timestamp = request.headers.get("X-Timestamp")
 
-    if signature and timestamp:
-        try:
-            if abs(int(time.time()) - int(timestamp)) > 300:
-                raise HTTPException(status_code=401, detail="Request too old")
-        except ValueError:
-            raise HTTPException(status_code=401, detail="Invalid timestamp")
+    # HIGH-04: Solo autenticación HMAC — sin fallback a API Key
+    if not signature or not timestamp:
+        raise HTTPException(status_code=401, detail="Missing X-Signature-V2 or X-Timestamp header")
 
-        try:
-            payload = json.loads(raw_body)
-            canonical = json.dumps(
-                shorten_floats(payload),
-                sort_keys=True,
-                separators=(",", ":"),
-                ensure_ascii=False,
-            )
-            expected = hmac.new(
-                settings.DIDIT_WEBHOOK_SECRET.encode("utf-8"),
-                canonical.encode("utf-8"),
-                hashlib.sha256,
-            ).hexdigest()
+    try:
+        if abs(int(time.time()) - int(timestamp)) > 300:
+            raise HTTPException(status_code=401, detail="Request too old")
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid timestamp")
 
-            if not hmac.compare_digest(signature, expected):
-                raise HTTPException(status_code=401, detail="Invalid signature")
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="Invalid JSON body")
-    else:
-        api_key = request.headers.get("x-api-key", "")
-        if api_key != settings.DIDIT_API_KEY:
-            raise HTTPException(status_code=403, detail="Forbidden")
+    try:
+        payload = json.loads(raw_body)
+        canonical = json.dumps(
+            shorten_floats(payload),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
+        expected = hmac.new(
+            settings.DIDIT_WEBHOOK_SECRET.encode("utf-8"),
+            canonical.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+
+        if not hmac.compare_digest(signature, expected):
+            raise HTTPException(status_code=401, detail="Invalid signature")
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
 
     payload = json.loads(raw_body)
     session_id = payload.get("session_id")
@@ -254,32 +263,97 @@ async def didit_webhook(request: Request):
 
     db = SessionLocal()
     try:
+        # HIGH-01: Idempotencia — verificar si este webhook ya fue procesado
+        existing = (
+            db.query(KycWebhookEvent)
+            .filter(
+                KycWebhookEvent.session_id == session_id,
+                KycWebhookEvent.status == status_val,
+            )
+            .first()
+        )
+        if existing:
+            logger.info(
+                f"Duplicate webhook ignored: session={session_id} status={status_val} "
+                f"(already processed at {existing.processed_at})"
+            )
+            return {"received": True, "duplicate": True}
+
         user = db.query(User).filter(User.id == int(vendor_data)).first()
-        if user:
-            if status_val == "Approved":
-                user.is_verified = True
-                user.verified_at = datetime.now(UTC)
-                portrait_url = _extract_portrait_url(payload)
-                if portrait_url:
-                    cloud_url = _upload_avatar_from_url(portrait_url, user.id)
-                    if cloud_url:
-                        user.avatar_url = cloud_url
-                        user.avatar_verified = True
-                log_action(
-                    user.id, "kyc_approved", {"session_id": session_id}, ip=request.client.host
+        if not user:
+            return {"received": True}
+
+        if status_val == "Approved":
+            # Maquina de estados KYC: registrar transicion
+            previous_status = user.kyc_status
+            previous_avatar = user.avatar_verified_url
+
+            user.kyc_status = "APPROVED"
+            user.is_verified = True
+            user.verified_at = datetime.now(UTC)
+
+            portrait_url = _extract_portrait_url(payload)
+            if portrait_url:
+                cloud_url = _upload_avatar_from_url(portrait_url, user.id)
+                if cloud_url:
+                    user.avatar_verified_url = cloud_url
+                    user.avatar_url = cloud_url
+                    user.avatar_verified = True
+            user.didit_session_id = None
+
+            # HIGH-02: Log de cambio de avatar con estado anterior
+            log_action(
+                user.id,
+                "kyc_approved",
+                {
+                    "session_id": session_id,
+                    "previous_status": previous_status,
+                    "new_status": "APPROVED",
+                    "previous_avatar": previous_avatar,
+                    "new_avatar": user.avatar_verified_url,
+                },
+                ip=request.client.host,
+            )
+
+        elif status_val in ("Declined", "Expired", "Abandoned"):
+            # CRIT-03: Nunca des-verificar a un usuario ya aprobado
+            if user.is_verified:
+                logger.warning(
+                    f"Ignoring {status_val} webhook for already-verified user {user.id} "
+                    f"(session {session_id}). Possibly a replayed or out-of-order webhook."
                 )
-            elif status_val in ("Declined", "Expired", "Abandoned"):
-                user.is_verified = False
-                user.didit_session_id = None
-                log_action(
-                    user.id,
-                    "kyc_failed",
-                    {"session_id": session_id, "status": status_val},
-                    ip=request.client.host,
-                )
-            db.commit()
-    except (ValueError, Exception):
-        pass
+                return {"received": True}
+
+            previous_status = user.kyc_status
+            new_status = status_val.upper()
+            user.kyc_status = new_status
+            user.didit_session_id = None
+
+            log_action(
+                user.id,
+                "kyc_failed",
+                {
+                    "session_id": session_id,
+                    "status": status_val,
+                    "previous_status": previous_status,
+                    "new_status": new_status,
+                },
+                ip=request.client.host,
+            )
+
+        # HIGH-01: Registrar evento como procesado
+        db.add(
+            KycWebhookEvent(
+                session_id=session_id,
+                status=status_val,
+                user_id=int(vendor_data),
+            )
+        )
+        db.commit()
+
+    except (ValueError, Exception) as e:
+        db.rollback()
+        logger.error(f"Webhook processing error: {e}", exc_info=True)
     finally:
         db.close()
 

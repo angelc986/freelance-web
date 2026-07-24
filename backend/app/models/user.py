@@ -29,9 +29,11 @@ class User(Base):
     held_balance = Column(Float, default=0.0)  # USDT retenido en trabajos activos (escrow)
     rating_avg = Column(Float, default=0.0)
     avatar_url = Column(String, nullable=True)
+    avatar_verified_url = Column(String, nullable=True)  # Solo Didit KYC — inmutable por el usuario
     avatar_verified = Column(Boolean, default=False)
     cedula_locked = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
+    kyc_status = Column(String, default="PENDING")  # PENDING | APPROVED | DECLINED | EXPIRED | ABANDONED | UNDER_REVIEW
     didit_session_id = Column(String, nullable=True)
     verified_at = Column(DateTime(timezone=True), nullable=True)
     last_login_at = Column(DateTime(timezone=True), nullable=True)
