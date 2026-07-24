@@ -744,7 +744,7 @@ def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session =
     # Construir link de reset
     s = get_settings()
     frontend_url = s.FRONTEND_URL.rstrip("/")
-    reset_link = f"{frontend_url}/reset-password?token={raw_token}"
+    reset_link = f"{frontend_url}/auth/reset-password?token={raw_token}"
 
     # Enviar email
     reset_html = f"""<!DOCTYPE html>

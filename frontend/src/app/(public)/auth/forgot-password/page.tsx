@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { API_BASE } from "@/lib/api";
+import Logo from "@/components/Logo";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -62,7 +63,7 @@ export default function ForgotPasswordPage() {
             Si {email} esta registrado, recibiras un enlace para restablecer tu contrasena.
           </p>
           <Link
-            href="/login"
+            href="/auth?screen=login"
             style={{
               display: "inline-block",
               marginTop: "24px",
@@ -100,9 +101,8 @@ export default function ForgotPasswordPage() {
         width: "100%",
         boxShadow: "0 25px 50px rgba(0,0,0,0.25)",
       }}>
-        {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
-          <span style={{ fontSize: "24px", fontWeight: 700, color: "#2563EB" }}>TurnoGO</span>
+          <Logo size="md" />
         </div>
 
         <h2 style={{ color: "#1F2937", fontSize: "20px", margin: "0 0 8px", textAlign: "center" }}>
@@ -174,7 +174,7 @@ export default function ForgotPasswordPage() {
 
         <div style={{ textAlign: "center", marginTop: "20px" }}>
           <Link
-            href="/login"
+            href="/auth?screen=login"
             style={{ color: "#2563EB", fontSize: "14px", textDecoration: "none", fontWeight: 500 }}
           >
             ← Volver al inicio
