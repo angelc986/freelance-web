@@ -180,7 +180,16 @@ CI/CD:          GitHub Actions — FASE 9.3 ✅ COMPLETADA (23 Jul 2026)
 - [x] **Documentación**: `docs/observability.md` — guía operativa con Grafana dashboards, 5 AlertManager rules, playbook de debugging
 - [x] 5 commits, 18 archivos, ~700 líneas
 
-### 9.5 Backups y DRP
+### 9.5 Backups y DRP ✅ COMPLETADA (24 Jul 2026)
+- [x] Auditoría completa de infraestructura (Supabase, Railway, Vercel, GitHub)
+- [x] Documento de Disaster Recovery: `docs/disaster-recovery.md` (~350 líneas)
+- [x] 9 escenarios de desastre documentados con RTO/RPO/procedimiento
+- [x] Procedimiento de restore paso a paso (8 pasos, 15-30 min)
+- [x] Objetivos SRE definidos: RPO 24h, RTO 2h, disponibilidad 99.5%
+- [x] Hallazgos: `supabase_url.txt` contiene credenciales (debe eliminarse)
+- [x] Recomendaciones: migrar Supabase a Pro antes de producción ($25/mes para PITR)
+
+### 9.5 Backups y DRP (original)
 - [ ] Configurar backups automáticos de Supabase (diarios, 7 días retención)
 - [ ] Documentar procedimiento de restore
 - [ ] Plan de recuperación: ¿qué pasa si Railway cae? ¿Si Supabase falla?
@@ -524,7 +533,7 @@ CI/CD:          GitHub Actions — FASE 9.3 ✅ COMPLETADA (23 Jul 2026)
 | Fase | Prioridad | Tiempo Estimado | Dependencias |
 |------|-----------|-----------------|--------------|
 | **Fase 8** — Seguridad Crítica | ✅ Completada | 19-22 Jul 2026 | Ninguna |
-| **Fase 9** — Infraestructura | ✅ Completada | 19-23 Jul 2026 | Fase 8 |
+| **Fase 9.5** — Backups y DRP | ✅ Completada | 24 Jul 2026 | Fase 9.4 |
 | **Fase 9.1** — Alembic | ✅ Completada | 22 Jul 2026 | |
 | **Fase 9.2** — Tests | ✅ Completada | 22 Jul 2026 | |
 | **Fase 9.3** — CI/CD | ✅ Completada | 23 Jul 2026 | Fase 9.2 |
@@ -548,7 +557,7 @@ Jul 2026 ──── Fase 8 ✅  (Seguridad Crítica) ────────�
 Jul 2026 ──── Fase 9.1 ✅ (Alembic Migraciones) ──────────── ✅
 Jul 2026 ──── Fase 9.2 ✅ (Tests Automatizados 137) ──────── ✅
 Jul 2026 ──── Fase 9.3 ✅ (CI/CD GitHub Actions) ──────────── ✅
-Jul 2026 ──── Fase 9.4 ✅ (Observabilidad Profesional) ─────── ✅
+Jul 2026 ──── Fase 9.5 ✅ (Backups y DRP) ────────────────── ✅
 Aug 2026 ──── Fase 10    (Bloqueantes producción) ────────── 🟠
 Aug-Sep 2026 ─ Fase 11-12 (Chat + UX) ───────────────────── 🟠🟡
 Sep-Oct 2026 ─ Fase 13-15 (Búsqueda + Seguridad + Metrics)  🟡
@@ -573,8 +582,9 @@ Nov-Dec 2026 ─ Fase 18-19 (Venezuela + Docs) ───────────
 | 19-22 jul 2026 | **Fase 8 completa**. SECRET_KEY, startup validator, dev-token eliminado, webhook HMAC, CORS strict, passwords, email verification, security headers, audit logs, gitignore. 60 tests de seguridad. |
 | 22 jul 2026 | **Fase 9.1 completa**. Alembic migrations (10 tablas), baseline, Railway Start Command con `alembic upgrade head`. |
 | 22 jul 2026 | **Fase 9.2 completa**. 137 tests estables (5 suites), aislamiento con `drop_all/create_all`, `.coveragerc`, `TESTING.md`, sesión `db` compartida. Cobertura ~65% core. |
-| 23 jul 2026 | **Fase 9.3 completa**. CI/CD pipeline: `ci.yml` (3 jobs: backend tests 163/163, ruff+mypy, ESLint+TypeScript) + `deploy.yml` (workflow_run gate). Arquitectura limpia: Vercel auto-deploy on push + Railway "Wait for CI" nativo. Sin duplicación. |
+| 23 jul 2026 | **Fase 9.3 completa**. CI/CD pipeline: ci.yml + deploy.yml (workflow_run gate). Arquitectura limpia: Vercel auto-deploy on push + Railway "Wait for CI" nativo. Sin duplicación. Smoke test exitoso: CI falla → gate bloquea deploy → revert → CI verde. |
 | 23 jul 2026 | **Fase 9.4 completa**. Observabilidad profesional en 5 bloques: logging estructurado (structlog, 24 prints eliminados), request ID tracing (X-Request-ID), health checks (/live, /ready, /health), métricas Prometheus (/metrics, 5 métricas), Sentry hardening (PII off, request_id tag, sanitización). `docs/observability.md` con playbook de debugging. |
+| 24 jul 2026 | **Fase 9.5 completa**. Disaster Recovery Plan completo: auditoría de infraestructura (Supabase, Railway, Vercel, GitHub), 9 escenarios de desastre, procedimiento de restore (8 pasos), objetivos SRE (RPO 24h, RTO 2h, 99.5%). `docs/disaster-recovery.md`. Fase 9 — Infraestructura: 100% completada. |
 | 23 jul 2026 | **Lecciones de deploy**: Vercel `ignoreCommand` bloquea Deploy Hooks. Railway "Wait for CI" es la solución correcta. Arquitectura final: 1 deploy por commit por plataforma. |
 
 ---
