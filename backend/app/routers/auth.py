@@ -700,9 +700,7 @@ RESET_TOKEN_EXPIRE_HOURS = 1
 
 @router.post("/forgot-password")
 @limiter.limit("1/5minutes")
-def forgot_password(
-    request: Request, body: ForgotPasswordRequest, db: Session = Depends(get_db)
-):
+def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session = Depends(get_db)):
     """
     Solicitar recuperacion de contrasena.
     Envia un email con un enlace de reset (solo si el usuario existe).
@@ -716,7 +714,10 @@ def forgot_password(
         if user:
             logger.info("Password reset requested for inactive user", extra={"user_id": user.id})
         else:
-            logger.info("Password reset requested for unknown email", extra={"email_hint": body.email[:3] + "***"})
+            logger.info(
+                "Password reset requested for unknown email",
+                extra={"email_hint": body.email[:3] + "***"},
+            )
         return {
             "message": "Si tu email esta registrado, recibiras un enlace de recuperacion en unos minutos."
         }
@@ -770,7 +771,9 @@ def forgot_password(
         ip=request.client.host,
     )
 
-    logger.info("Password reset token created", extra={"user_id": user.id, "token_type": "PASSWORD_RESET"})
+    logger.info(
+        "Password reset token created", extra={"user_id": user.id, "token_type": "PASSWORD_RESET"}
+    )
 
     return {
         "message": "Si tu email esta registrado, recibiras un enlace de recuperacion en unos minutos."
@@ -779,9 +782,7 @@ def forgot_password(
 
 @router.post("/reset-password")
 @limiter.limit("1/5minutes")
-def reset_password(
-    request: Request, body: ResetPasswordRequest, db: Session = Depends(get_db)
-):
+def reset_password(request: Request, body: ResetPasswordRequest, db: Session = Depends(get_db)):
     """
     Ejecutar el reset de contrasena con un token valido.
     """

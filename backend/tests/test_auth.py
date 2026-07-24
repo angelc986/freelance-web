@@ -286,6 +286,7 @@ class TestPasswordReset:
         # Get the token from DB
         from app.database import SessionLocal
         from app.models.change_token import ChangeToken
+
         db = SessionLocal()
         ct = (
             db.query(ChangeToken)
@@ -302,6 +303,7 @@ class TestPasswordReset:
         if ct is not None:
             from app.config import get_settings
             from passlib.context import CryptContext
+
             pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
             # We need the raw token — can't get it from hash, so test with
             # the actual raw token from the forgot-password endpoint

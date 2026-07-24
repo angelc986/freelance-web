@@ -86,10 +86,12 @@ class UserResponse(BaseModel):
 
 class ForgotPasswordRequest(BaseModel):
     """Request para solicitar reset de contraseña"""
+
     email: str
 
 
 class ResetPasswordRequest(BaseModel):
     """Request para ejecutar el reset con token"""
+
     token: str
     new_password: str

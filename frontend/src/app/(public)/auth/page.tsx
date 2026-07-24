@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { completeProfile } from "@/lib/api";
+import { completeProfile, API_BASE } from "@/lib/api";
 import Logo from "@/components/Logo";
 import dynamic from "next/dynamic";
 const LocationPicker = dynamic(() => import("@/components/LocationPicker"), { ssr: false });
