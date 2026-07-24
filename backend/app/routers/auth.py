@@ -515,7 +515,7 @@ def request_change(
     # Guardar en BD (expira 15 min)
     expires_at = datetime.now(UTC) + timedelta(minutes=15)
     change = ChangeToken(
-        user_id=user_id,
+        user_id=user.id,
         token_hash=code_hash,
         new_email=request.new_email,
         new_phone=request.new_phone,
@@ -564,7 +564,7 @@ def confirm_change(
     change_request = (
         db.query(ChangeToken)
         .filter(
-            ChangeToken.user_id == user_id,
+            ChangeToken.user_id == user.id,
             ChangeToken.used == False,
             ChangeToken.expires_at > datetime.now(UTC),
         )
@@ -768,7 +768,9 @@ def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session =
         if not ok:
             logger.warning(f"PASSWORD_RESET_EMAIL_FAILED user={user.id} send_email returned False")
     except Exception as e:
-        logger.error(f"PASSWORD_RESET_EMAIL_EXCEPTION user={user.id} error={e} type={type(e).__name__}")
+        logger.error(
+            f"PASSWORD_RESET_EMAIL_EXCEPTION user={user.id} error={e} type={type(e).__name__}"
+        )
         import traceback
         logger.error(f"PASSWORD_RESET_TRACEBACK {traceback.format_exc()}")
 
@@ -842,14 +844,14 @@ def reset_password(request: Request, body: ResetPasswordRequest, db: Session = D
         )
 
     # Verificar que no es la misma contrasena
-    if pwd_context.verify(body.new_password, user.hashed_password):
+    if pwd_context.verify(body.new_password, user.password_hash):
         raise HTTPException(
             status_code=400,
             detail="La nueva contrasena no puede ser igual a la anterior",
         )
 
     # Cambiar contrasena
-    user.hashed_password = pwd_context.hash(body.new_password)
+    user.password_hash = pwd_context.hash(body.new_password)
 
     # Invalidar token
     valid_token.used = True
