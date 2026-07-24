@@ -341,13 +341,23 @@ function ResetPasswordForm() {
           display: "flex", flexDirection: "column",
           zIndex: 20, overflow: "hidden",
         }}>
-          {/* Top bar */}
-          <div className="top-bar">
-            <Link href="/auth?screen=login" className="btn-back">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </Link>
+          {/* Top bar — same as auth page TopRowLogo */}
+          <div className="top-row top-bar">
+            <div className="flex items-center gap-2">
+              {/* Logo + text: desktop only */}
+              <a href="/" className="hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <Logo size="sm" showText={false} />
+                <span className="logo-text font-bold tracking-tight">Turno<span style={{color:"#2563EB"}}>GO</span></span>
+                <div className="w-px h-4 bg-gray-300 mx-1" />
+              </a>
+              <Link
+                href="/auth?screen=login"
+                className="btn-back"
+                style={{marginLeft:0,width:32,height:32,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",color:"#475569",border:"none",background:"none",cursor:"pointer",textDecoration:"none"}}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+              </Link>
+            </div>
           </div>
 
           {/* Content area */}
@@ -580,12 +590,12 @@ function ResetPasswordContent() {
           zIndex: 99, pointerEvents: "none",
         }} />
 
-        {/* Layer 11: Floating logo (mobile) */}
+        {/* Layer 11: Floating logo (mobile only — desktop shows logo in top-bar) */}
         <a href="/" style={{
           position: "absolute", left: "16px", zIndex: 30,
           top: "calc(env(safe-area-inset-top, 0px) + 14px)",
           textDecoration: "none",
-        }}>
+        }} className="md:hidden">
           <Logo size="sm" />
         </a>
 
