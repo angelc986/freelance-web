@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { API_BASE } from "@/lib/api";
+import Logo from "@/components/Logo";
 import "../auth.css";
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -578,6 +579,15 @@ function ResetPasswordContent() {
           background: "linear-gradient(to right, transparent 5%, rgba(255,255,255,0.6) 25%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0.6) 75%, transparent 95%)",
           zIndex: 99, pointerEvents: "none",
         }} />
+
+        {/* Layer 11: Floating logo (mobile) */}
+        <a href="/" style={{
+          position: "absolute", left: "16px", zIndex: 30,
+          top: "calc(env(safe-area-inset-top, 0px) + 14px)",
+          textDecoration: "none",
+        }}>
+          <Logo size="sm" />
+        </a>
 
         {/* Layer 11: Floating bubbles */}
         <Bubbles />

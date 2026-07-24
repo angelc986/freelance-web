@@ -1,3 +1,7 @@
+"use client";
+
+import { useId } from "react";
+
 interface LogoProps {
   className?: string;
   showText?: boolean;
@@ -5,6 +9,7 @@ interface LogoProps {
 }
 
 export default function Logo({ className = "", showText = true, size = "md" }: LogoProps) {
+  const gradientId = useId();
   const sizes = {
     sm: { icon: 28, text: "text-lg" },
     md: { icon: 36, text: "text-xl" },
@@ -26,13 +31,13 @@ export default function Logo({ className = "", showText = true, size = "md" }: L
         >
           {/* Background circle with gradient */}
           <defs>
-            <linearGradient id="logoGrad" x1="0" y1="0" x2="48" y2="48">
+            <linearGradient id={gradientId} x1="0" y1="0" x2="48" y2="48">
               <stop offset="0%" stopColor="#2563EB" />
               <stop offset="100%" stopColor="#1D4ED8" />
             </linearGradient>
           </defs>
 
-          <circle cx="24" cy="24" r="22" fill="url(#logoGrad)" />
+          <circle cx="24" cy="24" r="22" fill={`url(#${gradientId})`} />
 
           {/* Stylized "T" that also looks like a target/location */}
           <path
