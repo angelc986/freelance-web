@@ -84,17 +84,13 @@ def validate_image(file_bytes: bytes, max_size: int = MAX_FILE_SIZE) -> BytesIO:
         img = Image.open(BytesIO(file_bytes))
         img.verify()  # Check file integrity without fully decoding
     except (UnidentifiedImageError, Exception):
-        raise ImageValidationError(
-            "El archivo no es una imagen valida. Usa JPG, PNG o WEBP."
-        )
+        raise ImageValidationError("El archivo no es una imagen valida. Usa JPG, PNG o WEBP.")
 
     # Re-open after verify() (verify closes the file handle)
     img = Image.open(BytesIO(file_bytes))
 
     if img.format not in ALLOWED_FORMATS:
-        raise ImageValidationError(
-            f"Formato no permitido: {img.format}. Usa JPG, PNG o WEBP."
-        )
+        raise ImageValidationError(f"Formato no permitido: {img.format}. Usa JPG, PNG o WEBP.")
 
     if img.width > MAX_DIMENSIONS[0] or img.height > MAX_DIMENSIONS[1]:
         raise ImageValidationError(
@@ -146,7 +142,12 @@ def upload_avatar(file_bytes: bytes, user_id: int) -> str | None:
             overwrite=True,
             resource_type="image",
             transformation=[
-                {"width": AVATAR_SIZE[0], "height": AVATAR_SIZE[1], "crop": "fill", "gravity": "face"}
+                {
+                    "width": AVATAR_SIZE[0],
+                    "height": AVATAR_SIZE[1],
+                    "crop": "fill",
+                    "gravity": "face",
+                }
             ],
         )
         return result.get("secure_url")
@@ -184,7 +185,12 @@ def upload_avatar_from_url(image_url: str, user_id: int) -> str | None:
             overwrite=True,
             resource_type="image",
             transformation=[
-                {"width": AVATAR_SIZE[0], "height": AVATAR_SIZE[1], "crop": "fill", "gravity": "face"}
+                {
+                    "width": AVATAR_SIZE[0],
+                    "height": AVATAR_SIZE[1],
+                    "crop": "fill",
+                    "gravity": "face",
+                }
             ],
         )
         return result.get("secure_url")

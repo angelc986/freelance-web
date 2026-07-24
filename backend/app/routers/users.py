@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel
 from sqlalchemy import update as sa_update
@@ -263,9 +262,7 @@ async def upload_avatar_endpoint(
     previous_avatar = current_user.avatar_url
     previous_public_id = get_public_id(current_user.id)
 
-    db.execute(
-        sa_update(User).where(User.id == current_user.id).values(avatar_url=cloudinary_url)
-    )
+    db.execute(sa_update(User).where(User.id == current_user.id).values(avatar_url=cloudinary_url))
     db.commit()
 
     # CLOUD-06: Eliminar avatar anterior de Cloudinary
