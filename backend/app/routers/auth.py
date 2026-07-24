@@ -764,6 +764,8 @@ def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session =
 </body></html>"""
 
     try:
+        from app.services.email_service import send_email
+
         ok = send_email(user.email, "Recupera tu contrasena — TurnoGO", reset_html)
         if not ok:
             logger.warning(f"PASSWORD_RESET_EMAIL_FAILED user={user.id} send_email returned False")
