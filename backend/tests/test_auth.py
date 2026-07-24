@@ -144,7 +144,9 @@ class TestLogin:
                 "password": "Test123!",
             },
         )
-        assert resp.status_code == 200
+        # TEMPORARY CI FAILURE TEST — REMOVE AFTER PIPELINE VALIDATION
+        assert resp.status_code == 201  # DELIBERATELY WRONG: should be 200
+        # END TEMPORARY
         data = resp.json()
         assert "access_token" in data
         assert "refresh_token" in data
