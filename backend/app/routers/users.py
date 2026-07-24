@@ -12,8 +12,8 @@ from app.models.job import Job
 from app.models.rating import Rating
 from app.models.transaction import Transaction
 from app.models.user import User
-from app.services.auth import get_current_user
 from app.services.audit import log_action
+from app.services.auth import get_current_user
 from app.services.cloudinary_service import upload_avatar as cloudinary_upload
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])

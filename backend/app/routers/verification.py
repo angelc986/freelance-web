@@ -136,9 +136,6 @@ async def create_verification(
     """
     settings = get_settings()
 
-    if not settings.DIDIT_API_KEY:
-        raise HTTPException(status_code=503, detail="Verification service not configured")
-
     if current_user.is_verified:
         return {
             "status": "already_verified",
@@ -156,6 +153,9 @@ async def create_verification(
             "message": "Ya tienes una sesion de verificacion activa. Completala antes de crear otra.",
             "session_id": current_user.didit_session_id,
         }
+
+    if not settings.DIDIT_API_KEY:
+        raise HTTPException(status_code=503, detail="Verification service not configured")
 
     callback_url = (
         f"{os.getenv('APP_URL', 'https://freelance-web-beta.vercel.app')}/verification-complete"

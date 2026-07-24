@@ -33,7 +33,9 @@ class User(Base):
     avatar_verified = Column(Boolean, default=False)
     cedula_locked = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
-    kyc_status = Column(String, default="PENDING")  # PENDING | APPROVED | DECLINED | EXPIRED | ABANDONED | UNDER_REVIEW
+    kyc_status = Column(
+        String, default="PENDING"
+    )  # PENDING | APPROVED | DECLINED | EXPIRED | ABANDONED | UNDER_REVIEW
     didit_session_id = Column(String, nullable=True)
     verified_at = Column(DateTime(timezone=True), nullable=True)
     last_login_at = Column(DateTime(timezone=True), nullable=True)

@@ -9,7 +9,7 @@ import hashlib
 import hmac
 import json
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -41,9 +41,7 @@ def _make_didit_signature(payload: dict, secret: str = WEBHOOK_SECRET) -> str:
         separators=(",", ":"),
         ensure_ascii=False,
     )
-    return hmac.new(
-        secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256
-    ).hexdigest()
+    return hmac.new(secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256).hexdigest()
 
 
 def _webhook_payload(session_id: str, status: str, vendor_data: str) -> dict:
@@ -258,9 +256,7 @@ class TestWebhookIdempotency:
         assert r2["body"]["received"] is True
 
     @patch("app.routers.verification._upload_avatar_from_url", return_value=None)
-    def test_different_status_same_session_processed(
-        self, mock_upload, client, kyc_user_token
-    ):
+    def test_different_status_same_session_processed(self, mock_upload, client, kyc_user_token):
         """Diferentes status con misma session_id se procesan independientemente."""
         _token, user_id = kyc_user_token
         session_id = "session-multi-status"
@@ -277,9 +273,9 @@ class TestWebhookIdempotency:
         # Debe haber 2 registros (Declined + Approved)
         db = SessionLocal()
         try:
-            count = db.query(KycWebhookEvent).filter(
-                KycWebhookEvent.session_id == session_id
-            ).count()
+            count = (
+                db.query(KycWebhookEvent).filter(KycWebhookEvent.session_id == session_id).count()
+            )
             assert count == 2
         finally:
             db.close()
@@ -340,9 +336,7 @@ class TestKycStateMachine:
         assert user.kyc_status == "DECLINED"
 
         # DECLINED → APPROVED (nuevo intento con otra sesion)
-        with patch(
-            "app.routers.verification._upload_avatar_from_url", return_value=None
-        ):
+        with patch("app.routers.verification._upload_avatar_from_url", return_value=None):
             _send_webhook(client, _webhook_payload("s2", "Approved", str(user_id)))
         user = _get_user_from_db(user_id)
         assert user.kyc_status == "APPROVED"
@@ -353,9 +347,7 @@ class TestKycStateMachine:
         assert user.kyc_status == "APPROVED"
 
     @patch("app.routers.verification._upload_avatar_from_url", return_value=None)
-    def test_cloudinary_failure_keeps_consistent_state(
-        self, mock_upload, client, kyc_user_token
-    ):
+    def test_cloudinary_failure_keeps_consistent_state(self, mock_upload, client, kyc_user_token):
         """Si Cloudinary falla, el usuario queda verificado pero sin avatar."""
         _token, user_id = kyc_user_token
         session_id = "session-no-cloud"
@@ -459,9 +451,7 @@ class TestWebhookSecurity:
 class TestKycSessionManagement:
     """HIGH-03: Reutilizacion de sesiones, limites."""
 
-    def test_verified_user_cannot_create_new_kyc_session(
-        self, client, verified_user
-    ):
+    def test_verified_user_cannot_create_new_kyc_session(self, client, verified_user):
         """Usuario ya verificado → already_verified al crear sesion."""
         token, _uid = verified_user
         resp = client.post(
