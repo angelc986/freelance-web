@@ -764,7 +764,11 @@ def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session =
 </div>
 </body></html>"""
 
-    send_email(user.email, "Recupera tu contrasena — TurnoGO", reset_html)
+    try:
+        send_email(user.email, "Recupera tu contrasena — TurnoGO", reset_html)
+    except Exception as e:
+        logger.error("Failed to send password reset email", extra={"user_id": user.id, "error": str(e)})
+        # Token already created — user can request resend. Don't 500.
 
     log_action(
         user.id,
